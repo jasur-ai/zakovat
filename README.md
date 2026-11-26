@@ -33,9 +33,14 @@ Deploy qilgach Project → Settings → Environment Variables ga kirib, ikkita o
 
 Ixtiyoriy: `ZAKOVAT_TIMER_SECONDS` (standart 60), `WEBHOOK_URL` (o‘z domeningiz bo‘lsa), `MINIAPP_URL` (belgilanmasa `VERCEL_URL` ishlatiladi).
 
-**Webhook o‘zi o‘rnatiladi:** birinchi xabar kelganda bot `VERCEL_URL` asosida `/api/webhook` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. `scripts/set_webhook.py` faqat qo‘lda bajarish uchun zaxira usul.
+**Webhook o‘zi o‘rnatiladi:** saytga birinchi marta kiritilganda (masalan `/` yoki `/health` ochilganda) bot `VERCEL_URL` asosida `/api/webhook` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. Har kuni 03:00 da `/api/setup` cron ham uni qayta tasdiqlaydi. Agarda javob kelmasa:
 
-So‘ngra `/health` va `/` ni ochib, `/start`, `/solo 959`, `/duel 959` bilan sinab ko‘ring.
+- `https://<loyihangiz>.vercel.app/api/setup` — webhook’ni qo‘lda o‘rnatadi va natijani ko‘rsatadi;
+- `https://<loyihangiz>.vercel.app/api/status` — faqat `BOT_TOKEN` / `WEBHOOK_SECRET` bor-yo‘qligini va Telegram webhook holatini ko‘rsatadi (tokenni o‘zi ko‘rsatmaydi).
+
+`scripts/set_webhook.py` — qo‘lda bajarish uchun yana bir zaxira usul.
+
+So‘ngra `/start`, `/rules`, `/solo 959` bilan sinab ko‘ring.
 
 Barchasini bir komandada bajarish uchun (tokenlar faqat lokal shell muhitida):
 
