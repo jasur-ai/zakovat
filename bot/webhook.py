@@ -19,10 +19,14 @@ from pathlib import Path
 from fastapi import FastAPI, Header, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
+from telegram import ForceReply, Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import (
+    Application, ApplicationBuilder, ChatMemberHandler, CommandHandler,
+    ContextTypes, MessageHandler, filters,
+)
 
+from . import messages as msg
 from .answers import AnswerChecker, normalize
 from .archive import Archive
 from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session
@@ -111,14 +115,12 @@ async def send_question(bot, chat_id: int, session: Session, aliases: list[str] 
     if not question:
         return
     deadline = int(time.time()) + TIMER
-    text = (
-        f"<b>{session.number}/{session.total}-savol</b> · {_esc(session.package_title)}\n\n"
-        f"{_esc(str(question.get('text'))[:2800])}\n\n"
-        f"<i>Javobingizni shu xabarga reply qilib yozing · {TIMER}s · </i>{session.score_text()}"
-    )
     attachments = question.get("attachments") or []
-    if attachments and isinstance(attachments[0], str):
-        text += f"\n🖼 {_esc(attachments[0])}"
+    text = msg.question(
+        session.number, session.total, session.package_title, question.get("text"),
+        TIMER, session.score_text(),
+        attachments[0] if attachments and isinstance(attachments[0], str) else "",
+    )
     text += pack_state(session, deadline, aliases=aliases)
     await bot.send_message(
         chat_id=chat_id,
@@ -134,10 +136,12 @@ async def reveal(bot, chat_id: int, session: Session, headline: str) -> None:
     if not question:
         return
     answer = re.sub(r"^\s*(?:to'?g'?ri\s+)?javob\s*[:.]\s*", "", str(question.get("answer", "")), flags=re.I)
-    text = f"{headline}\n✅ Javob: <b>{_esc(answer[:1500])}</b>"
-    if question.get("comment"):
-        text += f"\n💬 Izoh: {_esc(str(question['comment'])[:1500])}"
-    text += f"\n\n{_esc(session.score_text())}"
+    attachments = question.get("answer_attachments") or []
+    text = msg.reveal(
+        headline, answer, question.get("comment") or "",
+        attachments[0] if attachments and isinstance(attachments[0], str) else "",
+        session.score_text(),
+    )
     await bot.send_message(chat_id=chat_id, text=text[:4090], parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
@@ -146,7 +150,13 @@ async def next_question(bot, chat_id: int, session: Session, headline: str, alia
     session.index += 1
     session.advance()
     if session.question is None:
-        await bot.send_message(chat_id=chat_id, text=session.summary())
+        percent = round(session.correct * 100 / session.total) if session.total else 0
+        await bot.send_message(
+            chat_id=chat_id, text=msg.summary(
+                session.package_title, session.total, session.correct, session.wrong, percent,
+            ),
+            parse_mode=ParseMode.HTML,
+        )
     else:
         await send_question(bot, chat_id, session, aliases)
 
@@ -186,7 +196,10 @@ async def start_game(update: Update, context: ContextTypes.DEFAULT_TYPE, mode: s
     )
     session.begin()
     label = "Yakka o‘yin" if mode == "solo" else "Guruh o‘yini"
-    await update.effective_message.reply_text(f"🎬 {label}: {_esc(title)} · {session.total} savol")
+    await update.effective_message.reply_text(
+        msg.game_start(label, title, session.total, TIMER, session.score_text()),
+        parse_mode=ParseMode.HTML,
+    )
     await send_question(context.bot, update.effective_chat.id, session)
 
 
@@ -204,21 +217,26 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if context.args and context.args[0].isdigit():
         await start_game(update, context, "solo", context.args[0])
         return
-    text = (
-        "🎯 <b>Zakovat Agent</b>\n\n"
-        "Savollarga replies qilib javob yozing. To‘g‘ri javob → Bilimdonlar +1, "
-        "javob yo‘q yoki vaqt tugadi → Qarshi taraf +1.\n\n"
-        "/solo 959 — yakka o‘yin\n/duel 959 — guruh o‘yini\n/packages [qidiruv]\n"
-        "/score, /skip, /stop, /accept — boshqaruv\n\n"
-        "Savol xabariga reply qilib yozish shart (ForceReply)."
-    )
-    keyboard = None
+    packages, questions = ARCHIVE.counts()
     miniapp = os.getenv("MINIAPP_URL") or os.getenv("VERCEL_URL") or ""
-    if miniapp and not miniapp.startswith("http"):
-        miniapp = "https://" + miniapp
-    if miniapp:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Mini App ochish", web_app=WebAppInfo(url=miniapp))]])
-    await update.effective_message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
+    await update.effective_message.reply_text(
+        msg.welcome(packages, questions, miniapp),
+        parse_mode=ParseMode.HTML,
+        reply_markup=msg.miniapp_button(miniapp),
+    )
+
+
+async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.effective_message.reply_text(msg.rules(), parse_mode=ParseMode.HTML)
+
+
+async def on_my_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat = update.effective_chat
+    if not chat or chat.type not in ("group", "supergroup"):
+        return
+    status = update.my_chat_member.new_chat_member.status
+    if status in ("member", "administrator"):
+        await context.bot.send_message(chat.id, msg.group_hello(), parse_mode=ParseMode.HTML)
 
 
 async def cmd_packages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -244,6 +262,9 @@ async def cmd_duel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     restored = restore(update, context)
     if not restored:
+        reply = msg.small_talk(update.message.text)
+        if reply:
+            await update.message.reply_text(reply, parse_mode=ParseMode.HTML)
         return
     session, data = restored
     aliases = list(data.get("a") or [])
@@ -252,14 +273,14 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if int(time.time()) > deadline:
         if session.resolve_unanswered():
-            await next_question(context.bot, chat_id, session, "⏰ Vaqt tugadi, ochko Qarshi tarafga.", aliases)
+            await next_question(context.bot, chat_id, session, "⏰ Vaqt tugadi. Ochko Qarshi tarafga qo‘shildi.", aliases)
         return
 
     result = session.submit(update.effective_user.id, update.message.text, checker_for(aliases))
     if result == CORRECT:
         await next_question(
             context.bot, chat_id, session,
-            f"✅ To‘g‘ri! {_esc(update.effective_user.first_name)} ochko qozondi.", aliases,
+            f"🎉 To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.", aliases,
         )
     elif result == FOREIGN:
         await update.message.reply_text("Bu yakka o‘yin — faqat boshlagan kishi javob yozadi.")
@@ -325,6 +346,7 @@ def build_telegram_app() -> Application:
     application.add_handlers([
         CommandHandler("start", cmd_start),
         CommandHandler("help", cmd_start),
+        CommandHandler("rules", cmd_rules),
         CommandHandler("packages", cmd_packages),
         CommandHandler("solo", cmd_solo),
         CommandHandler("quiz", cmd_solo),
@@ -333,6 +355,7 @@ def build_telegram_app() -> Application:
         CommandHandler("skip", cmd_skip),
         CommandHandler("stop", cmd_stop),
         CommandHandler("accept", cmd_accept),
+        ChatMemberHandler(on_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER),
         MessageHandler(filters.StatusUpdate.WEB_APP_DATA, on_web_app_data),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_text),
     ])

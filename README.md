@@ -50,6 +50,9 @@ Eslatma: Vercel serverless’da doimiy jarayon yo‘q, shuning uchun tilingan sa
 
 ## O‘yin mantig‘i
 
+- `/start` — keng tanishtiruv, `/help` — yordam, `/rules` — batafsil qoidalar;
+- guruhga qo‘shilganda bot o‘zini tanishtiradi va qoidalar havolasini yuboradi;
+- o‘yin yo‘q paytda `salom`, `yordam`, `qanday o‘ynayman?`, `paketlar`, `hisob`, `rahmat` kabi xabarlarga javob beradi;
 - `/solo [id|yoki qidiruv]` — yakka o‘yin: javobni faqat o‘yinni boshlagan kishi yozadi;
 - `/duel [id|yoki qidiruv]` — guruh o‘yini: hamma ishtirokchi javob yozadi, bir savolga birinchi to‘g‘ri javob ochko oladi;
 - `/packages [qidiruv]` — paket topish (masalan `/packages Zakovat`);

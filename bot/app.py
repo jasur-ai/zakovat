@@ -12,8 +12,12 @@ from pathlib import Path
 
 from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import (
+    Application, ApplicationBuilder, ChatMemberHandler, CommandHandler,
+    ContextTypes, MessageHandler, filters,
+)
 
+from . import messages as msg
 from .answers import AnswerChecker
 from .archive import Archive
 from .quiz import CORRECT, FOREIGN, IGNORED, Session
@@ -77,27 +81,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await _new_game(update, context, "solo", context.args[0])
         return
     packages, questions = _archive(context).counts()
-    text = (
-        "🎯 <b>Zakovat bot</b>\n\n"
-        f"Arxiv: {packages} paket, {questions} savol.\n\n"
-        "<b>Buyruqlar:</b>\n"
-        "/solo [id|yoki qidiruv] — yakka o‘yin (faqat siz javob yozasiz)\n"
-        "/duel [id|yoki qidiruv] — guruh o‘yini (hamma javob yozadi)\n"
-        "/packages [qidiruv] — paketlarni topish\n"
-        "/score — hisob\n"
-        "/skip — savolni o‘tkazish\n"
-        "/accept — oxirgi javobni to‘g‘ri deb o‘rganish (admin)\n"
-        "/stop — o‘yinni tugatish\n\n"
-        "<b>Hisob qoidasi:</b> to‘g‘ri javob → Bilimdonlarga 1 ochko; "
-        "javob yo‘q yoki vaqt tugadi → Qarshi tarafga 1 ochko. "
-        "10 savoldan 4 tasiga javob bersangiz hisob 4–6 bo‘ladi.\n\n"
-        "Masalan: <code>/solo 959</code>"
+    miniapp = os.getenv("MINIAPP_URL", "")
+    await update.effective_message.reply_text(
+        msg.welcome(packages, questions, miniapp),
+        parse_mode=ParseMode.HTML,
+        reply_markup=msg.miniapp_button(miniapp),
     )
-    await update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await start(update, context)
+
+
+async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.effective_message.reply_text(msg.rules(), parse_mode=ParseMode.HTML)
+
+
+async def on_my_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat = update.effective_chat
+    if not chat or chat.type not in ("group", "supergroup"):
+        return
+    status = update.my_chat_member.new_chat_member.status
+    if status in ("member", "administrator"):
+        await context.bot.send_message(chat.id, msg.group_hello(), parse_mode=ParseMode.HTML)
 
 
 async def packages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -146,9 +152,7 @@ async def _new_game(update: Update, context: ContextTypes.DEFAULT_TYPE, mode: st
     _sessions(context)[chat.id] = session
     label = "Yakka o‘yin" if mode == "solo" else "Guruh o‘yini"
     await update.effective_message.reply_text(
-        f"🎬 <b>{label}</b>boshlandi: {_esc(title)}\n"
-        f"Savollar: {session.total}. Har savolga {session.timer_seconds} sekund.\n"
-        f"{session.score_text()}",
+        msg.game_start(label, title, session.total, session.timer_seconds, session.score_text()),
         parse_mode=ParseMode.HTML,
     )
     await _send_question(chat.id, context, session)
@@ -171,17 +175,20 @@ async def on_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def _send_question(chat_id: int, context: ContextTypes.DEFAULT_TYPE, session: Session) -> None:
     question = session.begin() if session.question is None and session.index == 0 and not session.finished else session.question
     if question is None:
-        await context.bot.send_message(chat_id=chat_id, text=session.summary())
+        percent = round(session.correct * 100 / session.total) if session.total else 0
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=msg.summary(session.package_title, session.total, session.correct, session.wrong, percent),
+            parse_mode=ParseMode.HTML,
+        )
         _sessions(context).pop(chat_id, None)
         return
-    text = (
-        f"<b>{session.number}/{session.total}-savol</b> · {_esc(session.package_title)}\n\n"
-        f"{_esc(question.get('text'))}\n\n"
-        f"<i>Javobingizni yozing · {session.timer_seconds}s · </i>{session.score_text()}"
-    )
     attachments = question.get("attachments") or []
-    if attachments and isinstance(attachments[0], str):
-        text += f"\n🖼 {_esc(attachments[0])}"
+    text = msg.question(
+        session.number, session.total, session.package_title, question.get("text"),
+        session.timer_seconds, session.score_text(),
+        attachments[0] if attachments and isinstance(attachments[0], str) else "",
+    )
     message = await context.bot.send_message(
         chat_id=chat_id, text=text, parse_mode=ParseMode.HTML,
         disable_web_page_preview=True,
@@ -201,14 +208,12 @@ async def _reveal(chat_id: int, context: ContextTypes.DEFAULT_TYPE, session: Ses
     if not question:
         return
     answer = re.sub(r"^\s*(?:to'?g'?ri\s+)?javob\s*[:.]\s*", "", str(question.get("answer", "")), flags=re.I)
-    text = f"{headline}\n✅ Javob: <b>{_esc(answer)}</b>"
-    comment = question.get("comment")
-    if comment:
-        text += f"\n💬 Izoh: {_esc(comment)}"
-    for attachment in (question.get("answer_attachments") or [])[:1]:
-        if isinstance(attachment, str):
-            text += f"\n📎 {_esc(attachment)}"
-    text += f"\n\n{_esc(session.score_text())}"
+    answer_attachments = question.get("answer_attachments") or []
+    text = msg.reveal(
+        headline, answer, question.get("comment") or "",
+        answer_attachments[0] if answer_attachments and isinstance(answer_attachments[0], str) else "",
+        session.score_text(),
+    )
     await context.bot.send_message(
         chat_id=chat_id, text=text, parse_mode=ParseMode.HTML,
         disable_web_page_preview=True,
@@ -232,7 +237,7 @@ async def _on_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
     if int(session.question["id"]) != int(data.get("question_id")) or session.number != data.get("issue"):
         return
     if session.resolve_unanswered():
-        await _advance(data["chat_id"], context, session, "⏰ Vaqt tugadi, ochko Qarshi tarafga.")
+        await _advance(data["chat_id"], context, session, "⏰ Vaqt tugadi. Ochko Qarshi tarafga qo‘shildi.")
 
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -240,6 +245,9 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
     session = _current(context, update.effective_chat.id)
     if not session or session.question is None or session.answered:
+        reply = msg.small_talk(update.message.text)
+        if reply:
+            await update.message.reply_text(reply, parse_mode=ParseMode.HTML)
         return
     result = session.submit(update.effective_user.id, update.message.text, _checker(context))
     if result == FOREIGN:
@@ -249,7 +257,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     elif result == CORRECT:
         await _advance(
             update.effective_chat.id, context, session,
-            f"✅ To‘g‘ri! {update.effective_user.first_name} ochko qozondi.",
+            f"🎉 To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.",
         )
 
 
@@ -305,6 +313,7 @@ def build_app(token: str) -> Application:
     application.add_handlers([
         CommandHandler("start", start),
         CommandHandler("help", help_command),
+        CommandHandler("rules", rules),
         CommandHandler("packages", packages),
         CommandHandler("solo", solo),
         CommandHandler("quiz", solo),
@@ -313,6 +322,7 @@ def build_app(token: str) -> Application:
         CommandHandler("skip", skip),
         CommandHandler("accept", accept),
         CommandHandler("stop", stop),
+        ChatMemberHandler(on_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER),
         MessageHandler(filters.StatusUpdate.WEB_APP_DATA, on_web_app_data),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_message),
     ])
