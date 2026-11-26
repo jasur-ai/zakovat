@@ -33,6 +33,7 @@ SHARD_SIZE = 5000
 
 
 def api_get(path: str, params: dict | None = None, retries: int = 4) -> dict:
+    """Return the full API envelope: code, message, data and meta."""
     url = f"{API_ROOT}{path}"
     if params:
         url += "?" + urlencode(params)
@@ -51,12 +52,30 @@ def api_get(path: str, params: dict | None = None, retries: int = 4) -> dict:
                 payload = json.loads(response.read().decode("utf-8"))
             if str(payload.get("code", "1")) != "1" and payload.get("message") != "success":
                 raise RuntimeError(f"API error at {url}: {payload}")
-            return payload.get("data", payload)
+            return payload
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
             last_error = exc
             if attempt < retries - 1:
                 time.sleep(2 ** attempt)
     raise RuntimeError(f"Failed to fetch {url}: {last_error}")
+
+
+def data_items(payload: dict) -> list[dict]:
+    """The API returns data either as a list or as {items: [...]}."""
+    data = payload.get("data", payload)
+    if isinstance(data, list):
+        return [x for x in data if isinstance(x, dict)]
+    if isinstance(data, dict):
+        for key in ("items", "packages", "questions"):
+            value = data.get(key)
+            if isinstance(value, list):
+                return [x for x in value if isinstance(x, dict)]
+    return []
+
+
+def data_object(payload: dict) -> dict:
+    data = payload.get("data", payload)
+    return data if isinstance(data, dict) else {}
 
 
 def strip_html(value: object) -> str:
@@ -129,14 +148,14 @@ def main() -> int:
 
     print("Fetching package list...", flush=True)
     first = api_get("/package", {"per-page": 100, "page": 1})
-    packages = list(first.get("items") or first.get("packages") or [])
+    packages = data_items(first)
     meta = first.get("meta") or {}
     page_count = int(meta.get("pageCount") or 1)
     total_packages = int(meta.get("totalCount") or len(packages))
 
     for page in range(2, page_count + 1):
-        data = api_get("/package", {"per-page": 100, "page": page})
-        packages.extend(data.get("items") or data.get("packages") or [])
+        payload = api_get("/package", {"per-page": 100, "page": page})
+        packages.extend(data_items(payload))
         print(f"  package page {page}/{page_count}", flush=True)
         time.sleep(args.sleep)
 
@@ -161,7 +180,7 @@ def main() -> int:
         package_id = package.get("id")
         if not package_id:
             continue
-        full = api_get(f"/package/{package_id}", {"include": "questions,items"})
+        full = data_object(api_get(f"/package/{package_id}", {"include": "questions,items"}))
         questions = extract_questions(full)
 
         manifest["packages"].append(
