@@ -19,6 +19,8 @@ GET https://api.zakovatklubi.uz/v1/package/959?include=questions
 
 | Fayl | Tarkibi |
 | --- | --- |
+| `data/all/manifest.json` | **Butun arxiv indeksi: 1266 paket, 30853 savol** |
+| `data/all/questions/questions-0001.json … 0007.json` | **Barcha savollar** (matn, javob, izoh, paket id) — 7 sharda |
 | `data/zakovat-959.json` | 959-paket: metadata + 54 savol (javob va izoh bilan) |
 | `data/zakovat-959.flat.json` | Faqat savolar massivi |
 
@@ -59,9 +61,17 @@ data/all/questions/questions-0002.json
 
 `.devcontainer/devcontainer.json` va `scripts/full_export_codespace.sh` Codespace yaratilganda eksportni o‘zi bajarib push qiladi. Codespace yaratish uchun hisobingizda Codespaces ruxsati bo‘lishi kerak.
 
-## Nima uchun to‘liq baza hali yuklanmadi?
+## Arxiv holati
 
-Bu ish muhitidan `api.zakovatklubi.uz` ga to‘g‘ridan tarmoq chiqishi bloklangan. Sahifalarni faqat o‘qish vositasi mavjud; u 28 ming savolni olib faylga yozishga imkon bermaydi. GitHub Actions va Codespaces ham ushbu avtorizatsiya bilan ishga tushmadi. Shu sabab hozircha faqat 959-paket arxivlangan. Yuqoridagi usullardan biri ishga tushganda to‘liq arxiv avtomatik yaratiladi.
+To‘liq arxiv **2026-11-26 da GitHub Actions orqali yaratildi va shu branchga commit qilindi** (`Update full Zakovat question bank archive`):
+
+- paketlar: **1266**;
+- savollar: **30853** (javob va izohlar bilan);
+- shards: **7** (`data/all/questions/questions-0001.json … 0007.json`);
+- indeks: `data/all/manifest.json`;
+- siz bergan “Kolibri…” savoli arxivda bor (`id 23348`, `package_id 959`, javob `Peru`).
+
+Sandboxdan saytga to‘g‘ridan chiqish bloklanganligi sabab arxiv GitHub runner’da yaratildi. Yangilash uchun yuqoridagi Actions/Codespaces usullaridan foydalanish mumkin.
 
 ## Xavfsizlik va foydalanish
 
