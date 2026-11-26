@@ -24,23 +24,25 @@ python3 run_bot.py
 
 `api/index.py` — FastAPI ASGI entrypoint: `POST /api/webhook`, `GET /health` va `GET /` (Mini App). Serverless holatda o‘yin holati xabar ichidagi kompakt markerda saqlanadi, javoblar **ForceReply** orqali qabul qilinadi; vaqt tugashi keyingi xabar kelganda hisoblanadi.
 
-1. BotFather’dan **yangi token** oling (chatga yuborilgan token allaqachon oshkor bo‘lgan).
-2. Vercel dashboard → Project → Settings → Environment Variables:
-   - `BOT_TOKEN` — yangi bot tokeni;
-   - `WEBHOOK_SECRET` — o‘zingiz tanlagan tasodifiy sir (masalan `openssl rand -hex 24`);
-   - `MINIAPP_URL` — deploy URL (ixtiyoriy, Mini App tugmasi uchun);
-   - `ZAKOVAT_TIMER_SECONDS` — ixtiyoriy (standart 60).
-3. Deploy: repo’ni Vercel’ga ulang yoki `npx vercel --prod` (Vercel tokenini faqat o‘z terminalingizda eksport qiling).
-4. Webhook’ni ulang (faqat o‘z terminalingizda):
+**Eng oddiy usul — repo’ni Vercel’ga qo‘shish kifoya:** Vercel dashboard → *Add New → Project* → shu reponi tanlang → *Deploy*. `vercel.json`, `.python-version` va `requirements.txt` tayyor, build buyrug‘i kerak emas. Keyingi `push` lar avtomatik deploy bo‘ladi.
+
+Deploy qilgach Project → Settings → Environment Variables ga kirib, ikkita o‘zgaruvchi qo‘ying:
+
+- `BOT_TOKEN` — BotFather’dan olingan **yangi** token (chatga yuborilgani allaqachon oshkor bo‘lgan);
+- `WEBHOOK_SECRET` — o‘zingiz tanlagan tasodifiy sir (masalan `openssl rand -hex 24`).
+
+Ixtiyoriy: `ZAKOVAT_TIMER_SECONDS` (standart 60), `WEBHOOK_URL` (o‘z domeningiz bo‘lsa), `MINIAPP_URL` (belgilanmasa `VERCEL_URL` ishlatiladi).
+
+**Webhook o‘zi o‘rnatiladi:** birinchi xabar kelganda bot `VERCEL_URL` asosida `/api/webhook` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. `scripts/set_webhook.py` faqat qo‘lda bajarish uchun zaxira usul.
+
+So‘ngra `/health` va `/` ni ochib, `/start`, `/solo 959`, `/duel 959` bilan sinab ko‘ring.
+
+Barchasini bir komandada bajarish uchun (tokenlar faqat lokal shell muhitida):
 
 ```bash
-export BOT_TOKEN='...'
-export WEBHOOK_URL='https://<loyihangiz>.vercel.app'
-export WEBHOOK_SECRET='...'
-python3 scripts/set_webhook.py
+VERCEL_TOKEN=... VERCEL_ORG_ID=... VERCEL_PROJECT_ID=... \
+BOT_TOKEN=... WEBHOOK_SECRET=... bash scripts/deploy_all.sh
 ```
-
-5. `/health` va `/` tekshiring; `/start`, `/solo 959`, `/duel 959` bilan sinab ko‘ring.
 
 GitHub Actions orqali ham deploy qilish mumkin: repo Settings → Secrets and variables → Actions da `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secretlarini qo‘ying, keyin **Deploy Zakovat Agent to Vercel** workflow’sini ishga tushuring (`workflow_dispatch` yoki `repository_dispatch` `deploy-zakovat`). `BOT_TOKEN` va `WEBHOOK_SECRET` ni Vercel dashboard’ida qo‘yish shart — ular repo secretlariga yozilmaydi.
 

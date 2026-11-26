@@ -213,7 +213,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Savol xabariga reply qilib yozish shart (ForceReply)."
     )
     keyboard = None
-    miniapp = os.getenv("MINIAPP_URL", "")
+    miniapp = os.getenv("MINIAPP_URL") or os.getenv("VERCEL_URL") or ""
+    if miniapp and not miniapp.startswith("http"):
+        miniapp = "https://" + miniapp
     if miniapp:
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Mini App ochish", web_app=WebAppInfo(url=miniapp))]])
     await update.effective_message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
@@ -338,6 +340,7 @@ def build_telegram_app() -> Application:
 
 
 _application: Application | None = None
+_webhook_ready = False
 
 
 def get_application() -> Application:
@@ -345,6 +348,25 @@ def get_application() -> Application:
     if _application is None:
         _application = build_telegram_app()
     return _application
+
+
+async def ensure_webhook(application: Application) -> None:
+    """Register the webhook on first request using Vercel's own URL env var."""
+    global _webhook_ready
+    if _webhook_ready or not os.getenv("BOT_TOKEN"):
+        return
+    base = os.getenv("WEBHOOK_URL") or os.getenv("VERCEL_URL") or ""
+    if not base:
+        return
+    if not base.startswith("http"):
+        base = "https://" + base
+    await application.bot.set_webhook(
+        url=base.rstrip("/") + "/api/webhook",
+        secret_token=SECRET or None,
+        allowed_updates=["message"],
+        drop_pending_updates=True,
+    )
+    _webhook_ready = True
 
 
 app = FastAPI()
@@ -374,6 +396,7 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None 
     application = get_application()
     await application.initialize()
     try:
+        await ensure_webhook(application)
         await application.process_update(update)
     finally:
         await application.shutdown()
