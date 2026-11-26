@@ -2,6 +2,8 @@ name: Export full Zakovat question bank
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [archive-zakovat]
   schedule:
     - cron: '17 3 * * *'   # daily archive refresh
 
@@ -15,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: arena/be6326b8-zakovat
+          ref: arena/10efd590-zakovat
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,4 +37,4 @@ jobs:
             exit 0
           fi
           git commit -m "Update full Zakovat question bank archive"
-          git push origin HEAD:arena/be6326b8-zakovat
+          git push origin HEAD:arena/10efd590-zakovat

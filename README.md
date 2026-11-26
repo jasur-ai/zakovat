@@ -53,7 +53,7 @@ data/all/questions/questions-0002.json
 
 ### GitHub Actions orqali
 
-`.github/workflows/export-all.yml` qo‘shilgan. Repo Settings → Actions → General → Actions permissions ni yoqib, workflow’ni ishga tushuring (`workflow_dispatch`) — u butun bazani yuklab, shu branchga commit qiladi. Kunlik schedule ham bor.
+`.github/workflows/export-all.yml` qo‘shilgan. Repo Settings → Actions → General → Actions permissions ni yoqib, workflow’ni ishga tushuring (`workflow_dispatch`) — u butun bazani yuklab, shu branchga commit qiladi. Kunlik schedule ham bor. Shuningdek `repository_dispatch` (`archive-zakovat`) orqali ham ishga tushirish mumkin.
 
 ### Codespaces orqali
 
