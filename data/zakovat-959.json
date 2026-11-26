@@ -1,0 +1,450 @@
+{
+  "source": {
+    "site": "https://zakovatklubi.uz",
+    "quiz_url": "https://zakovatklubi.uz/quiz/5/10/959/0/0",
+    "api_url": "https://api.zakovatklubi.uz/v1/package/959?include=questions",
+    "package_id": 959,
+    "title": "Intellektual Olimpiada doirasidagi “Zakovat” o‘yini savollari (19.12.2024–20.12.2024)",
+    "event_start": 1734959339,
+    "event_end": 1735045999,
+    "rounds": 5,
+    "questions_per_round": 10,
+    "note": "Questions are from the 19–20 December 2024 past event; answers and comments are included. Use only for private Telegram group quiz hosting."
+  },
+  "exported_at": "2026-11-26T10:43:23+00:00",
+  "count": 54,
+  "questions": [
+    {
+      "id": 22453,
+      "round": 0,
+      "number": 1,
+      "text": "1-o‘rinni aniqlash uchun 5-qo‘shimcha savol. Kolibri – 50 metr uzunlikka ega. Oʻrgimchakning oʻlchami 46 metr. Kondorga tegishli oʻlcham esa 129 metr. Kaltakesak 188 metr uzunlik bilan rekordchi. Hayvonot olamiga qiziquvchilar bu raqamlar reallikka mos emasligini taʼkidlashlari mumkin. Savol: Qaysi davlat janubiga borilsa, bu jonivorlar bilan bogʻliq bu raqamlar haqqoniy koʻrsatkichlarga aylanadi?",
+      "answer": "Peru",
+      "comment": "Yuqoridagilar Naska platosidagi turli geogliflarning oʻlchamlari. Geogliflarga turli jonivorlarga oʻxshagani uchun yuqoridagi nomlar berilgan.https://shorturl.at/YuOR8"
+    },
+    {
+      "id": 22452,
+      "round": 0,
+      "number": 2,
+      "text": "1-o‘rinni aniqlash uchun 4-qo‘shimcha savol. Yaqinda Hindistonda 80 yil davomida tuproq ostida boʻlgan katta ibodatxona topildi. Ibodatxona 200 yil oldin qurilgan bo‘lib, Uning natijasida tuproq ostida qolib ketgan. Savol: Markaziy Osiyodagi qaysi shahar Uning natijasida tashlandiq holatga kelgan?",
+      "answer": "Koʻhna Urganch",
+      "comment": "Bu – daryo oʻzani oʻzgarishi edi. Ibodatxona bundan 80 yil oldin kuchli jala yogʻib Panno daryosining oʻzani oʻzgarishi natijasida suv ostida qolib ketgan. Keyinchalik daryo yuvib kelgan tuproq ostida qolgan. XVI asrda Amudaryo oʻzani oʻzgarishi sababli qachonlardir Xorazm poytaxti bo‘lgan shahar yashash uchun yaroqsiz holga kelgan.1. https://apostrophe.ua/news/society/science/2020-06-26/v-indii-pod-sloem-pes-nashli-zateryannyiy-hram-foto-i-video/201451 2. https://uz.wikipedia.org/wiki/Ko%CA%BBhna_Urganch"
+    },
+    {
+      "id": 22449,
+      "round": 0,
+      "number": 3,
+      "text": "1-o‘rinni aniqlash uchun 3-qo‘shimcha savol. Sherali Joʻrayev har doim xalqning ahvolidan xabardor bo‘lib, ijod namunalarida buni ko‘rsatib kelgan. Savol: Quruvchilarni ruhlantirish uchun aytilgan “Hormangiz” taronasi qaysi yilda chiqarilgan?",
+      "answer": "1966-yil",
+      "comment": "19 yoshli Sherali Joʻrayev Toshkent zilzilasidan keyin boshlangan qurilish ishlari paytida quruvchilarga gʻayrat tilab “Hormangiz” nomli qo‘shiqni kuylagan.https://hamroh.ucoz.ru/news/sherali_zhwraev_izhodi_andaj_boshlangandi/2014-12-04-7"
+    },
+    {
+      "id": 22448,
+      "round": 0,
+      "number": 4,
+      "text": "1-o‘rinni aniqlash uchun 2-qo‘shimcha savol. “Yigirmanchi asrda hech kim bilim sohasini beqiyos kengaytirish uchun bu qadar ko‘p ish qilmagan. Shunga qaramay, hech kim bunday bilim bilan bunchalik kamtar bo‘lmagan, hech kim donoliksiz hokimiyat halokatli ekanligiga bunchalik ishonmagan”. Savol: Bir AQSh prezidenti kim haqida bu gaplarni aytgan?",
+      "answer": "Albert Eynshteyn",
+      "comment": "Duayt Eyzenxauer Alber Eynshteyn o‘limidan so‘ng shunday ta’ziya bildirgan ekan.«Наука и жизнь» № 11, 2024. 51-bet"
+    },
+    {
+      "id": 22447,
+      "round": 0,
+      "number": 5,
+      "text": "1-o‘rinni aniqlash uchun 1-qo‘shimcha savol. Shoir oʻz qahramoni orqali sovet davrida odamlar ongiga singdirilgan aqlbovar qilmas rejalar, mehnat yuklamalari qanchalik ahmoqona va kulgili bo‘lganligini hazil ko‘rinishida ifodalab bergan. Axir “Toʻqqiz oyni uch oyda” kabi shiorlar faqat kulgiga arziydi. Savol: Qaysi shoir haqida gap ketmoqda?",
+      "answer": "Erkin Vohidov",
+      "comment": "Matmusa qahramoni bilan bog‘liq hangomalardan birida Matmusa 3 oyda ota bo‘ladi va bu katta shov-shuvga aylanib “Toʻqqiz oyni uch oyda” degan shiorlarni to‘qishadi. Bu holat sovet davri planlariga hajviya edi.https://goo.su/cvlfP0"
+    },
+    {
+      "id": 22446,
+      "round": 1,
+      "number": 1,
+      "text": "Savolda ikki joyda bir so‘zdan harflar tushib qoldirilgan. Qo‘shiqni ilk bor ijro qilgan insonning eslashicha, qo‘shiq dastlab nomga ega bo‘lmagan. Shunda O‘zbekiston radiosi xorining rahbari atoqli san’atkor Abdulhaq Sultonov, - “Og‘ayni, qo‘shig‘ing nihoyatda SO‘M bo‘libdi. Unga “SO‘M” deb nom bera qol” degan taklifi bastakorga ham, kengash a’zolariga juda ma’qul bo‘lgan. Shundan so‘ng, qo‘shiq shu nom bilan butun O‘zbekistonga tarqalib, shuhrat topgan. Savol: Yuqoridagi savol matnida tushurib qoldirilgan harflarni tiklab, so‘zni asl holda yozib bering.",
+      "answer": "So‘lim",
+      "comment": "She’ri G‘iyosiddin Soatiy qalamiga mansub “So‘lim” qo‘shig‘i 1932-yilda yozilgan. 1933-yilda Soatiyning shogirdi Qobilqori Siddiqov qo‘shiq qilib kuylagan. San'atshunoslarning fikriga ko‘ra, qo‘shiq Meroj kechasi haqida bo‘lib, Rasululloh s.a.v.ning Buroqda Jannantning 7 qavatiga qilgan sayohatlari haqida deyiladi. Savoldagi yashindek tez tarqaldi so‘zlari Meroj voqeasining tez bo‘lib o‘tganiga ishora edi.https://t.me/mm_telekanal/2848 (17:00)"
+    },
+    {
+      "id": 22445,
+      "round": 1,
+      "number": 2,
+      "text": "Qadimgi davr va O‘rta asrlarda Germes Trimegist deb atalgan donishmand bilan bog‘liq ta’limot tarqalgan. Aytishlaricha, donishmand maxsus muhri bilan o‘z asarlarini berkitib qo‘ygan va faqat tanlanganlarga o‘rgatgan. Keyinchalik bu ta’limot so‘fiylik, masonlik, okkultizm, teosofiya kabi ezoterik ta’limotlarga ta’sir ko‘rsatgan. Savol: Ushbu ta’limot nomi fizika va kimyo fanlaridan tanish bo‘lgan qaysi yunoncha so‘zning paydo bo‘lishiga olib kelgan?",
+      "answer": "Germetik",
+      "comment": "Germetik - zich berkitiladigan, havo yoki suyuqlikni mutlaqo o‘tkazmaydigan ma’nosini beradi.1. https://uz.wiktionary.org/wiki/germetik 2. https://ru.wikipedia.org/wiki/Герметизм"
+    },
+    {
+      "id": 22444,
+      "round": 1,
+      "number": 3,
+      "text": "Savolda almashtirish bor. Qarshingizda eramizdan oldingi 2500 chi yillarda yashagan qadimgi Misr bitikchi va ruhoniysini yog‘ochdan yasalgan haykali surati. Bu haykal yuqori detalizatsiyaga ega bo‘lib, bitikchi tanasidagi nuqsonlar ham batafsil tasvirlangan. Oq dog‘ esa tibbiyot tarixidagi sharsharaning ilk tasviri degan fikrlar ham mavjud. Savol: Qaysi so‘z sharshara so‘zi bilan almashtirilgan?",
+      "answer": "Katarakta",
+      "comment": "Suratga yaxshilab qarasangiz, haykal ko‘zlaridan birida oq dog‘ bor, olimlar fikricha bu kataraktaning ilk ifodalanishidir. Katarakta so‘zi yunonchadan sharshara deb tarjima qilinadi.https://ru.wikipedia.org/wiki/Каапер https://ru.wikipedia.org/wiki/Катаракта 234673 kaaper https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/F2/thumb_sU370mteNCa7cGiTdhR5EV9urU532N.jpg https://cdn.zakovatklubi.uz/uploads/F2/s_sU370mteNCa7cGiTdhR5EV9urU532N.jpg https://cdn.zakovatklubi.uz/uploads/F2/m_sU370mteNCa7cGiTdhR5EV9urU532N.jpg https://cdn.zakovatklubi.uz/uploads/F2/l_sU370mteNCa7cGiTdhR5EV9urU532N.jpg image/jpeg 260989 https://cdn.zakovatklubi.uz/uploads/F2/sU370mteNCa7cGiTdhR5EV9urU532N.jpg 234673 kaaper https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/F2/thumb_sU370mteNCa7cGiTdhR5EV9urU532N.jpg https://cdn.zakovatklubi.uz/uploads/F2/s_sU370mteNCa7cGiTdhR5EV9urU532N.jpg https://cdn.zakovatklubi.uz/uploads/F2/m_sU370mteNCa7cGiTdhR5EV9urU532N.jpg https://cdn.zakovatklubi.uz/uploads/F2/l_sU370mteNCa7cGiTdhR5EV9urU532N.jpg image/jpeg 260989 https://cdn.zakovatklubi.uz/uploads/F2/sU370mteNCa7cGiTdhR5EV9urU532N.jpg"
+    },
+    {
+      "id": 22443,
+      "round": 1,
+      "number": 4,
+      "text": "Barchaga tanish maqolada keltirilgan ajablanarli o‘xshashlik shundaki, shizofreniyaga chalingan bemorlar uchun shuningdek QOR iste’mol qilish ancha foydalidir. QOR yetishtirib sotish bilan shug‘ullanadigan bir vatandoshimizning intervyusiga ko‘ra, QORning ko‘payishi uchun yetarli issiqlikni hosil qilish kifoya, tabiat hodisasi muhim emas. Savol: Harflari tushirilgan so‘zni asl holida yozib bering.",
+      "answer": "Qo‘ziqorin",
+      "comment": "“Super Mario” o‘yinini o‘ynash shizofreniyaga chalinganlar uchun foydali ekanligi haqida oldingi savolda ma’lumot berdik, eng qizig‘i xuddi o‘yin qahramoni kabi bemorlarga ham qo‘ziqorin yeyish tavsiya etiladi. “Yomg‘irdan keyingi qo‘ziqorindek ko‘payish” iborasi ko‘pchilikka yaxshi tanish, ammo biznesmen vatandoshimiz uchun yomg‘ir kerak emas ekan.1. https://t.me/ru4chan/55793 2. http://surl.li/ehuxaq 3. https://kun.uz/69990418"
+    },
+    {
+      "id": 22442,
+      "round": 1,
+      "number": 5,
+      "text": "Savolda bir so‘z – boshqa ikki so‘zning o‘rnida qo‘llanilgan. Bir rus jurnali buyurtmasiga asosan chizilgan “Emu” nomli kartinalar to‘plamida, Emu – mundir va frakka o‘xshash kiyimlar kiygan holda, aslzodalar ko‘rinishida tasvirlangan. Muassasa direktorining aytishicha, “Emu”ni tasvirga olishga bo‘lgan qiziqish - Rembrandt asarlariga bo‘lgan qiziqishdan kam emas. Savol: Almashtirilgan ikki so‘zni yozib bering",
+      "answer": "Ermitaj mushuklari",
+      "comment": "Rassom Eldor Zokirovning “Ermitaj mushuklari” nomli suratlar to‘plami internetda mashhur va memlarga ham aylangan. Ermitaj mushuklari – muzeydagi sichqon va kalamushlarni ovlash uchun boqiladigan maxsus “qo‘riqchi” mushuklar bo‘lib, muzey direktori Mixail Piotrovskiy ularning tashrif buyuruvchilar uchun ham qiziq ekanligini aytib o‘tgan.1. https://lovers-of-art.livejournal.com/681601.html 2. https://dotart.info/ru/articles/zakirov-eldar-koty-ermitazha 3. https://ru.wikipedia.org/wiki/Эрмитажные_коты"
+    },
+    {
+      "id": 22441,
+      "round": 1,
+      "number": 6,
+      "text": "Xitoyliklarning Nyan-gao shirinligi ko‘proq Yangi yil payti yeyiladi. Irimga ko‘ra, Osmon imperatori saroyiga borganda BU ISHNI QILMASLIGI uchun Nyan-gao shirinligi oshxona ma’budiga ham beriladi. Savol: Nyan-gaoning qanday xususiyati BU ISHNI QILISH imkonini bermaydi?",
+      "answer": "Yopishqoqligi",
+      "comment": "BU ISHNI QILISH – yomonlash. Oilaning barcha sirlaridan voqif oshxona ma’budi imperatorga oila a’zolarini yomanlamasligi uchun uni og‘zini yelimlab qo‘yuvchi nyan-gao beriladi.https://ru.wikipedia.org/wiki/Няньгао"
+    },
+    {
+      "id": 22440,
+      "round": 1,
+      "number": 7,
+      "text": "Rossiyadagi restoranlardan biri ayrim turdagi mijozlar uchun xizmat ko‘rsatadi. Restoran nomi 9 harfdan iborat bo‘lib, okean ortidagi shahar nomiga “N” harfini qo‘shish orqali hosil qilingan. Savol: Restoran nomini 2 so‘zda yozib bering",
+      "answer": "Las Vegans",
+      "comment": "Asosan veganlar uchun xizmat qiladigan restoran nomi “Las vegans” bo‘lib, “Veganlar” deya tarjima qilinadi. Las-Vegas – Nevadadagi shahar nomi.1. https://dzen.ru/a/ZErNmzjDQ28UTSOM 2. https://en.wikipedia.org/wiki/Las_Vegas"
+    },
+    {
+      "id": 22439,
+      "round": 1,
+      "number": 8,
+      "text": "Bir maqolada tarqatmadagi sonlar orqali Uning nima uchun kerakligiga tushuntirish berilgan. U xavfni yoki o‘ljani oldindan ko‘rish imkonini bergan. Unda turish ma’lum kasallik keltirib chiqishi mumkin bo‘lgani uchun Unga yuborish jazo ham bo‘lishi mumkin edi. Savol: Uni emas, Uning nimaning ustida joylashishini niderland tilidan kelib chiqqan so‘z bilan yozib bering.",
+      "answer": "Machta",
+      "comment": "Gap “qarg‘a uyasi” deb ataluvchi qurilma haqida. Machta tepasiga joylashgan “qarg‘a uyasi” dengizda uzoq masofaga qarash imkonini bergan. Bu o‘z vaqtida misol uchun, qaroqchi, aysberg yoki kitlarni ko‘rish imkonin bergan. Lekin U yer chayqalib turgani uchun hatto tajribali dengizchilarda ham dengiz kasalligini chaqirgan. Tarqatmada dengiz sathidan balandlashgan sari ko‘rish mumkin bo‘lgan masofa nisbati keltirilgan. Machta esa niderlandcha so‘z.1. https://pikabu.ru/story/kak_daleko_nakhoditsya_gorizont_v_more_i_pochemu_nablyudatel_na_machte_korablya_byil_zhiznenno_neobkhodim_11772590 2. https://en.wikipedia.org/wiki/Crow%27s_nest 3. https://ru.wikipedia.org/wiki/Мачта 234672 jadval https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/PE/thumb_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png https://cdn.zakovatklubi.uz/uploads/PE/s_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png https://cdn.zakovatklubi.uz/uploads/PE/m_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png https://cdn.zakovatklubi.uz/uploads/PE/l_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png image/png 28414 https://cdn.zakovatklubi.uz/uploads/PE/6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png 234672 jadval https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/PE/thumb_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png https://cdn.zakovatklubi.uz/uploads/PE/s_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png https://cdn.zakovatklubi.uz/uploads/PE/m_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png https://cdn.zakovatklubi.uz/uploads/PE/l_6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png image/png 28414 https://cdn.zakovatklubi.uz/uploads/PE/6Q1cX3ELJw2WoMJO2jhn1ySA6cT8Zf.png"
+    },
+    {
+      "id": 22437,
+      "round": 1,
+      "number": 9,
+      "text": "Nyu-York shahri haqidagi kitobda yozilishicha, Uning yillik daromadi Rossiyadagi Moskva va Sankt-Peterburgdan tashqari har qanday shaharnikidan ko‘proq. Misol uchun 2023-yilda U 1,6 milliard dollardan ortiq to‘lov yiqqan. Unga ta’rif berilganda dunyoda eng ko‘p bo‘lgan 14 soni ham eslab o‘tiladi. Savol: AQSh prezidenti sharafiga nomlangan Uni nima ekanligini toping.",
+      "answer": "Ko‘prik",
+      "comment": "“Jorj Vashington ko‘prigi”dan o‘tish pulli. Bu ko‘prik 14 yo‘lakli dunyodagi yagona ko‘prik hisoblanadi.1. Roman Zinzer “FAQ Nyu-York”, 27-bet 2. https://samsebeskazal.livejournal.com/370367.html 3. https://en.wikipedia.org/wiki/George_Washington_Bridge 4. https://www.insidermonkey.com/blog/5-most-profitable-toll-roads-in-the-world-1165077/?singlepage=1"
+    },
+    {
+      "id": 22436,
+      "round": 1,
+      "number": 10,
+      "text": "Excel bo‘yicha jahon chempionati ishtirokchilariga beriladigan topshiriqlardan biri modellashtirish bo‘lib, klassik Uning analogini yaratish shartini bajarish lozim. Bir maqolada, U – shizofreniya bilan og‘riganlar uchun ijobiy ta’sir ko‘rsatishi aytiladi. Savol: Ilk bor 1985-yilda yaratilgan Uni toping",
+      "answer": "“Super Mario” o‘yini",
+      "comment": "Chempionat ishtirokchilari “Super Mario” o‘yinining klassik versiyasi analogini excel dasturida yarata olishi zarur. O‘yindagi muntazam harakat va turli ranglarning ko‘pligi – shizofreniyaga chalingan bemorlarning miya faoliyatiga ijobiy ta’sir ko‘rsatgan.1. https://finacademy.net/materials/shcho-take-chempionat-svitu-z-excel 2. https://naked-science.ru/article/medicine/igra-v-super-mario-pomogl 3. https://ru.wikipedia.org/wiki/Super_Mario_Bros."
+    },
+    {
+      "id": 22435,
+      "round": 2,
+      "number": 1,
+      "text": "2020-yilda bir nechta davlatlar bilan birga O‘zbekiston ham “o‘n ikki qabrning marsiyalari”ni YUNESKOning nomoddiy meros obyektlari ro‘yxatiga kiritish bo‘yicha taklif bergan. 2022-yildan boshlab “o‘n ikki qabrning marsiyalari”ni aytish Ozarbayjonning nomoddiy madaniy merosi ro‘yxatiga kiritilgan. Savol: “o‘n ikki qabrning marsiyalari” so‘zlari bilan almashtirilgan ikki yoki uch so‘zni yozib bering.",
+      "answer": "Nasriddin Afandining latifalari",
+      "comment": "Mulla Nasriddinning latifalari, Afandi latifalari Nasriddin Afandi obrazi turli nomlar bilan bir nechta davlatlarda mavjud personaj hisoblanadi. Nasriddin Afandi Ozarbayjonda Mulla Nasriddin nomi bilan tanilgan. 1966-yili “Xo‘ja Nasriddinning o‘n ikki qabri” nomli kinokomediya suratga olingan. Almashtirish ham shu joydan.https://www.youtube.com/watch?v=mOd9sDswWQ4 https://ru.wikipedia.org/wiki/Список_нематериального_культурного_наследия_в_Азербайджане"
+    },
+    {
+      "id": 22434,
+      "round": 2,
+      "number": 2,
+      "text": "Diqqat qiling savol matnining ikkita joyida bir so‘z tashlab ketilgan. Vommitra Hindiston kosmik tadqiqotlar tashkilotiga tegishli astronavt bo‘lib, mikrogravitatsiya sharoitida tajribalar o‘tkazish uchun yo‘naltirilgan. Vommitra haqidagi vikipediya maqolasida 2013-yil 7-noyabrdan 2014-yil 14-maygacha Koiti Vakataning sherigi vazifasini bajargan birinchi astronavtga ham havolani uchratish mumkin. Savol: Yuqoridagi savol matnining ikkita joyida tashlab ketilgan bir so‘zni yozib bering.",
+      "answer": "robot",
+      "comment": "Vommitra Hindiston kosmik tadqiqotlar tashkiloti tomonidan ishlab chiqilgan robot astronavt. U haqdagi maqolada esa yaponiyaliklar tomonidan yaratilgan dunyodagi birinchi robot astronavt Kiroboga havola uchrashi tabiiy albatta.https://ru.wikipedia.org/wiki/Вьоммитра https://ru.wikipedia.org/wiki/Киробо"
+    },
+    {
+      "id": 22433,
+      "round": 2,
+      "number": 3,
+      "text": "Orson Skott Kardning “Ender o‘yinlari” nomli fantastik romanida o‘zga sayyoraliklarga qarshi olib boriladigan urushda yerning kosmik flotini boshqarish uchun strategiyaga asoslangan o‘yinlarda muvaffaqiyatga erishgan yosh bolalar tanlab olinadi. O‘zga sayyoraliklar qo‘shini tor-mor keltirilgach, yerliklar flotiga boshchilik qilgan Ender Admiral unvoniga ega bo‘ladi. Savol: Faylasuf va siyosiy nazariyotchi Xanna Arend tomonidan ilk bor qo‘llanilgan qaysi atama haqidagi vikipediya maqolasida “Ender o‘yinlari”ga havola berilgan?",
+      "answer": "Meritokratiya",
+      "comment": "Meritokratiya bu rahbar lavozimlarini ijtimoiy kelib chiqishi va moliyaviy holatiga qarab emas, balki qobiliyatiga qarab taqsimlash orqali boshqaruvni amalga oshirishni anglatadi. Bu haqda dastlabki savolda ma’lumot berib o‘tgan edik.https://ru.wikipedia.org/wiki/Меритократия https://ru.wikipedia.org/wiki/Игра_Эндера"
+    },
+    {
+      "id": 22432,
+      "round": 2,
+      "number": 4,
+      "text": "Ornitopron yuz ming yillar ilgari qirilib ketgan baliq turi bo‘lib, faqatgina qoldiqlarini genografiya qilish orqali o‘rganilgan. Savol: Yuqoridagi jumlada tashlab ketilgan to‘rt harfni yozib bering.",
+      "answer": "Rent",
+      "comment": "O‘rganish genografiya orqali emas, balki rentgenografiya orqali amalga oshirilgan edi. Rentgenografiya bu – tadqiqot obyektining strukturasini rentgen nurlari orqali o‘rganish hisoblanadi. Darvoqe genografiya deb ataluvchi termin mavjud emas.https://en.wikipedia.org/wiki/Ornithoprion"
+    },
+    {
+      "id": 22431,
+      "round": 2,
+      "number": 5,
+      "text": "Bir matematik hisobicha, Ularning soni 10120 (o‘nning bir yuz yigirmanchi darajasi)ni tashkil qiladi. Boshqa bir mashhur hisob-kitobda kerakli son 18 kvintilliondan ortib ketadi. Savol: O‘nning bir yuz yigirmanchi darajasidan ortiq nima hisoblangan?",
+      "answer": "Shaxmatda takrorlanmaydigan partiyalar soni",
+      "comment": "Har bir yurish bilan shaxmatda variantlar soni ortib boradi. Misol uchun butun koinotdagi atomlar soni ham 1080 sonini tashkil qilar ekan. 18 kvintillion esa braxmanga berilishi kerak bug‘doy donalari soni edi. Aniqrog‘i - 18 446 744 073 709 551 615 (18 kvintillion 446 kvadrillion 744 trillion 73 milliard 709 million 551 ming 615)https://ru.wikipedia.org/wiki/Число_Шеннона https://ru.wikipedia.org/wiki/Задача_о_зёрнах_на_шахматной_доске"
+    },
+    {
+      "id": 22430,
+      "round": 2,
+      "number": 6,
+      "text": "Zika virusi insonning IKSINI o‘zgartirish orqali kasallikni boshqalarga ham yuqushiga zamin tayyorlaydi. Zika virusining bunday xususiyati malyariya keltirib chiqaradigan parazitda ham mavjud. Savol: IKSga ega bo‘lmagan personaj kim bo‘lishni istagandi?",
+      "answer": "Parfyumer",
+      "comment": "IKS bu – hid edi. Zika virusi insonning hidini o‘zgartirish orqali, uni chivinlar uchun yanada jozibador holatga keltirar ekan. Oqibatda zika virusi bilan og‘rigan bemorni chaqqan chivinlar, o‘z navbatida kasallikni boshqalarga ham yuqtiradi. Patrik Zyuskindning “Parfyumer” asari personaji Jan Batist Grenuy hidga ega emasdi va shu sababli o‘z hidini yaratish maqsadida parfyumer bo‘lishga qaror qiladi.https://fr.wikipedia.org/wiki/Virus_Zika https://ru.wikipedia.org/wiki/Парфюмер_(роман)"
+    },
+    {
+      "id": 22429,
+      "round": 2,
+      "number": 7,
+      "text": "Birinchi va ikkinchi jahon urushi davrida AQSh, Buyuk Britaniya, Kanada kabi davlatlarda qo‘shimcha sabzovotlar, o‘simliklar va mevalar yetishtirish maqsadida ULAR tashkil etilgan. ULAR oziq-ovqatga bo‘lgan umumiy talabning, kichik qismini bo‘lsada, yopgan. ULARNI barpo etish orqali nafaqat moddiy daromad olish, balki fuqarolarning ruhiyatini ko‘tarish ham maqsad qilingan. Boshqa bir UNDA “Matonat madhiyasi”, “Ko‘z yoshi” kabi majmualarni ham ko‘rish mumkin. Savol: UNI ikki so‘z bilan yozib bering.",
+      "answer": "G‘alaba bog‘i",
+      "comment": "Savolning ikkinchi qismida Toshkent shahrida ochilgan “G‘alaba bog‘i” haqida gap ketgan edi. https://ru.wikipedia.org/wiki/Сады_победы https://xs.uz/uzkr/post/galaba-bogi-khalqimiz-qahramonligini-aks-ettirgan-yakhlit-mazhmua"
+    },
+    {
+      "id": 22428,
+      "round": 2,
+      "number": 8,
+      "text": "Savol matnidagi bir so‘zdan harflar tushirib qoldirilgan. 2001-yili bir AQShlik dengiz arxeologi va yozuvchisi 1885-yili Gaiti qirg‘oqlarida cho‘kib ketgan “Mariya Selesta” kemasining qoldiqlarini topganini e’lon qilgan. Biroq, Kanada geologik xizmati tomonidan o‘tkazilgan xronologik ekspertiza kema qoldiqlari “Mariya Selesta” kemasiga tegishli bo‘lishi mumkin emas degan xulosaga keladi. Savol: Yuqoridagi savol matnida tushurib qoldirilgan harflarni tiklab, so‘zni asl holda yozib bering.",
+      "answer": "Dendroxronologiya",
+      "comment": "Dendroxronologiya bu – voqea-hodisalarning bo‘lib o‘tgan vaqtini, turli predmet va topilmalarning yoshini daraxtlarga va ularning halqalariga qarab aniqlashga qaratilgan fan tarmog‘i hisoblanadi. Topilgan kema qoldiqlari bo‘yicha o‘tkazilgan dendroxronologik ekspertiza yog‘ochlar Jorjiya shtatida o‘sadigan daraxtlarga tegishli ekanini, bu daraxtlardan esa faqatgina 1894-yilga kelib kemalarni qurishda va remont qilishda foydalanishganini aytishgan. Tabiiyki 1885-yili cho‘kib ketgan “Mariya Selesta” kemasida bu yog‘ochlarni bo‘lishi mumkin emas edi.https://ru.wikipedia.org/wiki/Мария_Целеста"
+    },
+    {
+      "id": 22427,
+      "round": 2,
+      "number": 9,
+      "text": "Diqqat qiling, savol matnidagi bir so‘zdan 5 ta harf tushirib qoldirilgan. O‘tgan asrning 30-yillarida Kaliforniya fanlar akademiyasi akvariumiga Avstraliyadan ham jabrasi, ham o‘pkasi orqali nafas oladigan baliqni olib kelishadi. Tadqiqotchilar aniqlashicha, bugungi kunda ham akvariumda yashab kelayotgan bu baliq yoshi 100 dan oshgan. Vikipediyaning ushbu baliq haqidagi maqolasi nomi FIL deb atalgan. Savol: Tushirib qoldirilgan harflarni tiklab, so‘zni asl holida yozib bering.",
+      "answer": "Mafusail",
+      "comment": "Mafusail Injilda tilga olinadigan eng uzoq umr ko‘rgan qaxramonlardan biri. 102 yoshga to‘lgan baliq haqidagi maqola ham uzoq umr ko‘rgan qahramon sharafiga atalgan ekan.https://en.wikipedia.org/wiki/Methuselah_(lungfish)"
+    },
+    {
+      "id": 22426,
+      "round": 2,
+      "number": 10,
+      "text": "Qarshingizdagi Ilya Repinning kartinasida UNI ko‘rib turibsiz. 1969-tug‘ilgan yozuvchining ULAR nomli asarida maxfiy xizmat xodimlarining xavf-xatarga to‘la hayoti aks ettirilgan. Savol: UNI uch so‘z bilan yozib bering.",
+      "answer": "O‘limga mahkum qilingan",
+      "comment": "Repinning kartinasi “Tavba-tazarrudan oldin” deb nomlanadi va unda o‘limga mahkum qilingan inqilobchi tasvirlangan. Kartinada ruhoniy qahramonning tavbasini qabul qilishga shaylanayotganini payqagan bo‘lsangiz kerak. Odatda o‘limga mahkum qilinganlarni qatldan oldin tavbasi qabul qilinadi. Savolning ikkinchi qismida yozuvchi Nuriddin Ismoilovning “O‘limga mahkum qilinganlar” asari haqida gap ketgandi.https://ru.wikipedia.org/wiki/Перед_исповедью https://library.tdau.uz/uz/books/451 234668 Ilja_Jefimowitsch_Repin_003 https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/ck/thumb_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg https://cdn.zakovatklubi.uz/uploads/ck/s_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg https://cdn.zakovatklubi.uz/uploads/ck/m_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg https://cdn.zakovatklubi.uz/uploads/ck/l_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg image/jpeg 224178 https://cdn.zakovatklubi.uz/uploads/ck/Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg 234668 Ilja_Jefimowitsch_Repin_003 https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/ck/thumb_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg https://cdn.zakovatklubi.uz/uploads/ck/s_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg https://cdn.zakovatklubi.uz/uploads/ck/m_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg https://cdn.zakovatklubi.uz/uploads/ck/l_Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg image/jpeg 224178 https://cdn.zakovatklubi.uz/uploads/ck/Q0wSWcCYvl9QJvG5sro71RNSTLKXfE.jpg"
+    },
+    {
+      "id": 22425,
+      "round": 3,
+      "number": 1,
+      "text": "[Boshlovchi tropikgrafiyani aniq va tushunarli tarzda o‘qib berishi lozim] Diqqat qiling savol matnidagi bir so‘zning 6 ta harfini o‘zgartirdik. Moskvadagi tropikgrafiya muzeyida saqnalayotgan eksponatlar orasida, jumladan “Fialka”ni va “Jefferson silindri”ni uchratish mumkin. Shuningdek tarixiy eksponatlar orasida Sezar ismi ham eslab o‘tiladi. Savol: 6 ta harfi o‘zgargan so‘zni aslicha yozib bering.",
+      "answer": "Kriptografiya",
+      "comment": "Muzey tropikgrafiya emas, balki Kriptografiya muzeyi edi. Kripto so‘zidan anagramma orqali tropik so‘zini hosil qilib o‘zgartirgan edik. Fialka sovetlarning shifr mashinasi bo‘lsa, Jefferson silindri esa amerikalik Tomas Jefferson tomonidan o‘ylab topilgan shifrlash qurilmasi hisoblanadi. Shuningdek, muzeyda Sezar shrifti nomi bilan ataladigan matnni kodlash uslubining nusxalari ham saqlanadi.https://ru.wikipedia.org/wiki/Музей_криптографии"
+    },
+    {
+      "id": 22424,
+      "round": 3,
+      "number": 2,
+      "text": "Turli suv havzalari, xususan botqoqlar, ko‘llar va irmoqlarning yo‘qolib borishi mushuklarning populyatsiyasiga jiddiy ta’sir o‘tkazmoqda. Yirik mushuklardan biri zooparkda o‘z qafasidan chiqib leopardning bolasini o‘ldirib qo‘ygani haqiqat. Savol: Yuqoridagi savol matnida ikki bora tashlab ketilgan O‘zbekistondagi tuman nomini yozib bering.",
+      "answer": "Baliqchi",
+      "comment": "Gap oddiy mushuk emas, baliqchi mushuk haqida borayotgan edi. Suv havzalari bo‘ylarida yashaydigan baliqchi mushuklar asosan baliq ovlash bilan kun kechirgani bois shunday nom olgan. Bu mushuklar birmuncha yirikroq bo‘ladi va bemalol boshqa yirtqichlarga qarshilik ko‘rsata oladi. Leopardning bolasini o‘ldirganidan ham gap oddiy mushuklar haqida emasligini payqash mumkin edi. Andijon viloyatida Baliqcha nomli shahar mavjud. https://en.wikipedia.org/wiki/Fishing_cat"
+    },
+    {
+      "id": 22423,
+      "round": 3,
+      "number": 3,
+      "text": "Diqqat qiling bir so‘zdagi beshta harf to‘rtta harf bilan almashtirilgan. Qovog‘arilarning bir turi asalarilar singari jamoa bo‘lib yashaydi. Ona qirolicha vafot etgach, o‘rnini yoshi ulug‘ boshqa ona ari egallaydi. Jamoadagi o‘ziga xos boshqa lavozimlar yoshga qarab taqsimlanadi. Aytish mumkinki, arilarning bu jamiyatida matriarxat tuzum va meritokratiya hukmron. Savol: Almashtirilgan beshta harfni tiklab, so‘zni asl holida yozib bering.",
+      "answer": "Gerontokratiya",
+      "comment": "Gerontokratiya keksalar, qariyalar, yoshu ulug‘lar hukmronligini anglatadi. Arilar jamiyatidagi boshqaruvda ham gerontokratiyani ko‘rish mumkin. Gerontokratiya so‘zining geron qismi meritokratiya atamasining meri qismi bilan almashtirilgan edi. Meritokratiya bu rahbar lavozimlarini ijtimoiy kelib chiqishi va moliyaviy holatiga qarab emas, balki qobiliyatiga qarab taqsimlash orqali boshqaruvni amalga oshirishni anglatadi. https://ru.wikipedia.org/wiki/Polistes_exclamans"
+    },
+    {
+      "id": 22422,
+      "round": 3,
+      "number": 4,
+      "text": "1878-yil oktyabrida, kechki payt Sheffilddagi stadionda 20 ming tomoshabin ishtirokida bo‘lib o‘tgan futbol matchida 2:0 hisobi qayd qilingan. Ushbu matchga yig‘ilgan tomoshabinlarning ko‘pchiligiga futbol matchi emas, balki futbol matchlarida birinchi marta bo‘lgan yangilik qiziq edi. Bu yangilik keyinchalik sportni ommalashuvi uchun katta hissa qo‘shgan. Savol: Ushbu futbol matchidagi yangilik nimadan iborat edi?",
+      "answer": "Dunyoda birinchi bor futbol matchi elektr toki yordamida yoritilgan",
+      "comment": "Shu mazmundagi javoblar Siemens projektorlari bilan stadion yoritilgan https://playersfootball.ru/pervyj-v-mire-futbolnyj-match-pri-osveshhenii/"
+    },
+    {
+      "id": 22421,
+      "round": 3,
+      "number": 5,
+      "text": "1997-yili terroristlar maktabga hujum qilib, o‘quvchilarni asirga olganlar. O‘quvchilarga 2 guruhga bo‘linishni buyurishgan. Lekin bundan bosh tortgan o‘quvchilar o‘zlarini “banyA IKS” deb atashgan. Natijada o‘qqa tutilgan o‘quvchilarning 17 nafari halok bo‘lgan. BanyA odamlar degani, IKS o‘rnida esa mamlakat nomi. Savol: Terroristlarlar bo‘linishga buyurgan 2 guruh nomini yozib bering.",
+      "answer": "Tutsi va xutu",
+      "comment": "Tutsi va xutular mojarosi Ruandada tutsilar genotsidiga olib kelgan. Lekin genotsiddan keyin hokimiyatni qo‘lga kiritgan guruh “milliy birlik” g‘oyasini ilgari surgan va keng targ‘ibotini boshlagan. Ruanda xalqi bari banyaruanda ekani targ‘ib qilinadi. Darvoqe o‘quvchilarning hammasi qiz bola bo‘lgan.https://www.latimes.com/archives/la-xpm-1997-04-30-mn-53939-story.html https://habr.com/ru/companies/onlinepatent/articles/863028/ https://en.wikipedia.org/wiki/Congolese_Banyarwanda"
+    },
+    {
+      "id": 22420,
+      "round": 3,
+      "number": 6,
+      "text": "“Kelajakka qaytib” filmida 1955-yilga borib qolgan Makflay, barga kirib, Shunday Uni so‘raydi va barmenning \\\"Uning shundayi ham bo‘lar ekanmi?\\\" deya hayron qolishiga sabab bo‘ladi. Reklamalardan birida, dastlab Shunday Uni ichgan mushuk, sichqonning iniga bemalol sig‘a boshlaydi. Savol: Shunday U o‘rnidagi 2 so‘zni yozib bering.",
+      "answer": "Shakarsiz Pepsi",
+      "comment": "Diet Pepsi, Parhez Pepsi, Pepsi no sugar, Shakarsiz Coca-cola Diet Pepsi 1964-yildan ishlab chiqarila boshlangan. Filmda esa qahramon 1955-yilga tushib qolgan, tabiiyki u paytda bu turdagi Pepsi mavjud emas edi. Reklamada Diet Pepsi ichgan mushuk ozib ketadi.1. “Kelajakka qaytib” 1-film, 37-minut 2. https://en.wikipedia.org/wiki/Diet_Pepsi 3. https://www.adsoftheworld.com/campaigns/cat-0827fc47-39e8-4698-9e4f-a2323f145ec6"
+    },
+    {
+      "id": 22419,
+      "round": 3,
+      "number": 7,
+      "text": "Tarqatmada Erkin Vohidov tomonidan 1961-yilda yozilgan she’rdan parchani ko‘rib turibsiz. Savol: Savolda IKS bilan almashtirilgan familiyani yozib bering.",
+      "answer": "Lermontov",
+      "comment": "Erkin Vohidov bu she’rni 25 yoshida yozgan. Rus shoiri Mixail Lermontov 26 yil umr ko‘rgan.Erkin Vohidov, “O‘zbegim”. “Yoshlar matbuoti”, 2024-yil. “Shoir umri” she’ri.234666 Shoir umri https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/bW/thumb_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg https://cdn.zakovatklubi.uz/uploads/bW/s_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg https://cdn.zakovatklubi.uz/uploads/bW/m_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg https://cdn.zakovatklubi.uz/uploads/bW/l_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg image/jpeg 76216 https://cdn.zakovatklubi.uz/uploads/bW/GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg 234666 Shoir umri https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/bW/thumb_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg https://cdn.zakovatklubi.uz/uploads/bW/s_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg https://cdn.zakovatklubi.uz/uploads/bW/m_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg https://cdn.zakovatklubi.uz/uploads/bW/l_GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg image/jpeg 76216 https://cdn.zakovatklubi.uz/uploads/bW/GRI3qDlDe3qeL6sMVjGABgchNZaCLu.jpg"
+    },
+    {
+      "id": 22418,
+      "round": 3,
+      "number": 8,
+      "text": "Abdulla Qahhorning “Dumli odamlar” hikoyasida O‘zbekistonga xorijdan kelgan jurnalist giddan shov-shuvli maqola uchun dumli odamlarni topib berishni so‘raydi. Gid dumli odamlar bo‘lmasligini tushuntirishga harakat qilsa, jurnalist xafa bo‘ladi va “Sening hukumating butun mamlakat ustiga ALFA tortgan”, deydi. Savol: ALFA bilan almashgan ikki so‘zni toping.",
+      "answer": "Temir parda",
+      "comment": "Temir parda termini Cherchill tomonidan ilk bor tilga olingan bo‘lib, u SSSR va boshqa sotsialistik davlatlarni G‘arbning kapitalislik davlatlaridan izolyatsiya qiluvchi siyosiy va chegaraviy to‘siqni anglatgan.https://n.ziyouz.com/portal-haqida/xarita/uzbek-nasri/abdulla-qahhor-1907-1968/abdulla-qahhor-dumli-odamlar-hikoya"
+    },
+    {
+      "id": 22417,
+      "round": 3,
+      "number": 9,
+      "text": "Savolda bir so‘zdan harflar tushib qolgan. “Qizil bo‘ron” romani jadidchilik harakati namoyondalaridan birining hayoti, ijodiy faoliyati, siyosiy qarashlari va o‘ldirilishi sabablari haqida. Savol: Savol matnida harflari tushirib qoldirilgan so‘zni asl holida yozib bering.",
+      "answer": "Toshbo‘ron",
+      "comment": "Asar nomi “Qizil toshbo‘ron” bo‘lib, u Hamza Hakimzoda Niyoziy haqidadir. Uning toshbo‘ron qilib o‘ldirilgani haqidagi versiya mashhur.Nabijon Boqiy, “Qizil toshbo‘ron”. “Yangi asr avlodi”, 2022-yil"
+    },
+    {
+      "id": 22416,
+      "round": 3,
+      "number": 10,
+      "text": "Abduqayum Yo‘ldoshev yozuvchi Nodirabegim Ibrohimovaning so‘zga siqiqligi, tasvirlardagi shafqatsiz istehzo mahoratini qayd etar ekan, Nodirabegim bejizga Uning asarlarini tarjima qilmayotganini ta’kidlaydi. Savol: Gap 1862-yilda tug‘ilgan qaysi adib haqida ketmoqda?",
+      "answer": "O.Genri",
+      "comment": "Uilyam Sidni Porter O.Genri qisqa hikoyalar ustasi hisoblanadi“Men, dadam va Alsgeymer” kitobi so‘zboshisi"
+    },
+    {
+      "id": 22415,
+      "round": 4,
+      "number": 1,
+      "text": "Duplet. Savolda Bu ishni qilish va Shu ishni qilish so‘zlari boshqa so‘zlar bilan almashtirilgan. 1. X Factor loyihasida Lola “Rishat” guruhi chiqishi yakunida Bu ishni qiladi. Lola Bu ishni guruh yigitlari bilan bellashmoqchi bo‘lganligi uchun emas, balki “Rishat” guruhi chiqishi eng katta maqtovlarga loyiqligini ko‘rsatish uchun qilgan. Savol: Bu ishni qilish o‘rnidagi so‘zlarni yozib bering.",
+      "answer": "Qo‘lqop otish",
+      "comment": "Ilgari kimnidir duelga yoki bellashuvga chaqirish uchun qo‘lqop otilgan. Lola esa “Rishat” guruhining chiqishi eng katta maqtovlarga loyiqligini bildirish uchun o‘z qo‘lqopini otadi."
+    },
+    {
+      "id": 23311,
+      "round": 0,
+      "number": null,
+      "text": "“Rishat” guruhi a’zosi yangi chiqishi oldidan “Shu ishni qilishmasa bo‘ldi” deb hazillashadi. Arab madaniyatida Shu ishni qilish eng yomon haqorat hisoblanadi. Savol: Shu ishni qilish o‘rnidagi so‘zlarni yozib bering.",
+      "answer": "Oyoq kiyim otish",
+      "comment": "Guruh a’zosi keyingi chiqish oldidan “Nima otishsa ham, oyoq kiyim otishmasa bo‘ldi” deb hazillashgan."
+    },
+    {
+      "id": 22414,
+      "round": 4,
+      "number": 2,
+      "text": "Fransiya qirolichasi Mariya Antuanetta bolalari bilan tasvirlangan ushbu kartina xalqning malika to‘g‘risidagi tasavvurini yaxshilashga qaratilgan. Chunki Mariya Antuanettaning xalq orasidagi obro‘yi, qisqa qilib aytganda, yaxshi emas edi. Kartinadagi SHUNDAY U qirolichaga jamiyatning hamdardligini yanada oshirishi hamda Mariya ham qayg‘uda ekanligini ko‘rsatishi kerak edi. Savol: SHUNDAY U o‘rnidagi bir xil harflar bilan boshlanuvchi 2 so‘zni yozib bering.",
+      "answer": "Bo‘sh belanchak",
+      "comment": "Bo‘sh beshik Qirolichaning kenja qizi Sofi-Helen-Beatriksning o‘rniga bo‘sh beshik qoldirgan, chunki u rasm tugashidan bir oz oldin vafot etgandi.https://ru.wikipedia.org/wiki/Портрет_Марии-Антуанетты_с_детьми 234665 MA https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/iL/thumb_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg https://cdn.zakovatklubi.uz/uploads/iL/s_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg https://cdn.zakovatklubi.uz/uploads/iL/m_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg https://cdn.zakovatklubi.uz/uploads/iL/l_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg image/jpeg 187010 https://cdn.zakovatklubi.uz/uploads/iL/Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg 234665 MA https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/iL/thumb_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg https://cdn.zakovatklubi.uz/uploads/iL/s_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg https://cdn.zakovatklubi.uz/uploads/iL/m_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg https://cdn.zakovatklubi.uz/uploads/iL/l_Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg image/jpeg 187010 https://cdn.zakovatklubi.uz/uploads/iL/Vy8WUgVBCmEUgxy4B16DxXNhddoyil.jpg"
+    },
+    {
+      "id": 22413,
+      "round": 4,
+      "number": 3,
+      "text": "Savol muallifi o‘zi yaratgan mnemonika yordamida ulardan kichigini “kichik” so‘zi bilan, kattasini “katta” so‘zi bilan farqlaydi. Kattasining qilgan ishi o‘zi va ukalari hayotiga naf keltirgan. Savol: Kattasining ismini toping.",
+      "answer": "Naf-naf",
+      "comment": "Gap “Uch cho‘chqacha” ertagi qahramonlari Nif-Nif, Nuf-Nuf va Naf-Naf haqida bormoqda edi. Savol muallifi ulardan qaysi biri katta, qaysi biri kichiklini ajratib olish uchun o‘zi uchun mnemonika o‘ylab topgan. Eng kichigi Nif-Nifning ismini “kichik” so‘zi bilan eslab qolgan, chunki Nif-Nifda ham “kichik” so‘zida ham ikkala unli “I” harfidir. Cho‘chqachalarning eng kattasi Naf-Nafning ismida ham “katta” so‘zida ham har ikkala unli “A” harfidir. Savoldagi “naf keltirdi” so‘zlari ham yordam edi.https://ru.wikipedia.org/wiki/Три_поросёнка"
+    },
+    {
+      "id": 22412,
+      "round": 4,
+      "number": 4,
+      "text": "“Setora” guruhining “Ajdodlar ruhi” klipi yakunida hozirgi zamon aks ettiriladi va epizodlardan birida U ham ko‘rsatiladi. U haqidagi ma’lumotlarda 27 millimetr ham tilga olinadi. Savol: U bilan almashtirilganni bir necha so‘zda aniq yozib bering.",
+      "answer": "25 so‘mlik tanga",
+      "comment": "Mashhur klip 1219-yilda Chingizxon boshchiligidagi mo‘g‘ullarning yurtimizga bosqini voqealari bilan boshlanadi. Klip so‘nggida yurtimizda 1999-yilda Jaloliddin Manguberdi tavalludining 800 yilligini keng nishonlash tadbirlari aks ettiriladi va epizodlardan birida ushbu yubileyga bag‘ishlab chiqarilgan, Jaloliddin Manguberdi tasviri tushirilgan 25 so‘mlik tanga ham ko‘rsatib o‘tiladi. Savolda aytilgan 27 mm - ushbu tanganing diametri edi.1. https://youtu.be/syzcJRrV8NI?t=286&si=9Lfn-F_Lor0kv9mK 2. https://en.numista.com/catalogue/pieces3097.html"
+    },
+    {
+      "id": 22411,
+      "round": 4,
+      "number": 5,
+      "text": "She’rdan parcha. “Oʻtgan kunlar” varaqlarini Shundan keyin oʻqidi U. Siz Qodiriyni olib ketishgani haqidagi she’rdan parcha tingladingiz. Oʻzbek maqolida Uning tishi yoʻqligi aytiladi. Savol: Uni unlilari bir xil so‘zda yozib bering.",
+      "answer": "Olov",
+      "comment": "Alanga Qodiriyni olib ketishgach, uning asarlari yoqib yuborilganini Xurshid Davron shunday tasvirlagan. Oʻzbek maqoliga koʻra, olovning tishi yoʻq, hoʻl-quruq bilan ishi yoʻq.1. https://kh-davron.uz/ijod/sherlar/xurshid-davron-abdulla-qodiriy.html 2. https://n.ziyouz.com/portal-haqida/xarita/uzbek-xalq-ogzaki-ijodi/uzbek-xalq-maqollari/ehtiyotkorlik-va-ehtiyotsizlik-haqida-maqollar"
+    },
+    {
+      "id": 22410,
+      "round": 4,
+      "number": 6,
+      "text": "Bir Yevropa shahri metropoliteni bekatida oʻz zamonasining isteʼdodli rassomlarining suratlari bir joyga jam bo‘lgan. Bekatning yon tomonlarida Gelios aravasi, Argonavtlar va Yevropaning oʻgʻirlanishi syujetlari tasvirlangan. Savol: Bu bekat nomini unli harflari bir xil boʻlgan soʻzda yozib bering.",
+      "answer": "Parnas",
+      "comment": "Parnas Yunonistonning markaziy qismidagi togʻ tizmasi. Afsonalarga koʻra Parnas togʻi muzalar yigʻiladigan joy edi. Ikki ming yildan ortiq vaqt davomida bu togʻ madaniyatda shoirlar, rassomlar va ijod ahlining ramziy yashash va yigʻilish joyi joyi sifatida tilga olingan. https://ru.m.wikipedia.org/wiki/Парнас_(станция_метро)"
+    },
+    {
+      "id": 22409,
+      "round": 4,
+      "number": 7,
+      "text": "Tolstoyning “Insonga ko‘p yer kerakmi?” nomli hikoyasida katta hududli yerga egalik qilishni istaydigan ochko‘z dehqon haqida so‘z yuritiladi. Yerga egalik qilish uchun borini bergan dehqonga hikoya yakunida bor yo‘g‘i 3 arshin yer nasib qilgan. Savol: Nega aynan 3 arshin?",
+      "answer": "Dehqonning bo‘yini uzunligi 3 arshinga teng edi.",
+      "comment": "Dehqonning murdasiga moslab qazilgan qabrning uzunligi 3 arshin bo‘lgan. Qabr uzunligi so‘zi bo‘yicha.Hikoyada katta yerga egalik qilishni istagan dehqonga bir shart bilan yer berishga kelishiladi. Shartga ko‘ra, dehqon belgilangan nuqtadan yo‘lga chiqib bir chiziq bo‘ylab harakatlanishi va quyosh botgunga qadar, aylanib boshlang‘ich nuqtaga yetib kelishi kerak edi. Dehqon yurgan chiziqdan chegara tortilib, dehqon qamrab olgan hudud o‘ziga berilishi kelishilgan. Ochko‘z dehqon ko‘proq yerga egalik qilish maqsadida tinimsiz yugurgan va belgilangan nuqtaga yetib kelib jon taslim qilgan.https://librebook.me/mnogo_li_cheloveku_zemli_nujno/vol1/1"
+    },
+    {
+      "id": 22408,
+      "round": 4,
+      "number": 8,
+      "text": "Arxitektor UNI qurish uchun botqoqlikni tanlaganda boshida ustidan kulishgan. Lekin bino zilzilalarga chidagani arxitektor haqligini ko‘rsatgan. Savol: Qoldiqlari botqoqlikdan topilgan qaysi bino haqida gap ketmoqda?",
+      "answer": "Artemida ibodatxonasi",
+      "comment": "Artemida ibodatxonasi botqoqlikka qurilgan edi. Qurilishi 2 asrdan uzoq davom ibodatxonani Gerostrat yoqib yuborgan.1. https://ru.wikipedia.org/wiki/Храм_Артемиды_Эфесской 1. https://zebryansk.livejournal.com/6640.html 2. https://diletant.media/articles/30013942/"
+    },
+    {
+      "id": 22407,
+      "round": 4,
+      "number": 9,
+      "text": "Suratdagi kashta nomida Uni koʻrish mumkin. Zulfiyaning she’rida U tuproqqa talpinib, doimo unga sadoqat bilan yashashi aytiladi. Savol: Uni qo‘shma bir soʻzda yozib bering.",
+      "answer": "Majnuntol",
+      "comment": "Kashtada bir qancha egilgan nashqlarni ko‘rish mumkin. Zulfiyaning she’rida Majnuntol tuproqqa talpinib, doimo unga sadoqat bilan yashashi aytiladi.1. Tasviriy sanʼat, 7-sinf. 2. https://audio.ziyonet.uz/book/2638 234664 Kashta https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/Jn/thumb_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg https://cdn.zakovatklubi.uz/uploads/Jn/s_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg https://cdn.zakovatklubi.uz/uploads/Jn/m_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg https://cdn.zakovatklubi.uz/uploads/Jn/l_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg image/jpeg 467105 https://cdn.zakovatklubi.uz/uploads/Jn/BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg 234664 Kashta https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/Jn/thumb_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg https://cdn.zakovatklubi.uz/uploads/Jn/s_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg https://cdn.zakovatklubi.uz/uploads/Jn/m_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg https://cdn.zakovatklubi.uz/uploads/Jn/l_BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg image/jpeg 467105 https://cdn.zakovatklubi.uz/uploads/Jn/BxSLKC5v30050LJZpwSi1V6CnsIjZR.jpg"
+    },
+    {
+      "id": 22406,
+      "round": 4,
+      "number": 10,
+      "text": "Bir internet nashrida yozilishicha, uyatchan odamlar bu ishni unchalik xohlashmaydi. Uyatchanlar bu ishni o‘rganishi uchun, bu ishni qilayotgan boshqalarga parallel ravishda taqlid qilishi kerakligi yozilgan. “Vokrug sveta” nashri maqolasida esa cho‘llardagi qumlar ham bu ishni qilishi aytib o‘tilgan. Savol: Bu ishni yozib bering.",
+      "answer": "Qo‘shiq aytish",
+      "comment": "Siz qo‘shiq aytishni endi boshlagan bo‘lsangiz biror qo‘shiqqa parallel ravishda taqlid qilish tavsiya etilgan. Cho‘ldagi qum kvartlari harakatlanganda ham ovoz eshitiladi va ular “cho‘l qo‘shiqlari” deyiladi.1. https://uz.scienceforming.com/10908275-how-to-learn-to-sing-and-develop-talent 2. https://www.vokrugsveta.ru/articles/ostayutsya-voprosy-5-udivitelnykh-yavlenii-prirody-kotorym-nauka-do-sikh-por-ne-nashla-odnoznachnogo-obyasneniya-id5973718/"
+    },
+    {
+      "id": 22405,
+      "round": 5,
+      "number": 1,
+      "text": "Somon yo‘lining sanskritcha nomi “Osmon ALFAsi”. Qadimda Somon yo‘li galaktikasi kechasi toza, oppoq yarqirab turgan ALFA kabi ko‘ringani sabab shunday nomlangani qiziq va achinarli holat. Savol: ALFAni yozib bering.",
+      "answer": "Ganga daryosi",
+      "comment": "Ganga, Gang Qadimda toza va oppoq ko‘ringani sabab Somon yo‘li Akashganga, ya’ni “Osmon Gangasi”nomi berilgan. Biroq afsuski bugungi kunda Ganga daryosi iflosligi bo‘yicha birinchi o‘rinda turadi.1. https://en.wikipedia.org/wiki/Milky_Way 2. https://ru.wikipedia.org/wiki/Ганг"
+    },
+    {
+      "id": 22404,
+      "round": 5,
+      "number": 2,
+      "text": "Rassom Tristam Pol Hiller chizgan suratlarida kunduzgi qishloq, port, sohil bo‘yi, shahar markaziy ko‘chalarini tasvirlaydi. Ammo suratlarda odamlar umuman ko‘rinmaydi. Bloger Pyotr Mixaylov bunday holatni Unga o‘xshatadi. Savol: U nima ekanligini ispancha so‘z bilan yozib bering.",
+      "answer": "Siesta",
+      "comment": "Siesta – ispancha urf-odat bo‘lib, tushdan keyingi mizg‘ib olishni angalatdi.https://dzen.ru/a/Ysr8C0vFFk3GwP1W"
+    },
+    {
+      "id": 22403,
+      "round": 5,
+      "number": 3,
+      "text": "Bir fantastik serialda yovuz ruh tomonidan boshqariladigan arvoh mashina UNGA qiyoslanadi. Nemis tilidagi doimo darbadar yuradigan insonlarga nisbatan ishlatiladinadigan jumlada ham U tilga olinadi. Savol: Uni ikki so‘zda yozib bering.",
+      "answer": "Uchar Golland",
+      "comment": "Serialdagi mashina yovuz kapitan tomonidan boshqariladigan arvoh kema \\\"Uchar golland\\\" ga oʻxshatiladi. Uchar Golland kemasi talqinlarga ko‘ra la'natlangan va hech qachon qirg‘oqqa chiqa olmaydi. Doimo darbadar yuruvchilar uchun ishlatilinadigan jumlada aynan Uchar Golland tila olinadi.1. \\\"Supernatural\\\" 13-qism 12:30 - 12:40. 2. https://ru.wikipedia.org/wiki/Летучий_голландец"
+    },
+    {
+      "id": 22402,
+      "round": 5,
+      "number": 4,
+      "text": "Qarshingizda Kayten deb nomlanuvchi torpeda chizmasini ko‘rib turibsiz. Savol: Bu torpedalar ikkinchi jahon urushida qaysi davlat tomonidan qo‘llanilgan?",
+      "answer": "Yaponiya",
+      "comment": "Yaponiyada kamikadzelar nafaqat samolyotlarda, balki torpedalarda ham bo‘lishgan. Suratdagi sxemada torpeda chizmasida insonni ham ko‘rishingiz mumkin.https://flot.com/history/interesting/torpedo2.htm https://ja.m.wikipedia.org/wiki/%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB:Kaiten_torpedo_type_10_schematic-1.svg 234675 Kaiten https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/RM/thumb_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png https://cdn.zakovatklubi.uz/uploads/RM/s_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png https://cdn.zakovatklubi.uz/uploads/RM/m_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png https://cdn.zakovatklubi.uz/uploads/RM/l_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png image/png 49226 https://cdn.zakovatklubi.uz/uploads/RM/RoDo7DKVspNFUwqciuqnOol2MHKSPa.png 234675 Kaiten https://cdn.zakovatklubi.uz/uploads/default.jpg https://cdn.zakovatklubi.uz/uploads/RM/thumb_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png https://cdn.zakovatklubi.uz/uploads/RM/s_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png https://cdn.zakovatklubi.uz/uploads/RM/m_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png https://cdn.zakovatklubi.uz/uploads/RM/l_RoDo7DKVspNFUwqciuqnOol2MHKSPa.png image/png 49226 https://cdn.zakovatklubi.uz/uploads/RM/RoDo7DKVspNFUwqciuqnOol2MHKSPa.png"
+    },
+    {
+      "id": 22400,
+      "round": 5,
+      "number": 5,
+      "text": "Bir Youtube blogida tushida uygʻongan inson tushni ongli ravishda boshqarishi mumkinligi aytiladi. Video muallifi bu jarayonni BU ISHga oʻxshatadi. Metateatrning asosiy elementlaridan biri sifatida BU ISH keltirilgan. Savol: BU ISH o‘rnidagi bir necha so‘zni yozib bering.",
+      "answer": "To‘rtinchi devorni buzish",
+      "comment": "Video muallifi tushida uyg‘onib ongli ravishda tushni boshqarishni to‘rtinchi devorni buzishga qiyoslaydi. Metateatr spektakl ichida spektaklni o‘ynash yoki sahna asarida uning teatr ekanligini ochiq-oydin taʼkidlash orqali kuzatuvchining e’tiborini jalb qilishni o‘z ichiga olgan badiiy usuldir. To‘rtinchi devorni buzish ham uning ajralmas qismidir.1. https://youtu.be/OSSKMSZhRPg?si=f0IGx_Qix4FuKWYO 2. https://en.wikipedia.org/wiki/Metatheatre"
+    },
+    {
+      "id": 22399,
+      "round": 5,
+      "number": 6,
+      "text": "Odatda Ularning asosiy rangi ruslarda yashil, inglizlarda kulrang, ispanlarda sariq bo‘lgan. Golland va fransuzlarda esa oqqa yaqin edi. AQShda 1830-yillardan so‘ng oq rangli Ular tayyorlana boshlangan. Shimoliy orollarda esa hatto alvon ranglilari ham uchragan. Savol: U nima?",
+      "answer": "Yelkanlar",
+      "comment": "Asosan zig‘ir va kanopdan tayyorlangan va uzoqroq chidashi uchun maxsus bo‘yalgan yelkanlar rangi yashil, sariq, oqish va hatto alvon, ya’ni qizil bo‘lgan. AQShda paxtadan yelkanlar to‘qila boshlangan. “Alvon yelkanlar” asarini eshitgan bo‘lsangiz kerak.https://pikabu.ru/story/kakogo_tsveta_byili_parusa_starinnyikh_korabley_belyie_a_kak_naschet_zelenyikh_i_zheltyikh_12094217"
+    },
+    {
+      "id": 22398,
+      "round": 5,
+      "number": 7,
+      "text": "1865-yili tug‘ilgan polshalik fantast-yozuvchi Vladislav Uminskiy ixtirochilik bilan ham shug‘ullangan. Yozuvchining asarlarida olimlar va injenerlar qiyofasidagi bosh qahramonlar texnika taraqqiyotini aks ettiruvchi ulkan ixtirolar qilishadi, dunyoning turli nuqtalariga sayohatlarni amalga oshirishadi. Vikipediyada Vladislav Uminskiy polshalik U deb atalgan. UNING unchalik ham mashhur bo‘lmagan ismi Gabriel. Savol: U kim?",
+      "answer": "Jyul Vern",
+      "comment": "Jyul Gabriel Vern asarlarida ham ixtirochilar, olimlar va sayohatga chiqqan personajlarni uchratish mumkin.https://en.wikipedia.org/wiki/W%C5%82adys%C5%82aw_Umi%C5%84ski https://en.wikipedia.org/wiki/Jules_Verne"
+    },
+    {
+      "id": 22397,
+      "round": 5,
+      "number": 8,
+      "text": "Intellektual mulk haqidagi ko‘rsatuvda qatnashgan ushbu ayolning aytishicha, she’rdagi bitta misra ham shoirning mulki hisoblanadi. Ko‘rsatuv davomida ushbu ayol turmush o‘rtog‘ining ijodidan Hamdam Sobirov tomonidan ruxsatsiz foydalanilganini aytadi. Savol: Ushbu ayol kimligini yozib bering.",
+      "answer": "Nazira as-Salom",
+      "comment": "Muhammad Yusufning turmush o‘rtog‘i Nazira as-Salomning aytishicha, shoirning “Biz baxtli bo‘lamiz” she’ridagi “Aybing onang seni chiroyli tuqqan” misrasidan “Janze” qo‘shig‘ida foydalanishda Hamdam Sobirov marhum shoirning oila a’zolaridan ruxsat so‘ramagan. Ushbu savol orqali biz Intellektual olimpiadani assalomdan boshlashga qaror qildik. “Gapirmasak bo‘lmaydi” tok-shousining intellektual mulk haqidagi soni."
+    }
+  ]
+}
