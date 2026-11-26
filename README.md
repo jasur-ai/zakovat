@@ -22,7 +22,7 @@ python3 run_bot.py
 
 ## Vercel ga deploy qilish (webhook + Mini App)
 
-`api/index.py` — FastAPI ASGI entrypoint: `POST /api/webhook`, `GET /health` va `GET /` (Mini App). Serverless holatda o‘yin holati xabar ichidagi kompakt markerda saqlanadi, javoblar **ForceReply** orqali qabul qilinadi; vaqt tugashi keyingi xabar kelganda hisoblanadi.
+`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook, `GET /api/index` — diagnostika, `GET /api/index?setup=1` — webhook’ni qo‘lda o‘rnatish. `/` — Mini App (statik fayl). Serverless holatda o‘yin holati xabar ichidagi kompakt markerda saqlanadi, javoblar **ForceReply** orqali qabul qilinadi; vaqt tugashi keyingi xabar kelganda hisoblanadi.
 
 **Eng oddiy usul — repo’ni Vercel’ga qo‘shish kifoya:** Vercel dashboard → *Add New → Project* → shu reponi tanlang → *Deploy*. `vercel.json`, `.python-version` va `requirements.txt` tayyor, build buyrug‘i kerak emas. Keyingi `push` lar avtomatik deploy bo‘ladi.
 
@@ -33,10 +33,10 @@ Deploy qilgach Project → Settings → Environment Variables ga kirib, ikkita o
 
 Ixtiyoriy: `ZAKOVAT_TIMER_SECONDS` (standart 60), `WEBHOOK_URL` (o‘z domeningiz bo‘lsa), `MINIAPP_URL` (belgilanmasa `VERCEL_URL` ishlatiladi).
 
-**Webhook o‘zi o‘rnatiladi:** saytga birinchi marta kiritilganda (masalan `/` yoki `/health` ochilganda) bot `VERCEL_URL` asosida `/api/webhook` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. Har kuni 03:00 da `/api/setup` cron ham uni qayta tasdiqlaydi. Agarda javob kelmasa:
+**Webhook o‘zi o‘rnatiladi:** funksiyaga birinchi so‘rov kelganda bot `VERCEL_URL` asosida `/api/index` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. Har kuni 03:00 da `/api/index` cron ham uni qayta tasdiqlaydi. Agarda javob kelmasa:
 
-- `https://<loyihangiz>.vercel.app/api/setup` — webhook’ni qo‘lda o‘rnatadi va natijani ko‘rsatadi;
-- `https://<loyihangiz>.vercel.app/api/status` — faqat `BOT_TOKEN` / `WEBHOOK_SECRET` bor-yo‘qligini va Telegram webhook holatini ko‘rsatadi (tokenni o‘zi ko‘rsatmaydi).
+- `https://<loyihangiz>.vercel.app/api/index?setup=1` — webhook’ni qo‘lda o‘rnatadi va natijani ko‘rsatadi;
+- `https://<loyihangiz>.vercel.app/api/index` — faqat `BOT_TOKEN` / `WEBHOOK_SECRET` bor-yo‘qligini va Telegram webhook holatini ko‘rsatadi (tokenni o‘zi ko‘rsatmaydi).
 
 `scripts/set_webhook.py` — qo‘lda bajarish uchun yana bir zaxira usul.
 

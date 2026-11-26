@@ -23,7 +23,7 @@ def main() -> int:
     if not token or not url:
         print("BOT_TOKEN va WEBHOOK_URL muhit o‘zgaruvchilari kerak.", file=sys.stderr)
         return 1
-    endpoint = url.rstrip("/") + "/api/webhook"
+    endpoint = url.rstrip("/") + "/api/index"
     payload = {
         "url": endpoint,
         "allowed_updates": json.dumps(["message"]),
