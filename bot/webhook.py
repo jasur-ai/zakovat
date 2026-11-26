@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, Header, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
 from telegram import ForceReply, Update
 from telegram.constants import ParseMode
@@ -364,6 +364,8 @@ def build_telegram_app() -> Application:
 
 _application: Application | None = None
 _webhook_ready = False
+_setup_error = ""
+_setup_attempted = False
 
 
 def get_application() -> Application:
@@ -373,26 +375,95 @@ def get_application() -> Application:
     return _application
 
 
-async def ensure_webhook(application: Application) -> None:
-    """Register the webhook on first request using Vercel's own URL env var."""
-    global _webhook_ready
-    if _webhook_ready or not os.getenv("BOT_TOKEN"):
+async def ensure_webhook(application: Application, force: bool = False) -> None:
+    """Register the webhook using Vercel's own URL env var."""
+    global _webhook_ready, _setup_error, _setup_attempted
+    if (_webhook_ready or _setup_attempted) and not force:
+        return
+    _setup_attempted = True
+    if not os.getenv("BOT_TOKEN"):
+        _setup_error = "BOT_TOKEN environment variable is not set"
         return
     base = os.getenv("WEBHOOK_URL") or os.getenv("VERCEL_URL") or ""
     if not base:
+        _setup_error = "WEBHOOK_URL / VERCEL_URL environment variable is not set"
         return
     if not base.startswith("http"):
         base = "https://" + base
-    await application.bot.set_webhook(
-        url=base.rstrip("/") + "/api/webhook",
-        secret_token=SECRET or None,
-        allowed_updates=["message"],
-        drop_pending_updates=True,
-    )
-    _webhook_ready = True
+    try:
+        await application.bot.set_webhook(
+            url=base.rstrip("/") + "/api/webhook",
+            secret_token=SECRET or None,
+            allowed_updates=["message", "my_chat_member"],
+            drop_pending_updates=True,
+        )
+        _webhook_ready = True
+        _setup_error = ""
+    except Exception as exc:  # telegram API errors must not break the site
+        _setup_error = str(exc)
+
+
+async def bootstrap_webhook() -> None:
+    """Runs on any first HTTP request so a plain site visit registers the webhook."""
+    if _webhook_ready or _setup_attempted or not os.getenv("BOT_TOKEN"):
+        return
+    application = get_application()
+    await application.initialize()
+    try:
+        await ensure_webhook(application)
+    finally:
+        await application.shutdown()
 
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def bootstrap(request: Request, call_next):
+    await bootstrap_webhook()
+    return await call_next(request)
+
+
+@app.get("/api/setup")
+async def setup():
+    """Idempotent manual bootstrap: open once after deploying."""
+    try:
+        application = get_application()
+        await application.initialize()
+        try:
+            await ensure_webhook(application, force=True)
+            info = await application.bot.get_webhook_info()
+        finally:
+            await application.shutdown()
+        if _setup_error:
+            return PlainTextResponse(f"Xatolik: {_setup_error}", status_code=500)
+        return PlainTextResponse(f"Webhook o‘rnatildi: {info.url}\n{info.pending_update_count} kutilayotgan xabar")
+    except Exception as exc:
+        return PlainTextResponse(f"Xatolik: {exc}", status_code=500)
+
+
+@app.get("/api/status")
+async def status():
+    """Diagnostic page: shows only whether secrets exist, never their values."""
+    lines = [
+        f"BOT_TOKEN: {'set' if os.getenv('BOT_TOKEN') else 'MISSING'}",
+        f"WEBHOOK_SECRET: {'set' if SECRET else 'MISSING'}",
+        f"VERCEL_URL: {os.getenv('VERCEL_URL') or '(yo‘q)'}",
+        f"So‘nggi o‘rnatish xatoligi: {_setup_error or 'yo‘q'}",
+    ]
+    if os.getenv("BOT_TOKEN"):
+        try:
+            application = get_application()
+            await application.initialize()
+            try:
+                info = await application.bot.get_webhook_info()
+            finally:
+                await application.shutdown()
+            lines.append(f"Telegram webhook: {info.url or '(o‘rnatilmagan)'}")
+            lines.append(f"Kutilayotgan xabarlar: {info.pending_update_count}")
+        except Exception as exc:
+            lines.append(f"Telegram xatoligi: {exc}")
+    return PlainTextResponse("\n".join(lines))
 
 
 @app.get("/")
