@@ -1,0 +1,6 @@
+{
+  "name": "Zakovat full export",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "bash scripts/full_export_codespace.sh",
+  "remoteUser": "vscode"
+}
