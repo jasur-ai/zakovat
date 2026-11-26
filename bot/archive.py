@@ -30,6 +30,7 @@ class Archive:
             }
         self.packages = {int(p["id"]): p for p in self.manifest.get("packages", [])}
         self._by_package: dict[int, list[dict]] | None = None
+        self._question_index: dict[int, dict] | None = None
 
     def _load(self) -> dict[int, list[dict]]:
         if self._by_package is None:
@@ -50,6 +51,16 @@ class Archive:
 
     def questions(self, package_id: int) -> list[dict]:
         return list(self._load().get(int(package_id), []))
+
+    def question(self, question_id: int) -> dict | None:
+        """Look up one question by id (used by stateless webhook sessions)."""
+        if self._question_index is None:
+            self._question_index = {
+                int(q["id"]): q
+                for questions in self._load().values()
+                for q in questions
+            }
+        return self._question_index.get(int(question_id))
 
     def package(self, package_id: int) -> dict | None:
         package = self.packages.get(int(package_id))

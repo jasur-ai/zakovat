@@ -20,6 +20,32 @@ python3 run_bot.py
 
 `.env.example` — faqat namuna. **Token hech qaerga commit qilinmaydi.** Suhbatda ilgari paydo bo‘lgan tokenlar kompromat hisoblanadi — ularni BotFather orqali yangilang.
 
+## Vercel ga deploy qilish (webhook + Mini App)
+
+`api/index.py` — FastAPI ASGI entrypoint: `POST /api/webhook`, `GET /health` va `GET /` (Mini App). Serverless holatda o‘yin holati xabar ichidagi kompakt markerda saqlanadi, javoblar **ForceReply** orqali qabul qilinadi; vaqt tugashi keyingi xabar kelganda hisoblanadi.
+
+1. BotFather’dan **yangi token** oling (chatga yuborilgan token allaqachon oshkor bo‘lgan).
+2. Vercel dashboard → Project → Settings → Environment Variables:
+   - `BOT_TOKEN` — yangi bot tokeni;
+   - `WEBHOOK_SECRET` — o‘zingiz tanlagan tasodifiy sir (masalan `openssl rand -hex 24`);
+   - `MINIAPP_URL` — deploy URL (ixtiyoriy, Mini App tugmasi uchun);
+   - `ZAKOVAT_TIMER_SECONDS` — ixtiyoriy (standart 60).
+3. Deploy: repo’ni Vercel’ga ulang yoki `npx vercel --prod` (Vercel tokenini faqat o‘z terminalingizda eksport qiling).
+4. Webhook’ni ulang (faqat o‘z terminalingizda):
+
+```bash
+export BOT_TOKEN='...'
+export WEBHOOK_URL='https://<loyihangiz>.vercel.app'
+export WEBHOOK_SECRET='...'
+python3 scripts/set_webhook.py
+```
+
+5. `/health` va `/` tekshiring; `/start`, `/solo 959`, `/duel 959` bilan sinab ko‘ring.
+
+GitHub Actions orqali ham deploy qilish mumkin: repo Settings → Secrets and variables → Actions da `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secretlarini qo‘ying, keyin **Deploy Zakovat Agent to Vercel** workflow’sini ishga tushuring (`workflow_dispatch` yoki `repository_dispatch` `deploy-zakovat`). `BOT_TOKEN` va `WEBHOOK_SECRET` ni Vercel dashboard’ida qo‘yish shart — ular repo secretlariga yozilmaydi.
+
+Eslatma: Vercel serverless’da doimiy jarayon yo‘q, shuning uchun tilingan savollar faqat keyingi xabar/compound kelganda yopiladi. Doimiy real-time timer kerak bo‘lsa, botni `python3 run_bot.py` bilan uzluksiz serverda ishga tushurish kerak.
+
 ## O‘yin mantig‘i
 
 - `/solo [id|yoki qidiruv]` — yakka o‘yin: javobni faqat o‘yinni boshlagan kishi yozadi;
