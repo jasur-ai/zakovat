@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zakovat Agent — Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { color-scheme: dark; --accent: #7c5cff; --card: #1c1c26; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px 18px 40px; background: #0e0e14; color: #f4f4f8;
+           font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.4px; }
+    .sub { opacity: .72; margin-bottom: 22px; }
+    .card { background: var(--card); border: 1px solid #2c2c3a; border-radius: 16px;
+            padding: 18px; margin-bottom: 14px; }
+    .card b { display: block; font-size: 17px; margin-bottom: 6px; }
+    .card p { margin: 0 0 12px; opacity: .82; font-size: 14px; }
+    button { width: 100%; border: 0; border-radius: 12px; padding: 13px 16px;
+             font-size: 15px; font-weight: 600; color: #fff; background: var(--accent); cursor: pointer; }
+    button.secondary { background: #2b2b3a; margin-top: 8px; }
+    code { background: #111118; padding: 2px 6px; border-radius: 6px; }
+    .rules { font-size: 13px; opacity: .7; padding: 0 4px; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Zakovat Agent</h1>
+  <div class="sub">Savollar arxivi bilan o‘yin — yakka yoki guruhda.</div>
+
+  <div class="card">
+    <b>Yakka o‘yin</b>
+    <p>Faqat siz javob yozasiz. Hisob: to‘g‘ri → Bilimdonlar, xato → Qarshi taraf.</p>
+    <button onclick="start('959')">959-paketni boshlash</button>
+    <button class="secondary" onclick="start('')">Tasodifiy paket</button>
+  </div>
+
+  <div class="card">
+    <b>Guruh o‘yini</b>
+    <p>Botga <code>/duel 959</code> yuboring va guruhga qo‘shing. Hamma javob yozadi.</p>
+    <button class="secondary" onclick="location.href='https://t.me/Zakovat_agent'">Botni ochish</button>
+  </div>
+
+  <div class="rules">
+    Qoida: 10 savoldan 4 tasiga javob berilsa hisob <b>4–6</b> bo‘ladi.
+    Savol xabariga <b>reply</b> qilib javob yozing.
+  </div>
+
+  <script>
+    const WebApp = window.Telegram?.WebApp;
+    if (WebApp) { WebApp.ready(); WebApp.expand(); WebApp.setHeaderColor('#0e0e14'); }
+    function start(id) {
+      const data = 'start:' + id;
+      if (WebApp) { WebApp.sendData(data); WebApp.close(); }
+      else { location.href = 'https://t.me/Zakovat_agent?start=' + id; }
+    }
+  </script>
+</body>
+</html>

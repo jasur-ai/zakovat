@@ -73,6 +73,9 @@ def _resolve_package(context: ContextTypes.DEFAULT_TYPE, argument: str) -> tuple
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if context.args and context.args[0].isdigit():
+        await _new_game(update, context, "solo", context.args[0])
+        return
     packages, questions = _archive(context).counts()
     text = (
         "🎯 <b>Zakovat bot</b>\n\n"
@@ -112,9 +115,11 @@ async def packages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML)
 
 
-async def _new_game(update: Update, context: ContextTypes.DEFAULT_TYPE, mode: str) -> None:
+async def _new_game(update: Update, context: ContextTypes.DEFAULT_TYPE, mode: str, argument: str | None = None) -> None:
     chat = update.effective_chat
-    resolved = _resolve_package(context, " ".join(context.args or []))
+    if argument is None:
+        argument = " ".join(context.args or [])
+    resolved = _resolve_package(context, argument)
     if not resolved:
         await update.effective_message.reply_text(
             "Paket topilmadi. Id yoki qidiruv so‘zini bering, masalan: /solo 959"
@@ -155,6 +160,12 @@ async def solo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def duel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await _new_game(update, context, "group")
+
+
+async def on_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    data = (update.effective_message.web_app_data.data or "").strip()
+    if data.startswith("start:"):
+        await _new_game(update, context, "solo", data.split(":", 1)[1])
 
 
 async def _send_question(chat_id: int, context: ContextTypes.DEFAULT_TYPE, session: Session) -> None:
@@ -302,6 +313,7 @@ def build_app(token: str) -> Application:
         CommandHandler("skip", skip),
         CommandHandler("accept", accept),
         CommandHandler("stop", stop),
+        MessageHandler(filters.StatusUpdate.WEB_APP_DATA, on_web_app_data),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_message),
     ])
     return application
