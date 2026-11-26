@@ -4,14 +4,7 @@
       "maxDuration": 60
     }
   },
-  "rewrites": [
-    { "source": "/api/webhook", "destination": "/api/index" },
-    { "source": "/api/status", "destination": "/api/index" },
-    { "source": "/api/setup", "destination": "/api/index" },
-    { "source": "/health", "destination": "/api/index" },
-    { "source": "/", "destination": "/api/index" }
-  ],
   "crons": [
-    { "path": "/api/setup", "schedule": "0 3 * * *" }
+    { "path": "/api/index", "schedule": "0 3 * * *" }
   ]
 }

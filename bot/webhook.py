@@ -392,7 +392,7 @@ async def ensure_webhook(application: Application, force: bool = False) -> None:
         base = "https://" + base
     try:
         await application.bot.set_webhook(
-            url=base.rstrip("/") + "/api/webhook",
+            url=base.rstrip("/") + "/api/index",
             secret_token=SECRET or None,
             allowed_updates=["message", "my_chat_member"],
             drop_pending_updates=True,
@@ -424,6 +424,15 @@ async def bootstrap(request: Request, call_next):
     return await call_next(request)
 
 
+def status_page(title: str, lines: list[str], status_code: int = 200) -> HTMLResponse:
+    body = "<br>".join(msg.esc(line) for line in lines)
+    return HTMLResponse(
+        f"<!doctype html><meta charset='utf-8'><title>{msg.esc(title)}</title>"
+        f"<h1>{msg.esc(title)}</h1><pre>{body}</pre>",
+        status_code=status_code,
+    )
+
+
 @app.get("/api/setup")
 async def setup():
     """Idempotent manual bootstrap: open once after deploying."""
@@ -436,10 +445,13 @@ async def setup():
         finally:
             await application.shutdown()
         if _setup_error:
-            return PlainTextResponse(f"Xatolik: {_setup_error}", status_code=500)
-        return PlainTextResponse(f"Webhook o‘rnatildi: {info.url}\n{info.pending_update_count} kutilayotgan xabar")
+            return status_page("Xatolik", [_setup_error], 500)
+        return status_page("Webhook", [
+            f"Webhook o‘rnatildi: {info.url}",
+            f"{info.pending_update_count} kutilayotgan xabar",
+        ])
     except Exception as exc:
-        return PlainTextResponse(f"Xatolik: {exc}", status_code=500)
+        return status_page("Xatolik", [str(exc)], 500)
 
 
 @app.get("/api/status")
@@ -463,7 +475,15 @@ async def status():
             lines.append(f"Kutilayotgan xabarlar: {info.pending_update_count}")
         except Exception as exc:
             lines.append(f"Telegram xatoligi: {exc}")
-    return PlainTextResponse("\n".join(lines))
+    return status_page("Bot holati", lines)
+
+
+@app.get("/api/index")
+async def index(request: Request):
+    """Vercel exposes api/index.py at this path; it doubles as a diagnostics page."""
+    if request.query_params.get("setup") == "1":
+        return await setup()
+    return await status()
 
 
 @app.get("/")
@@ -480,6 +500,7 @@ async def health():
 
 
 @app.post("/api/webhook")
+@app.post("/api/index")
 async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None = Header(default=None)):
     if SECRET and not secrets.compare_digest(x_telegram_bot_api_secret_token or "", SECRET):
         return Response(status_code=403)
