@@ -42,6 +42,13 @@ python3 scripts/set_webhook.py
 
 5. `/health` va `/` tekshiring; `/start`, `/solo 959`, `/duel 959` bilan sinab ko‘ring.
 
+Barchasini bir komandada bajarish uchun (tokenlar faqat lokal shell muhitida):
+
+```bash
+VERCEL_TOKEN=... VERCEL_ORG_ID=... VERCEL_PROJECT_ID=... \
+BOT_TOKEN=... WEBHOOK_SECRET=... bash scripts/deploy_all.sh
+```
+
 GitHub Actions orqali ham deploy qilish mumkin: repo Settings → Secrets and variables → Actions da `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secretlarini qo‘ying, keyin **Deploy Zakovat Agent to Vercel** workflow’sini ishga tushuring (`workflow_dispatch` yoki `repository_dispatch` `deploy-zakovat`). `BOT_TOKEN` va `WEBHOOK_SECRET` ni Vercel dashboard’ida qo‘yish shart — ular repo secretlariga yozilmaydi.
 
 Eslatma: Vercel serverless’da doimiy jarayon yo‘q, shuning uchun tilingan savollar faqat keyingi xabar/compound kelganda yopiladi. Doimiy real-time timer kerak bo‘lsa, botni `python3 run_bot.py` bilan uzluksiz serverda ishga tushurish kerak.

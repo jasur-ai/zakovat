@@ -213,7 +213,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Savol xabariga reply qilib yozish shart (ForceReply)."
     )
     keyboard = None
-    miniapp = os.getenv("MINIAPP_URL", "")
+    miniapp = os.getenv("MINIAPP_URL") or os.getenv("VERCEL_URL") or ""
+    if miniapp and not miniapp.startswith("http"):
+        miniapp = "https://" + miniapp
     if miniapp:
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Mini App ochish", web_app=WebAppInfo(url=miniapp))]])
     await update.effective_message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
