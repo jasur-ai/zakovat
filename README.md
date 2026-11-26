@@ -48,6 +48,37 @@ python3 scripts/export_zakovat.py \
 
 Skript URL dan `rounds / questions_per_round / package_id` ni ajratib oladi, API ga so‘rov yuboradi, HTML teglarni tozalaydi va JSON yozadi. Tarmoq cheklangan muhitda (masalan, sandbox) to‘g‘ridan API ga chiqish bloklanishi mumkin — shuning uchun tayyor JSON fayllar qo‘shib qo‘yildi.
 
+## Butun savollar bazasini olish (barcha paketlar)
+
+API ma'lumotlariga ko‘ra saytda **1266 ta paket** va **28814 ta savol** bor. Bularning hammasini bitta paket (959) bilan aralashtirib yubormaslik kerak — siz so‘ragan “to‘liq baza” mana shu butun to‘plamdir.
+
+Buning uchun `scripts/export_all.py` tayyorlandi. U:
+
+1. `/v1/package` dan barcha paketlar ro‘yxatini (100 tadan sahifalab) oladi;
+2. har bir paket uchun `/v1/package/{id}?include=questions` ga murojaat qiladi;
+3. barcha savollarni `text / answer / comment` bilan 5000 tadan shardinga bo‘lib yozadi;
+4. `data/all/manifest.json` ga umumiy hisob va paketlar indeksini qo‘yadi.
+
+Oddiy kompyuterda (saytga chiqish imkoni bor yerda) bajarish:
+
+```bash
+python3 scripts/export_all.py --out-dir data/all
+git add data/all
+git commit -m "Archive full Zakovat question bank"
+git push origin arena/791f4561-zakovat
+```
+
+Natija:
+
+```
+data/all/manifest.json
+data/all/questions/questions-0001.json
+data/all/questions/questions-0002.json
+...
+```
+
+**Muhim cheklov:** ushbu sandboxdan `api.zakovatklubi.uz` ga to‘g‘ridan tarmoq chiqishi bloklangan, GitHub Actions ham bu repo uchun ishlamaydi, Codespaces yaratishga ham token ruxsati yo‘q. Shuning uchun to‘liq 28 814 savol hozircha shu branchga yozib bo‘lmadi — faqat 959-paket (54 savol) arxivlandi. Yuqoridagi ikki komandani interneti bor muhitda bajarsangiz, butun baza avtomatik tarzda GitHub’dagi shu branchga yuklanadi. `.devcontainer/` va `scripts/full_export_codespace.sh` fayllari Codespaces/Actions muhitida ishlatish uchun qo‘shib qo‘yildi (u yerdan tarmoq ochiq bo‘lsa, skript o‘zi commit qiladi).
+
 ## Savollar eski ekanligini tekshirish
 
 - Paket sarlavhasi: `Intellektual Olimpiada doirasidagi “Zakovat” o‘yini savollari (19.12.2024–20.12.2024)`.
