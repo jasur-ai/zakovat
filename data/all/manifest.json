@@ -1,0 +1,6348 @@
+{
+  "source": "https://zakovatklubi.uz",
+  "api_root": "https://api.zakovatklubi.uz/v1",
+  "exported_at": "2026-11-26T12:15:54+00:00",
+  "package_count": 1266,
+  "question_count": 30853,
+  "shards": [
+    "questions/questions-0001.json",
+    "questions/questions-0002.json",
+    "questions/questions-0003.json",
+    "questions/questions-0004.json",
+    "questions/questions-0005.json",
+    "questions/questions-0006.json",
+    "questions/questions-0007.json"
+  ],
+  "packages": [
+    {
+      "id": 5,
+      "title": "Talabalar ligasi 8-tur",
+      "questions": 25
+    },
+    {
+      "id": 9,
+      "title": "Девятый тур студенческой лиги",
+      "questions": 27
+    },
+    {
+      "id": 14,
+      "title": "Турнир в министерстве юстиции",
+      "questions": 24
+    },
+    {
+      "id": 15,
+      "title": "Mahalla 17.08.2022",
+      "questions": 20
+    },
+    {
+      "id": 20,
+      "title": "Zakovat to'garagi (20.09.2022)",
+      "questions": 20
+    },
+    {
+      "id": 21,
+      "title": "Oliy ta'lim muassasalaridagi \"Zakovat\" klubi to‘garagi",
+      "questions": 20
+    },
+    {
+      "id": 22,
+      "title": "Oliy ta'lim muassasalaridagi \"Zakovat\" klubi to‘garagi (28.09.2022)",
+      "questions": 20
+    },
+    {
+      "id": 23,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (29.09.2022)",
+      "questions": 20
+    },
+    {
+      "id": 24,
+      "title": "Maktabdagi Zakovat to'garagi (27.09.2022)",
+      "questions": 20
+    },
+    {
+      "id": 25,
+      "title": "Maktabdagi Zakovat to'garagi (04.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 26,
+      "title": "OTMlardagi \"Zakovat\" to‘garagi (05.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 27,
+      "title": "Ekspromt jamoasi Professional liga 2022/2023 1-tur, Kuzgi mavsum savollar paketi (10.09.2022)",
+      "questions": 37
+    },
+    {
+      "id": 29,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi 07.10..2022",
+      "questions": 20
+    },
+    {
+      "id": 30,
+      "title": "Maktabdagi Zakovat to'garagi (11.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 31,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (11.10..2022)",
+      "questions": 20
+    },
+    {
+      "id": 32,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (12.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 33,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi 14.10.2022",
+      "questions": 20
+    },
+    {
+      "id": 35,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (19.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 36,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (20.10..2022)",
+      "questions": 20
+    },
+    {
+      "id": 37,
+      "title": "Maktabdagi Zakovat to'garagi (25.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 38,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (25.10..2022)",
+      "questions": 20
+    },
+    {
+      "id": 39,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (26.10.2022)",
+      "questions": 20
+    },
+    {
+      "id": 40,
+      "title": "Maktabdagi Zakovat to'garagi (01.11.2022)",
+      "questions": 20
+    },
+    {
+      "id": 41,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (02.11.2022)",
+      "questions": 20
+    },
+    {
+      "id": 42,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (09.11.2022)",
+      "questions": 20
+    },
+    {
+      "id": 44,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (17.11..2022)",
+      "questions": 20
+    },
+    {
+      "id": 45,
+      "title": "Чемпионат OKS Technologies по Заковат",
+      "questions": 26
+    },
+    {
+      "id": 47,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (23.11.2022)",
+      "questions": 20
+    },
+    {
+      "id": 52,
+      "title": "O‘qituvchilar o‘rtasidagi \"Zakovat\" intellektual turniri hududiy saralashi savollari (13.11.2022)",
+      "questions": 62
+    },
+    {
+      "id": 53,
+      "title": "\"Besh tashabbus\" olimpiadasi Respublika bosqichi (06.12.2022)",
+      "questions": 48
+    },
+    {
+      "id": 62,
+      "title": "Oliy ta'lim muassasalaridagi \"Zakovat\" klubi to‘garagi (25.01.2023))",
+      "questions": 20
+    },
+    {
+      "id": 71,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi (24.02.2023)",
+      "questions": 20
+    },
+    {
+      "id": 73,
+      "title": "Oliy ta'lim muassasalaridagi \"Zakovat\" klubi to‘garagi (01.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 74,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (02.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 75,
+      "title": "Xotin-qizlar o‘rtasidagi \"Zakovat\" intellektual turniri hududiy saralash bosqichi 1-15",
+      "questions": 15
+    },
+    {
+      "id": 76,
+      "title": "Xotin-qizlar o‘rtasidagi \"Zakovat\" intellektual turniri hududiy saralash bosqichi 16-30",
+      "questions": 15
+    },
+    {
+      "id": 77,
+      "title": "Xotin-qizlar o‘rtasidagi \"Zakovat\" intellektual turniri hududiy saralash bosqichi 31-45",
+      "questions": 15
+    },
+    {
+      "id": 78,
+      "title": "Xotin-qizlar o‘rtasidagi \"Zakovat\" intellektual turniri hududiy saralash bosqichi 1-36",
+      "questions": 36
+    },
+    {
+      "id": 80,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (09.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 81,
+      "title": "Maktabdagi Zakovat to'garagi (14.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 82,
+      "title": "Xotin-qizlar o‘rtasidagi \"Zakovat\" intellektual turniri Respublika bosqichi savollari",
+      "questions": 37
+    },
+    {
+      "id": 104,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (15.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 105,
+      "title": "KarSU jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 11
+    },
+    {
+      "id": 106,
+      "title": "Berkut jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 107,
+      "title": "Magnavr jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 108,
+      "title": "Ziyali jaslar jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 109,
+      "title": "Mag‘ripat topari jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 110,
+      "title": "ReMIX jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 13
+    },
+    {
+      "id": 111,
+      "title": "Tesey jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 13
+    },
+    {
+      "id": 112,
+      "title": "Ural jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 113,
+      "title": "Idrok jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 114,
+      "title": "Ishonch jamoasi Qoraqalpog‘iston-Xorazm marafoni savollari (12.03.2023)",
+      "questions": 11
+    },
+    {
+      "id": 115,
+      "title": "Buxoro viloyat hokimi kubogi uchun Zakovat intellektual o‘yini bo‘yicha Respublika ochiq turniri",
+      "questions": 60
+    },
+    {
+      "id": 116,
+      "title": "Anjanli bollar jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 117,
+      "title": "Burgutlar jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 13
+    },
+    {
+      "id": 118,
+      "title": "Shedevr jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 119,
+      "title": "Tiki-taka  jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 13
+    },
+    {
+      "id": 120,
+      "title": "Kandidat jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 121,
+      "title": "Lirika jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 122,
+      "title": "Oltiariq jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 11
+    },
+    {
+      "id": 123,
+      "title": "Reunion jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 124,
+      "title": "Kapitoliy jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 125,
+      "title": "Pentagon  jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 126,
+      "title": "Revolver  jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 13
+    },
+    {
+      "id": 127,
+      "title": "Spectrum jamoasi Farg‘ona-Namangan-Andijon marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 128,
+      "title": "Espero jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 129,
+      "title": "Jobir Ahmedov jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 130,
+      "title": "Benom jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 14
+    },
+    {
+      "id": 131,
+      "title": "Bingo jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 13
+    },
+    {
+      "id": 132,
+      "title": "Ekspromt jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 133,
+      "title": "Farrux Rafiqov jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 134,
+      "title": "Incognito jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 15
+    },
+    {
+      "id": 135,
+      "title": "Legion jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 136,
+      "title": "Metaverse jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 137,
+      "title": "Renessans jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 138,
+      "title": "Respect jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 139,
+      "title": "NAVI jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 140,
+      "title": "Metsenat jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 141,
+      "title": "Nostalgy jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 14
+    },
+    {
+      "id": 142,
+      "title": "Zero jamoasi Toshkent intellektual marafoni savollari (12.03.2023)",
+      "questions": 12
+    },
+    {
+      "id": 143,
+      "title": "Maktabdagi Zakovat to‘garagi (28.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 144,
+      "title": "Kvazar jamoasi Samarqand-Qashqadaryo-Surxondaryo marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 145,
+      "title": "Galacticos jamoasi Samarqand-Qashqadaryo-Surxondaryo marafoni savollari (12.03.2023)",
+      "questions": 10
+    },
+    {
+      "id": 146,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (30.03.2023)",
+      "questions": 20
+    },
+    {
+      "id": 147,
+      "title": "Maktabdagi Zakovat to‘garagi (04.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 148,
+      "title": "Ekspromt jamoasi Professional liga 2022/2023 Bahorgi mavsum 1-tur savollari",
+      "questions": 38
+    },
+    {
+      "id": 149,
+      "title": "Ikkinchi liga 2022/2023 Bahorgi mavsum 1-o‘yini (01.04.2023) savollar paketi",
+      "questions": 24
+    },
+    {
+      "id": 150,
+      "title": "Oliy ta'lim muassasalaridagi \"Zakovat\" klubi to‘garagi (05.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 151,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (07.04.2023)",
+      "questions": 22
+    },
+    {
+      "id": 152,
+      "title": "Metaverse jamoasi Professional liga 2022/2023 Bahorgi mavsum 2-tur savollari",
+      "questions": 40
+    },
+    {
+      "id": 153,
+      "title": "Ikkinchi liga 2022/2023 Bahorgi mavsum 2-tur o‘yini (08.04.2023) savollar paketi",
+      "questions": 26
+    },
+    {
+      "id": 154,
+      "title": "Maktablardagi \"Zakovat\" klubi to‘garagi (11.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 155,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Qishgi mavsum 1-tur o'yini (07.12.2022) savollar paketi",
+      "questions": 40
+    },
+    {
+      "id": 156,
+      "title": "Ikkinchi liga 2022 Yozgi mavsum 12-tur o‘yini (28.08.2022) savollar paketi",
+      "questions": 25
+    },
+    {
+      "id": 157,
+      "title": "Birinchi liga 2022 Kuzgi mavsum 1-tur o‘yini (10.09.2022) savollar paketi",
+      "questions": 27
+    },
+    {
+      "id": 158,
+      "title": "Navi jamoasi  Professional liga qishki mavsum 2-tur savollar paketi (07.01.2023)",
+      "questions": 38
+    },
+    {
+      "id": 159,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Qishgi mavsum 2-tur o'yini (14.12.2022) savollar paketi",
+      "questions": 38
+    },
+    {
+      "id": 160,
+      "title": "Professional liga 2022/2023 Yozgi mavsum 12-tur o‘yini (27.08.2022) savollar paketi",
+      "questions": 39
+    },
+    {
+      "id": 161,
+      "title": "Birinchi liga 2022 yozgi mavsum 2-tur o'yini savollar paketii",
+      "questions": 28
+    },
+    {
+      "id": 162,
+      "title": "Ikkinchi liga 2022/2023 Qishki mavsum 2-tur o‘yini (07.01.2023) savollar paketi",
+      "questions": 26
+    },
+    {
+      "id": 163,
+      "title": "\"Metaverse\" Professional liga 2022/2023 kuzgi mavsum 2-tur o‘yini (17.09.2022) savollar paketi",
+      "questions": 39
+    },
+    {
+      "id": 164,
+      "title": "\"Ekspromt\" Professional liga 2022/2023 kuzgi mavsum 1-tur (10.09.2022) savollar paketi",
+      "questions": 37
+    },
+    {
+      "id": 165,
+      "title": "\"Navi\" Professional liga 2022/2023 kuzgi mavsum 3-tur (01.10.2022) savollar paketi",
+      "questions": 37
+    },
+    {
+      "id": 166,
+      "title": "Ikkinchi liga 2022/2023 Qishki mavsum 3-tur o‘yini (21.01.2023) savollar paketi",
+      "questions": 27
+    },
+    {
+      "id": 167,
+      "title": "Ikkinchi liga 2022/2023 Kuzgi mavsum 2-tur o‘yini (17.09.2023) savollar paketi",
+      "questions": 25
+    },
+    {
+      "id": 168,
+      "title": "Metaverse jamoasi  Professional liga 2022-2023 qishki mavsum 3-tur savollar paketi (21.01.2023)",
+      "questions": 36
+    },
+    {
+      "id": 169,
+      "title": "Ikkinchi liga 2022/2023 Qishki mavsum 4-tur o'yini savollar paketi (28.01.2023)",
+      "questions": 24
+    },
+    {
+      "id": 170,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Qishgi mavsum 3-tur o'yini (21.12.2022) savollar paketi",
+      "questions": 37
+    },
+    {
+      "id": 171,
+      "title": "Ikkinchi liga 2022/2023 Kuzgi mavsum 3-tur o'yini savollar paketi (02.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 172,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Qishgi mavsum Magnum jamoasi (21.12.2022) savollar paketi",
+      "questions": 36
+    },
+    {
+      "id": 173,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (12.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 174,
+      "title": "Ikkinchi liga 2022/2023 Kuzgi mavsum 11-tur o'yini savollar paketi (26.11.2022)",
+      "questions": 25
+    },
+    {
+      "id": 175,
+      "title": "Ikkinchi liga 2022/2023 Kuzgi mavsum 10-tur o'yini savollar paketi (19.11.2022)",
+      "questions": 28
+    },
+    {
+      "id": 176,
+      "title": "Jobir Ahmedov jamoasi rofessional va Birinchi liga kuzgi mavsumi 11-tur o‘yini (26.11.2022)",
+      "questions": 39
+    },
+    {
+      "id": 177,
+      "title": "Farrux Rafiqov jamoasi Professional liga 2022 Yozgi mavsum 9-tur o'yini. (06.08.2022)",
+      "questions": 36
+    },
+    {
+      "id": 178,
+      "title": "Birinchi liga 2022 Yozgi mavsum 9-tur o'yini. (07.08.2022)",
+      "questions": 24
+    },
+    {
+      "id": 179,
+      "title": "Ikkinchi liga 2022/2023 kuzgi mavsumi 12-tur o‘yini (03.12.2023)",
+      "questions": 26
+    },
+    {
+      "id": 180,
+      "title": "Birinchi liga 2022 yozgi mavsum 10-tur o'yini (13.08.2022)",
+      "questions": 24
+    },
+    {
+      "id": 181,
+      "title": "Jobir Ahmedov jamoasi Professional liga 2022 Yozgi mavsum 10-tur o'yini. (13.08.2022)",
+      "questions": 38
+    },
+    {
+      "id": 182,
+      "title": "Farg'ona jamoasi Professional liga 2022-2023 kuzgi mavsum 4-tur savollar paketi (08.10.2023)",
+      "questions": 43
+    },
+    {
+      "id": 183,
+      "title": "Ekspromt jamoasi Professional va Birinchi liga qishki mavsumi 1-tur",
+      "questions": 41
+    },
+    {
+      "id": 184,
+      "title": "Bingo jamoasi Professional va birinchi liga kuzgi mavsum 7-tur (29.10.2022)",
+      "questions": 41
+    },
+    {
+      "id": 185,
+      "title": "Renessans jamoasi Professional liga 2022-2023 kuzgi mavsum 5-tur savollar paketi (15.10.2022)",
+      "questions": 39
+    },
+    {
+      "id": 186,
+      "title": "Benom jamoasi Professional liga Yozgi mavsum  6-tur 16.07.2022",
+      "questions": 1
+    },
+    {
+      "id": 187,
+      "title": "Benom jamoasi Professional liga Yozgi mavsum 6-tur savollar paketi (16.07.2022)",
+      "questions": 40
+    },
+    {
+      "id": 188,
+      "title": "Espero jamoasi Professional va Birinchi liga Bahorgi mavsum-2022 9-tur savollar  (07.05.2022)",
+      "questions": 34
+    },
+    {
+      "id": 189,
+      "title": "Birinchi liga 2022 yozgi mavsum 3-tur",
+      "questions": 28
+    },
+    {
+      "id": 190,
+      "title": "Milliy jamoasi Professional liga Yozgi mavsum 7-tur savollar paketi  (23.07.2022)",
+      "questions": 38
+    },
+    {
+      "id": 191,
+      "title": "No Comment jamoasi Professional va Birinchi liga Yozgi mavsum 2022 2-tur savolla paketi (11.06.2022)",
+      "questions": 38
+    },
+    {
+      "id": 192,
+      "title": "Benom jamoasi Professional liga 2022-2023 kuzgi mavsum 6-tur savollar paketi (22.10.2022)",
+      "questions": 36
+    },
+    {
+      "id": 193,
+      "title": "Ikkinchi liga kuzgi mavsum 9-tur savollar paketi (12.11.2022)",
+      "questions": 24
+    },
+    {
+      "id": 194,
+      "title": "Ikkinchi liga kuzgi mavsum 5-tur savollar paketi (15.10.2022)",
+      "questions": 24
+    },
+    {
+      "id": 195,
+      "title": "Ikkinchi liga kuzgi mavsum 8-tur savollar paketi (05.11.2022)",
+      "questions": 27
+    },
+    {
+      "id": 196,
+      "title": "Farrux Rafiqov jamoasi Professional va Birinchi liga Bahorgi mavsum 10-tur savollar  (14.05.2022)",
+      "questions": 34
+    },
+    {
+      "id": 197,
+      "title": "Ikkinchi liga kuzgi mavsumi 6-tur savollar paketi (22.10.2022)",
+      "questions": 24
+    },
+    {
+      "id": 198,
+      "title": "Ikkinchi liga kuzgi mavsumi 7-tur savollar paketi (29.10.2022)",
+      "questions": 24
+    },
+    {
+      "id": 199,
+      "title": "Espero jamoasi Professional liga Yozgi mavsum 8-tur savollar paketi (30.07.2022)",
+      "questions": 37
+    },
+    {
+      "id": 200,
+      "title": "Ekspromt jamoasi Professional liga Yozgi mavsum 1-tur savollar paketi (04.06.2022)",
+      "questions": 38
+    },
+    {
+      "id": 201,
+      "title": "Jobir Ahmedov jamoasi Professional liga Bahorgi mavsum-2022 11-tur savollar  (21.05.2022)",
+      "questions": 33
+    },
+    {
+      "id": 202,
+      "title": "Espero jamoasi Professional liga kuzgi mavsum-2022 8-tur savollar (05.11.2022)",
+      "questions": 36
+    },
+    {
+      "id": 203,
+      "title": "Legion jamoasi Professional liga kuzgi mavsum-2022 10-tur savollar (19.11.2022)",
+      "questions": 36
+    },
+    {
+      "id": 204,
+      "title": "Asror Norqulov jamoasi Professional liga Bahorgi mavsum-2022 12-tur savollar  (28.05.2022)",
+      "questions": 34
+    },
+    {
+      "id": 205,
+      "title": "Farrux Rafiqov jamoasi Professional liga kuzgi mavsum-2022 9-tur savollar (12.11.2022)",
+      "questions": 36
+    },
+    {
+      "id": 206,
+      "title": "Bahodir Anorovning Birinchi liga Yozgi mavsum-2022 1-tur savollar  (06.06.2022)",
+      "questions": 28
+    },
+    {
+      "id": 207,
+      "title": "Bahodir Anorov Ikkinchi liga qishki mavsumi 1-tur o‘yini(10.12.2022)",
+      "questions": 28
+    },
+    {
+      "id": 208,
+      "title": "Abdurasul Abdullayev Professional va Birinchi liga kuzgi mavzum 12-tur(03.12.2022)",
+      "questions": 37
+    },
+    {
+      "id": 209,
+      "title": "Birinchi liga yozgi mavsum 2022 11-tur savollari (21.08.2022)",
+      "questions": 27
+    },
+    {
+      "id": 210,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Qishgi mavsum Google jamoasi (11.01.2023) savollar paketi",
+      "questions": 42
+    },
+    {
+      "id": 211,
+      "title": "Metavers jamoasi Professional liga yozgi mavsum-2022 3-tur savollar (18.06.2022)",
+      "questions": 42
+    },
+    {
+      "id": 212,
+      "title": "Legion jamoasi Professional liga yozgi  mavsum-2022 4-tur savollari (25.06.2022)",
+      "questions": 39
+    },
+    {
+      "id": 213,
+      "title": "Farg'ona jamoasi Professional ligasi Yozgi mavsum-2022 11-tur (21.08.2022)",
+      "questions": 40
+    },
+    {
+      "id": 214,
+      "title": "Birinchi liga Yozgi mavsum 2022 (07.08.2022)",
+      "questions": 25
+    },
+    {
+      "id": 215,
+      "title": "Ikkinchi liga qishki mavsumi 2-tur savollar paketi (07.01.2023)",
+      "questions": 26
+    },
+    {
+      "id": 216,
+      "title": "Benom jamoasi Professional liga 2022-2023 qishki mavsum 6-tur savollar paketi (11.02.2023)",
+      "questions": 36
+    },
+    {
+      "id": 217,
+      "title": "Birinchi liga Yozgi mavsum 8-tur 2022 (23.07.2022)",
+      "questions": 25
+    },
+    {
+      "id": 218,
+      "title": "Ikkinchi liga 2022-2023 Qishki mavsum 8-tur o'yini (28.02.2023)",
+      "questions": 26
+    },
+    {
+      "id": 219,
+      "title": "Legion jamoasi  Professional liga 2022-2023 qishki mavsum 10-tur savollar paketi (11.03.2023)",
+      "questions": 42
+    },
+    {
+      "id": 220,
+      "title": "Respect jamoasining Birinchi liga Yozgi mavsum 8-tur savollar paketi (30.07.2022)",
+      "questions": 24
+    },
+    {
+      "id": 221,
+      "title": "Ikkinchi liga 2023-yil Qishki mavsum 7-tur o'yini savollar paketi (18.02.2023)",
+      "questions": 24
+    },
+    {
+      "id": 222,
+      "title": "Birinchi liga 2022 yil Yozgi mavsum 6-tur savollar paketi (16.07.2022)",
+      "questions": 25
+    },
+    {
+      "id": 223,
+      "title": "Ikkinchi liga qishki mavsum 3-tur savollar paketi (21.01.2023)",
+      "questions": 27
+    },
+    {
+      "id": 224,
+      "title": "Metaverse jamoasi Professional liga 2022-2023 qishki mavsum 3-tur savollar paketi (21.01.2023)",
+      "questions": 38
+    },
+    {
+      "id": 225,
+      "title": "Ikkinchi liga qishki mavsum 5-tur savollar paketi (04.02.2023)",
+      "questions": 24
+    },
+    {
+      "id": 226,
+      "title": "Espero jamoasi Professional liga 2022-2023 qishki mavsum 8-tur savollar paketi (25.02.2023)",
+      "questions": 36
+    },
+    {
+      "id": 227,
+      "title": "Idrok jamoasi Profliga Yozgi mavsum 1-tur (02.06.2022)",
+      "questions": 34
+    },
+    {
+      "id": 228,
+      "title": "Ikkinchi liga Qishki mavsum 6-tur savollari (11.02.2023)",
+      "questions": 24
+    },
+    {
+      "id": 229,
+      "title": ",,Renessans'' Professional liga 2022-2023 qishki mavsum 5-tur savollar paketi (04.02.2023)",
+      "questions": 39
+    },
+    {
+      "id": 230,
+      "title": "Xorazm Zakovat klubi Kuzgi mavsum 1-tur savollari (Idrok jamoasi) (08.09.2022)",
+      "questions": 30
+    },
+    {
+      "id": 231,
+      "title": "Ikkinchi liga Qishki mavsum 8-tur(25.02.2023)",
+      "questions": 26
+    },
+    {
+      "id": 232,
+      "title": "Ikkinchi liga Qishgi mavsum 2022-2023 9-tur o'yini. (04.03.2023)",
+      "questions": 25
+    },
+    {
+      "id": 233,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (14.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 234,
+      "title": "Ikkinchi liga Bahorgi mavsum 2022-2023 1-tur (01.04.2023)",
+      "questions": 24
+    },
+    {
+      "id": 235,
+      "title": "Ikkinchi liga 2023 yil Qishki mavsum 8-tur savollari (25.02.2023)",
+      "questions": 26
+    },
+    {
+      "id": 236,
+      "title": "Ikkinchi liga Bahorgi mavsum 2023 2-tur (08.04.2023)",
+      "questions": 26
+    },
+    {
+      "id": 237,
+      "title": "Bahodir Anorov Talaba-o‘quvchilar ligasi va O‘quvchilar ligasi o‘yinlari 8-tur (09.03.2023)",
+      "questions": 26
+    },
+    {
+      "id": 238,
+      "title": "\"Benom\" Professional  liga Qishki mavsum 2022-2023 6-tur 11.02.2023",
+      "questions": 36
+    },
+    {
+      "id": 239,
+      "title": "Ikkinchi liga 2022/2023 Qishgi mavsum 10-tur o'yini  (11.03.2023)",
+      "questions": 24
+    },
+    {
+      "id": 240,
+      "title": "Birinchi liga Yozgi mavsum-2022 4-tur (25.06.2022)",
+      "questions": 24
+    },
+    {
+      "id": 241,
+      "title": "Birinchi liga Yozgi mavsum-2022 5-tur (02.07.2022)",
+      "questions": 25
+    },
+    {
+      "id": 242,
+      "title": "Xorazm Zakovat klubi yozgi mavsum 2-tur ReMIX jamoasi savollar paketi (09.06.2022)",
+      "questions": 33
+    },
+    {
+      "id": 243,
+      "title": "Bingo jamoasi Professional va birinchi liga qishgi mavsum 7-tur (18.02.2023)",
+      "questions": 42
+    },
+    {
+      "id": 244,
+      "title": "Xorazm Zakovat klubi Professional liga Qishki mavsum 7-tur Idrok jamoasi savollari (19.01.2023)",
+      "questions": 38
+    },
+    {
+      "id": 245,
+      "title": "Xorazm Zakovat klubi Yozgi mavsum \"Royal Team\" jamoasi savollar paketi (16.06.2022)",
+      "questions": 33
+    },
+    {
+      "id": 246,
+      "title": "Xorazm Zakovat klubi Qishki mavsum \"Positive\" jamoasi savollar paketi (05.01.2023)",
+      "questions": 31
+    },
+    {
+      "id": 247,
+      "title": "Xorazm Zakovat klubi Qishki mavsum 2-tur Adrenalin jamoasi savollari (15.12.2022)",
+      "questions": 32
+    },
+    {
+      "id": 248,
+      "title": "Xorazm Zakovat klubi Qishki mavsum 8-tur Renessans jamoasi savollari (26.01.2023)",
+      "questions": 35
+    },
+    {
+      "id": 249,
+      "title": "Xorazm Zakovat klubi Qishki mavsum 1-tur Ural jamoasi savollari (01.12.2022)",
+      "questions": 32
+    },
+    {
+      "id": 250,
+      "title": "Xorazm Zakovat klubi Qishki mavsum 9-tur ReMIX jamoasi savollari (02.02.2023)",
+      "questions": 35
+    },
+    {
+      "id": 251,
+      "title": "Jobir Ahmedov Professional va birinchi liga  qishgi mavsum 11-tur savollari (18.03.2023)",
+      "questions": 37
+    },
+    {
+      "id": 252,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Qishgi mavsum Iceberg jamoasi (18.01.2023) savollar paketi",
+      "questions": 41
+    },
+    {
+      "id": 253,
+      "title": "2023-Bahorgi mavsum Reyting oyini 6-tur",
+      "questions": 0
+    },
+    {
+      "id": 254,
+      "title": "Maktablardagi Zakovat to‘garagi (18.04.2023)",
+      "questions": 22
+    },
+    {
+      "id": 255,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 1-tur Ekspromt jamoasi",
+      "questions": 26
+    },
+    {
+      "id": 256,
+      "title": "Xorazm Zakovat klubi Qishki mavsum 10-tur Nemesis jamoasi savollari (09.02.2023)",
+      "questions": 34
+    },
+    {
+      "id": 257,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 2-tur \"Metaverse\" jamoasi",
+      "questions": 26
+    },
+    {
+      "id": 258,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 3-tur Legion jamoasi",
+      "questions": 25
+    },
+    {
+      "id": 259,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 4-tur Renessans jamoasi",
+      "questions": 31
+    },
+    {
+      "id": 260,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 5-tur Bingo jamoasi",
+      "questions": 32
+    },
+    {
+      "id": 261,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 6-tur Bloomberg jamoasi",
+      "questions": 33
+    },
+    {
+      "id": 262,
+      "title": "2021/22-yilgi Professional Liga Bahorgi mavsum 7-tur Milliy jamoasi",
+      "questions": 33
+    },
+    {
+      "id": 263,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (19.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 264,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (20.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 265,
+      "title": "Talabalar ligasi 2022/2023 Bahorgi mavsum 4-tur o‘yini savollari (Hamro Boltaboyev)",
+      "questions": 24
+    },
+    {
+      "id": 266,
+      "title": "Ikkinchi liga 2022/2023 Bahorgi mavsum 3-tur o‘yini (15.04.2023) savollar paketi",
+      "questions": 29
+    },
+    {
+      "id": 267,
+      "title": "Incognito jamoasi Professional liga 2022/2023 Bahorgi mavsum 3-tur savollari (15.04.2023)",
+      "questions": 40
+    },
+    {
+      "id": 268,
+      "title": "Maktablardagi Zakovat to‘garagi (25.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 269,
+      "title": "O‘quvchilar ligasi 2022/2023 Bahorgi mavsum 3-tur savollari",
+      "questions": 28
+    },
+    {
+      "id": 270,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (26.04.2023)",
+      "questions": 20
+    },
+    {
+      "id": 271,
+      "title": "Maktabdagi Zakovat to‘garagi (02.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 272,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (03.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 273,
+      "title": "Farg‘ona jamoasi Professional liga 2022/2023 Bahorgi mavsum 4-tur savollari",
+      "questions": 38
+    },
+    {
+      "id": 274,
+      "title": "Talabalar ligasi 2022/2023 Bahorgi mavsum 5-tur o‘yini savollari (Doston Nematov)",
+      "questions": 27
+    },
+    {
+      "id": 275,
+      "title": "Chempionlar kubogi 2022/2023 Qishki mavsum savollar paketi",
+      "questions": 36
+    },
+    {
+      "id": 276,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (10.05.2023)",
+      "questions": 21
+    },
+    {
+      "id": 277,
+      "title": "Maktabdagi Zakovat to‘garagi (10.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 278,
+      "title": "O‘rta-maxsus va professional ta'lim to'garagi (11.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 279,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi 12.05.2023",
+      "questions": 20
+    },
+    {
+      "id": 280,
+      "title": "Maktablardagi Zakovat to‘garagi (16.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 281,
+      "title": "OTMlardagi \"Zakovat\" to‘garagi (29.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 282,
+      "title": "Maktab ligasi Bahorgi mavsum (27.04.2023)",
+      "questions": 24
+    },
+    {
+      "id": 283,
+      "title": "Ikkinchi liga bahorgi mavsumi 4-tur o‘yini  (27.04.2023)",
+      "questions": 24
+    },
+    {
+      "id": 284,
+      "title": "Renessans jamoasi Professional liga 2022\\2023 bahorgi mavsum 5-tur (29.04.2023)",
+      "questions": 36
+    },
+    {
+      "id": 285,
+      "title": "Ikkinchi liga bahorgi mavsumi 5-tur o‘yini (29.04.2023)",
+      "questions": 27
+    },
+    {
+      "id": 286,
+      "title": "O'quvchilar ligasi 2022/2023 Bahorgi mavsum 5-tur savollari (04.05.2023)",
+      "questions": 24
+    },
+    {
+      "id": 287,
+      "title": "Ikkinchi liga bahorgi mavsumi 6-tur o‘yini  (06.05.2023)",
+      "questions": 25
+    },
+    {
+      "id": 288,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (07.06.2023)",
+      "questions": 21
+    },
+    {
+      "id": 289,
+      "title": "Beshikdan qabrgacha ilm izla 1-tur",
+      "questions": 36
+    },
+    {
+      "id": 290,
+      "title": "Talabalar ligasi 2022/2023 Bahorgi mavsum 6-tur savollari (04.05.2023)",
+      "questions": 27
+    },
+    {
+      "id": 291,
+      "title": "Espero jamoasi Professinal liga 2022/2023 bahorgi mavsum 6-tur (06.05.2023)",
+      "questions": 36
+    },
+    {
+      "id": 292,
+      "title": "Buxoro zakovat klubi. Bahorgi mavsum 2-tur savollari",
+      "questions": 0
+    },
+    {
+      "id": 293,
+      "title": "Buxoro zakovat klubi. Bahorgi mavsum 2-tur savollari",
+      "questions": 38
+    },
+    {
+      "id": 294,
+      "title": "Buxoro zakovat klubi.Bahorgi mavsum 9-tur savollari (12.05.2023)",
+      "questions": 37
+    },
+    {
+      "id": 295,
+      "title": "Buxoro zakovat klubi. Bahorgi mavsum 12-tur savollari (06.06.2023)",
+      "questions": 36
+    },
+    {
+      "id": 296,
+      "title": "O'quvchilar ligasi 2022/2023 Bahorgi mavsum 6-tur savollari (11.05.2023)",
+      "questions": 27
+    },
+    {
+      "id": 297,
+      "title": "Talabalar ligasi 2022/2023 Bahorgi mavsum 7-tur savollari (11.05.2023)",
+      "questions": 24
+    },
+    {
+      "id": 298,
+      "title": "Ikkinchi liga bahorgi mavsumi 7-tur o‘yini (13.05.2023)",
+      "questions": 24
+    },
+    {
+      "id": 299,
+      "title": "O'quvchilar ligasi 2022/2023 Bahorgi mavsum 7-tur savollari (18.05.2023)",
+      "questions": 26
+    },
+    {
+      "id": 300,
+      "title": "Bingo jamoasi navbatchiligi Professional va Birinchi liga bahorgi mavsum 7-tur(13.05.2023)",
+      "questions": 40
+    },
+    {
+      "id": 301,
+      "title": "Talabalar ligasi 2022/2023 Bahorgi mavsum 8-tur savollari (18.05.2023)",
+      "questions": 25
+    },
+    {
+      "id": 302,
+      "title": "Benom jamoasi Professional va Birinchi liga bahorgi mavsumi 7-tur o‘yini (20.05.2023)",
+      "questions": 40
+    },
+    {
+      "id": 303,
+      "title": "Qashqadaryo professinal ligasi  bahorgi mavsum 1-tur Google jamoasi navbatchliligi",
+      "questions": 37
+    },
+    {
+      "id": 304,
+      "title": "Qashqadaryo Professional Ligasi 2022/2023 Bahorgi mavsum 7-tur o'yini (19.05.2023) savollar paketi",
+      "questions": 2
+    },
+    {
+      "id": 305,
+      "title": "II Чемпионата Узбекистана по игре Zakovat  на русском языке (14.05.2023)",
+      "questions": 61
+    },
+    {
+      "id": 306,
+      "title": "Farruh Rafiqov jamoasi Professinal liga 2022/2023 bahorgi mavsum 9-tur (27.05.2023)",
+      "questions": 39
+    },
+    {
+      "id": 307,
+      "title": "Ikkinchi liga bahorgi mavsum 8-tur o‘yini  (20.05.2023)",
+      "questions": 26
+    },
+    {
+      "id": 308,
+      "title": "Legion jamoasi Professinal liga 2022/2023 bahorgi mavsum 10-tur (03.06.2023)",
+      "questions": 38
+    },
+    {
+      "id": 309,
+      "title": "Ikkinchi liga bahorgi mavsum 9-tur o‘yini  (27.05.2023)",
+      "questions": 27
+    },
+    {
+      "id": 310,
+      "title": "Ikkinchi liga bahorgi mavsumi 10-tur o‘yini  (03.06.2023)",
+      "questions": 25
+    },
+    {
+      "id": 311,
+      "title": "Jobir Ahmedov jamoasi Professinal liga 2022/2023 bahorgi mavsum 11-tur (10.06.2023)",
+      "questions": 37
+    },
+    {
+      "id": 312,
+      "title": "Ikkinchi liga bahorgi mavsum 11-tur  o'yini (10.06.2023)",
+      "questions": 29
+    },
+    {
+      "id": 313,
+      "title": "Professinal liga 2022/2023 bahorgi mavsum 12-tur (17.06.2023)",
+      "questions": 40
+    },
+    {
+      "id": 314,
+      "title": "Ikkinchi liga bahorgi mavsum 12-tur o'yini (17.06.2023)",
+      "questions": 25
+    },
+    {
+      "id": 315,
+      "title": "O'zbekiston Respublikasida xususiy amaliyot bilan shug'ullanuvchi notariuslar o'rtasidagi turnir",
+      "questions": 25
+    },
+    {
+      "id": 316,
+      "title": "\"30-iyun Yoshlar kuni\" munosabati bilan RRIHHQ qo‘mitasi xodimlari o‘rtasidagi \"Zakovat\" turniri",
+      "questions": 25
+    },
+    {
+      "id": 317,
+      "title": "''Agrar yoshlar forumi\" doirasida o‘tkazilgan \"Zakovat\"  turniri",
+      "questions": 30
+    },
+    {
+      "id": 318,
+      "title": "Kronos jamoasi navbatchiligi Professional va Birinchi liga yozgi mavsumi 2-tur o‘yini",
+      "questions": 39
+    },
+    {
+      "id": 319,
+      "title": "Metaverse jamoasi Professinal liga 2022/2023 yozgi mavsum 1-tur (24.06.2023)",
+      "questions": 41
+    },
+    {
+      "id": 320,
+      "title": "Ikkinchi liga yozgi mavsum 2-tur o'yini (01.07.2023)",
+      "questions": 26
+    },
+    {
+      "id": 323,
+      "title": "Ikkinchi liga yozgi mavsum 1-tur o'yini (24.06.2023)",
+      "questions": 25
+    },
+    {
+      "id": 324,
+      "title": "Sodiq school jamoasi Professinal liga 2022/2023 yozgi mavsum 3-tur (08.07.2023)",
+      "questions": 37
+    },
+    {
+      "id": 325,
+      "title": "Ikkinchi liga yozgi mavsum 3-tur o'yini (08.07.2023)",
+      "questions": 24
+    },
+    {
+      "id": 326,
+      "title": "Nostalgy jamoasi Professional liga 2022/2023 yozgi mavsum 4-tur (15.07.2023)",
+      "questions": 37
+    },
+    {
+      "id": 327,
+      "title": "Do'stlik kubogi (23.07.2023)",
+      "questions": 38
+    },
+    {
+      "id": 328,
+      "title": "Ikkinchi liga yozgi mavsum 4-tur o'yini (15.04.2023)",
+      "questions": 27
+    },
+    {
+      "id": 329,
+      "title": "Renessans jamoasi Professinal liga 2022/2023 yozgi mavsum 5-tur (18.07.2023)",
+      "questions": 38
+    },
+    {
+      "id": 330,
+      "title": "Jobir Ahmedov jamoasi Professional va Birinchi liga 2022/2023 yozgi mavsumi 6-tur o‘yini(22.07.2023)",
+      "questions": 40
+    },
+    {
+      "id": 331,
+      "title": "Qashqadaryo professional ligasi  yozgi mavsum 8-tur Antanta jamoasi navbatchliligi",
+      "questions": 42
+    },
+    {
+      "id": 332,
+      "title": "Maktabgacha ta’lim agentligi xodimlari o‘rtasida zakovat musobaqasi",
+      "questions": 24
+    },
+    {
+      "id": 333,
+      "title": "Chempionlar kubogi savollari (30.07.2023)",
+      "questions": 38
+    },
+    {
+      "id": 334,
+      "title": "Buxoro Professional Ligasi yozgi mavsum 7-tur (25.07.2023)",
+      "questions": 35
+    },
+    {
+      "id": 335,
+      "title": "Ikkinchi liga yozgi mavsum 5-tur o‘yini(22.07.2023)",
+      "questions": 24
+    },
+    {
+      "id": 336,
+      "title": "Benom jamoasi Professinal liga 2023-yil yozgi mavsum 7-tur (29.07.2023)",
+      "questions": 40
+    },
+    {
+      "id": 337,
+      "title": "Ikkinchi Liga Yozgi mavsum 6-tur (29.07.23)",
+      "questions": 26
+    },
+    {
+      "id": 338,
+      "title": "Bingo jamoasi Professinal liga 2023-yil yozgi mavsum 8-tur (05.08.2023)",
+      "questions": 38
+    },
+    {
+      "id": 339,
+      "title": "Legion jamoasi Professional liga 2022/2023 yozgi mavsum 9-tur (12.08.23)",
+      "questions": 38
+    },
+    {
+      "id": 340,
+      "title": "Oltiariq jamoasi Farg'ona zakovat klubi yozgi mavsum 1-tur (25.06.2023)",
+      "questions": 27
+    },
+    {
+      "id": 341,
+      "title": "Ikkinchi Liga Yozgi mavsum 7-tur (05.08.23)",
+      "questions": 24
+    },
+    {
+      "id": 342,
+      "title": "Galacticos jamoasi Samarqand zakovat klubi yozgi ligasi 1-tur (26.06.2023)",
+      "questions": 30
+    },
+    {
+      "id": 343,
+      "title": "Kvazar jamoasi Samarqand zakovat klubi yozgi ligasi 2-tur (03.07.2023)",
+      "questions": 31
+    },
+    {
+      "id": 344,
+      "title": "Sirdaryo Zakovat professional ligasi Yozgi mavsum 1-tur",
+      "questions": 26
+    },
+    {
+      "id": 345,
+      "title": "Alfraganuz jamoasi Farg'ona zakovat klubi yozgi mavsum 2-tur (09.07.2023)",
+      "questions": 25
+    },
+    {
+      "id": 346,
+      "title": "Sirius jamoasi Samarqand zakovat klubi yozgi ligasi 3-tur (10.07.2023)",
+      "questions": 34
+    },
+    {
+      "id": 347,
+      "title": "\"Eko zakovat\"",
+      "questions": 24
+    },
+    {
+      "id": 348,
+      "title": "Farrux Rafiqov jamoasi Professional liga 2022/2023 yozgi mavsum 10-tur (19.08.23)",
+      "questions": 40
+    },
+    {
+      "id": 349,
+      "title": "Feniks jamoasi Samarqand zakovat klubi yozgi ligasi 4-tur (17.07.2023)",
+      "questions": 35
+    },
+    {
+      "id": 350,
+      "title": "Yakudza jamoasi Farg'ona zakovat klubi yozgi mavsum 4-tur (23.07.2023)",
+      "questions": 26
+    },
+    {
+      "id": 351,
+      "title": "Navoiy viloyati intellektual olimpiadasi savollari",
+      "questions": 38
+    },
+    {
+      "id": 352,
+      "title": "Qoraqalpog'iston Respublikasi Intellektual Olimpiadasi savollari (05.08.2023)",
+      "questions": 37
+    },
+    {
+      "id": 353,
+      "title": "Team Invectus jamoasi Samarqand zakovat klubi yozgi ligasi 5-tur (24.07.2023)",
+      "questions": 30
+    },
+    {
+      "id": 354,
+      "title": "Sirdaryo Zakovat professional ligasi Yozgi mavsum 2-tur",
+      "questions": 28
+    },
+    {
+      "id": 355,
+      "title": "Sirdaryo viloyati Zakovat professional ligasi Yozgi mavsum 3-tur",
+      "questions": 27
+    },
+    {
+      "id": 356,
+      "title": "Sirdaryo viloyati Zakovat professional ligasi Yozgi mavsum 4-tur",
+      "questions": 30
+    },
+    {
+      "id": 357,
+      "title": "Reunion jamoasi Farg'ona zakovat klubi 3-tur (16.07.2023)",
+      "questions": 28
+    },
+    {
+      "id": 358,
+      "title": "Tafakkur Time jamoasi Samarqand zakovat klubi yozgi ligasi 6-tur (31.07.2023)",
+      "questions": 33
+    },
+    {
+      "id": 359,
+      "title": "Rebellion jamoasi Farg'ona zakovat klubi 5-tur (13.08.2023)",
+      "questions": 27
+    },
+    {
+      "id": 360,
+      "title": "Пакет вопросов I Открытого чемпионата Азии по игре «Заковат» (12-13.08.2023)",
+      "questions": 94
+    },
+    {
+      "id": 361,
+      "title": "Legion jamoasi Samarqand zakovat klubi yozgi ligasi 7-tur (07.08.2023)",
+      "questions": 33
+    },
+    {
+      "id": 362,
+      "title": "Jizzax viloyati Intellektual Olimpiadasi savollari (20.08.2023)",
+      "questions": 51
+    },
+    {
+      "id": 363,
+      "title": "Vektor jamoasi Farg'ona zakovat klubi 6-tur (13.08.2023)",
+      "questions": 29
+    },
+    {
+      "id": 364,
+      "title": "Qoraqalpog'iston Respublikasi Intellektual Olimpiadasi Breyn Ring savollari (06.08.2023)",
+      "questions": 130
+    },
+    {
+      "id": 365,
+      "title": "Sirdaryo viloyati intellektual olimpiadasi zakovat savollari",
+      "questions": 36
+    },
+    {
+      "id": 366,
+      "title": "Progress jamoasi Samarqand zakovat klubi yozgi ligasi 8-tur (14.08.2023)",
+      "questions": 34
+    },
+    {
+      "id": 367,
+      "title": "PI jamoasi Samarqand zakovat klubi yozgi ligasi 9-tur (21.08.2023)",
+      "questions": 33
+    },
+    {
+      "id": 368,
+      "title": "Namangan viloyati Adliya boshqarmasi hodimlari o'rtasida Zakovat turniri",
+      "questions": 24
+    },
+    {
+      "id": 369,
+      "title": "Namangan viloyati Ichki ishlar boshqarmasi xodimlari o'rtasida Zakovat turniri",
+      "questions": 24
+    },
+    {
+      "id": 370,
+      "title": "Namangan viloyati University of Business and Science xususiy OTM o'qituvchilari o'rtasida turnir",
+      "questions": 24
+    },
+    {
+      "id": 371,
+      "title": "Navoiy viloyati Kasaba uyushmalari federatsiyasiga tegishli tashkilotlar o'rtasida zakovat o'yini",
+      "questions": 24
+    },
+    {
+      "id": 372,
+      "title": "Bermud jamoasi Buxoro zakovat klubi yozgi ligasi 2-tur (20.06.2023)",
+      "questions": 37
+    },
+    {
+      "id": 373,
+      "title": "Ikkinchi liga yozgi mavsum 8-tur (19.08.2023)",
+      "questions": 26
+    },
+    {
+      "id": 374,
+      "title": "Qashqadaryo Zakovat klubi ichki marafoni (27.08.2023)",
+      "questions": 102
+    },
+    {
+      "id": 375,
+      "title": "Andijon viloyati intellektual olimpiadasi",
+      "questions": 36
+    },
+    {
+      "id": 376,
+      "title": "Andijon viloyati maktab o'quvchilar o'rtasida turnir",
+      "questions": 36
+    },
+    {
+      "id": 377,
+      "title": "SamIQand jamoasi Samarqand zakovat klubi yozgi ligasi 10-tur (28.08.2023)",
+      "questions": 33
+    },
+    {
+      "id": 378,
+      "title": "Qashqadaryo professional ligasi  yozgi mavsum 12-tur Diamond jamoasi navbatchliligi",
+      "questions": 36
+    },
+    {
+      "id": 379,
+      "title": "Do'stlik kubogi Qashqadaryo viloyati",
+      "questions": 36
+    },
+    {
+      "id": 380,
+      "title": "Oscar jamoasi Buxoro zakovat klubi yozgi ligasi 5-tur (11.07.2023)",
+      "questions": 32
+    },
+    {
+      "id": 381,
+      "title": "Buxoro zakovat klubi yozgi ligasi 10-tur (15.08.2023)",
+      "questions": 37
+    },
+    {
+      "id": 382,
+      "title": "Buxoro PM jamoasi Buxoro zakovat klubi yozgi ligasi 8-tur (01.08.2023)",
+      "questions": 40
+    },
+    {
+      "id": 383,
+      "title": "Insayt jamoasi Buxoro zakovat klubi yozgi ligasi 4-tur (04.07.2023)",
+      "questions": 39
+    },
+    {
+      "id": 385,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni uchun Avangard jamoasi savollari:",
+      "questions": 1
+    },
+    {
+      "id": 386,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni uchun Avangard jamoasi savollari:",
+      "questions": 10
+    },
+    {
+      "id": 387,
+      "title": "Qoraqalpog‘iston Respublikasi - Xorazm hududiy marafoni uchun Berkut jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 388,
+      "title": "Qoraqalpog‘iston Respublikasi - Xorazm hududiy marafoni  Ziyali Jaslar jamoas savollar (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 389,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni uchun Insayt jamoasi savollari:",
+      "questions": 12
+    },
+    {
+      "id": 390,
+      "title": "Qoraqalpog'iston Respublikasi-Xorazm hududiy marafoni KarSU jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 391,
+      "title": "Qoraqalpog'iston Respublikasi-Xorazm hududiy marafoni Armageddon jamoasi savollari (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 392,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni uchun Maestro Academy jamoasi savollari:(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 393,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni uchun F8 jamoasi savollari:(03.09.2023)",
+      "questions": 0
+    },
+    {
+      "id": 394,
+      "title": "Qoraqalpog'iston Respublikasi-Xorazm hududiy marafoni Vendetta jamoasi savollari (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 395,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Sardoba jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 396,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Seven jamoasi savollari (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 397,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Maestro jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 398,
+      "title": "Buxoro viloyati \"Intellektual kun\" (25.06.2023)",
+      "questions": 37
+    },
+    {
+      "id": 399,
+      "title": "Buxoro viloyati \"Adabiyot va kino\" mavzusiga bag'ishlangan turnir  (16.07.2023)",
+      "questions": 26
+    },
+    {
+      "id": 400,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni Pentagon jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 401,
+      "title": "Espero jamoasi Professional va Birinchi liga 2022/2023 yozgi mavsumi 11-tur o‘yini(26.08.2023)",
+      "questions": 39
+    },
+    {
+      "id": 402,
+      "title": "Lirika jamoasi Farg'ona zakovat klubi 7-tur (27.08.2023)",
+      "questions": 24
+    },
+    {
+      "id": 403,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Google jamoasi savollari(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 404,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Diamond jamoasi savollari(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 405,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Magnum  jamoasi savollari(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 406,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Antanta  jamoasi savollari(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 407,
+      "title": "Farg'ona-Andijon-Namangan hududiy intellektual marafoni Alfraganuz jamoasi  (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 408,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni Spectrum jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 409,
+      "title": "Maktablardagi zakovat to‘garagi 5-6-7-sinflar uchun (05.09.2023)",
+      "questions": 20
+    },
+    {
+      "id": 410,
+      "title": "Farg'ona-Andijon-Namangan hududiy intellektual marafoni Reunion jamoasi (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 411,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni Kapitoliy jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 412,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Galacticos jamoasi savollari(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 413,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni Kazbek jamoasi savollari (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 414,
+      "title": "Maktablardagi zakovat to‘garagi 8-9-10-11-sinflar uchun savollar (05.09.2023)",
+      "questions": 20
+    },
+    {
+      "id": 415,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Kvazar jamoasi savollari(03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 416,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni PI jamoasi savollari(03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 417,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni  Lirika jamoasi  (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 418,
+      "title": "Farg'ona-Andijon-Namangan  hududiy marafoni  Burgutlar jamoasi",
+      "questions": 12
+    },
+    {
+      "id": 419,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni Oltiariq jamoasi (03.09.2023)",
+      "questions": 14
+    },
+    {
+      "id": 420,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Discovery jamoasi savollari (03.09.2023)",
+      "questions": 13
+    },
+    {
+      "id": 421,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Milliy jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 422,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Kulminatsiya jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 423,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Nurafshon jamoasi savollari (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 424,
+      "title": "Farg'ona-Andijon-Namangan hududiy marafoni Shedevr  jamoasi (03.09.2023)",
+      "questions": 20
+    },
+    {
+      "id": 425,
+      "title": "Xorazm intellektual marafoni \"XIII LEGION\" jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 426,
+      "title": "Farg'ona-Andijon-Namangan  hududiy  marafoni Tiki-Taka jamoasi (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 427,
+      "title": "Ikkinchi liga yozgi mavsum 9-tur o‘yini(26.08.2023)",
+      "questions": 24
+    },
+    {
+      "id": 428,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni Cogito jamoasi savollari (03.09.2023)",
+      "questions": 13
+    },
+    {
+      "id": 429,
+      "title": "Farg'ona-Andijon-Namangan  hududiy  marafoni Yangi Yulduzlar jamoasi (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 430,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni Antanta jamoasi savollari (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 431,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni Black hole jamoasi savollari (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 432,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni Darts jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 433,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni Albion jamoasi savollari (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 434,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni F8 jamoasi savollari (03.09.2023)",
+      "questions": 13
+    },
+    {
+      "id": 435,
+      "title": "\"Buxoro-Navoiy\" hududiy marafoni Atom jamoasi savollari (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 436,
+      "title": "Xorazm intellektual marafoni \"IDROK\" jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 437,
+      "title": "Xorazm intellektual marafoni \"ASTRON\" jamoasi savollari (03.09.2023)",
+      "questions": 14
+    },
+    {
+      "id": 438,
+      "title": "Yozyovon  jamoasi Farg'ona zakovat klubi 8-tur (27.08.2023)",
+      "questions": 26
+    },
+    {
+      "id": 439,
+      "title": "Xorazm intellektual marafoni \"ReMIX\" jamoasi savollari (03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 440,
+      "title": "OTMlardagi Zakovat to‘garagi savollari (06.09.2023)",
+      "questions": 20
+    },
+    {
+      "id": 441,
+      "title": "Xorazm intellektual marafoni \"URAL\" jamoasi savollari (03.09.2023)",
+      "questions": 13
+    },
+    {
+      "id": 442,
+      "title": "Vazirlik va idoralar o‘rtasidagi “Zakovat” turniri savollari (27.12.2022)",
+      "questions": 36
+    },
+    {
+      "id": 443,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Team Invictus jamoasi savollari(03.09.2023)",
+      "questions": 12
+    },
+    {
+      "id": 444,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"S-team\" jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 445,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Sarbon jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 446,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy ma'rafoni Humo  jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 447,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Semurg' jamoasi savollari (03.09.2023)",
+      "questions": 15
+    },
+    {
+      "id": 448,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Legion jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 449,
+      "title": "\"Sirdaryo-Jizzax-Toshkent viloyati\" hududiy marafoni Meta jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 450,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"No comment\" jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 451,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"O‘zgacha\" jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 452,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Everest\" jamoasi savollari (03.09.2023)",
+      "questions": 10
+    },
+    {
+      "id": 453,
+      "title": "Talabalar ligasi 2023/2024 Kuz mavsumi 1-tur savollari",
+      "questions": 27
+    },
+    {
+      "id": 454,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi savollari 08.09.2023",
+      "questions": 20
+    },
+    {
+      "id": 455,
+      "title": "Renessans jamoasi Toshkant shahri intellektual marafoni (03.09.2023)",
+      "questions": 11
+    },
+    {
+      "id": 456,
+      "title": "Intellektual maktab \"Zakovat\" o‘yini savollari (26.08.2023)",
+      "questions": 36
+    },
+    {
+      "id": 457,
+      "title": "Sirdaryo viloyati \"Zakovat\" professional ligasi kuzgi mavsum 1-tur savollari",
+      "questions": 26
+    },
+    {
+      "id": 458,
+      "title": "Professional va Birinchi liga Yozgi mavsum 12-tur (02.09.2023)",
+      "questions": 38
+    },
+    {
+      "id": 459,
+      "title": "Maktab va o‘rta maxsus ta'lim muassasalardagi Zakovat to‘garagi (12.09.2023)",
+      "questions": 20
+    },
+    {
+      "id": 460,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun savollar (12.09..2023)",
+      "questions": 20
+    },
+    {
+      "id": 461,
+      "title": "Metaverse jamoasi Professional liga kuzgi mavsum 1-tur (09.09.2023)",
+      "questions": 36
+    },
+    {
+      "id": 462,
+      "title": "Ikkinchi liga kuzgi mavsum 1-tur (09.09.2023)",
+      "questions": 24
+    },
+    {
+      "id": 464,
+      "title": "Buxoro zakovat klubi kuzgi ligasi 1-tur (08.09.2023)",
+      "questions": 38
+    },
+    {
+      "id": 465,
+      "title": "BUXORO ZAKOVAT KLUBI KUZGI LIGASI 2- TUR (15.09.2023)",
+      "questions": 37
+    },
+    {
+      "id": 466,
+      "title": "BUXORO ZAKOVAT KLUBI KUZGI LIGASI 3- TUR (22.09.2023)",
+      "questions": 42
+    },
+    {
+      "id": 467,
+      "title": "Bingo jamoasi Professional va 1-liga 2022/2023 kuzgi mavsum 2-tur (16.09.23)",
+      "questions": 36
+    },
+    {
+      "id": 468,
+      "title": "Talabalar ligasi 2023/2024 Kuz mavsumi 2-tur savollari",
+      "questions": 24
+    },
+    {
+      "id": 469,
+      "title": "2-liga 1-tur: Bahodir Anorov savollar paketi",
+      "questions": 24
+    },
+    {
+      "id": 470,
+      "title": "Qashqadaryo professional ligasi  kuzgi mavsum 2-tur Google jamoasi navbatchliligi",
+      "questions": 37
+    },
+    {
+      "id": 471,
+      "title": "Qashqadaryo professional ligasi  kuzgi mavsum 3-tur Antanta jamoasi navbatchliligi",
+      "questions": 40
+    },
+    {
+      "id": 472,
+      "title": "Qashqadaryo professional ligasi  kuzgi mavsum 4-tur Magnum jamoasi navbatchliligi",
+      "questions": 36
+    },
+    {
+      "id": 473,
+      "title": "Chempionlar kubogi Yozgi mavsum 2023-yil savollar paketi (01.10.2023)",
+      "questions": 38
+    },
+    {
+      "id": 474,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (03.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 475,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (03.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 476,
+      "title": "Espero jamoasi Professional va 1-liga 2022/2023 kuzgi mavsum 3-tur (23.09.23)",
+      "questions": 39
+    },
+    {
+      "id": 477,
+      "title": "Talabalar ligasi 2023/2024 Kuz mavsumi 3-tur savollari",
+      "questions": 25
+    },
+    {
+      "id": 478,
+      "title": "O'ZBEKKO'MIR AJ Zakovat klubi ochilish o'yini",
+      "questions": 20
+    },
+    {
+      "id": 479,
+      "title": "TDTU Olmaliq filialida o'tkazilgan Zakovat o'yini",
+      "questions": 20
+    },
+    {
+      "id": 480,
+      "title": "BUXORO ZAKOVAT KLUBI KUZGI LIGASI 4- TUR (29.09.2023)",
+      "questions": 35
+    },
+    {
+      "id": 482,
+      "title": "Soliq xizmati  organlarida ishlayotgan ayollar uchun o'tkazilgan  “Zakovat'' o'yini",
+      "questions": 20
+    },
+    {
+      "id": 483,
+      "title": "Toshkent viloyati Zakovat klubi Professional liga kuzgi mavsum 1-tur (04.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 484,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi 06.10.2023",
+      "questions": 20
+    },
+    {
+      "id": 485,
+      "title": "Ikkinchi liga kuzgi mavsum 3-tur savollari (23.09.2023)",
+      "questions": 22
+    },
+    {
+      "id": 486,
+      "title": "Magnum jamoasi Professional va 1-liga 2022/2023 kuzgi mavsum 4-tur (30.09.23)",
+      "questions": 36
+    },
+    {
+      "id": 487,
+      "title": "BUXORO ZAKOVAT KLUBI KUZGI LIGASI 5- TUR (06.10.2023)",
+      "questions": 34
+    },
+    {
+      "id": 488,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 4-tur (05.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 489,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (1-tur) 05.10.2023",
+      "questions": 24
+    },
+    {
+      "id": 490,
+      "title": "Ikkinchi liga 5-tur. (turganbayev Atabek) 05.10.2023",
+      "questions": 25
+    },
+    {
+      "id": 491,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (17.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 492,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (17.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 493,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (18.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 494,
+      "title": "Alfraganuz jamoasi Farg'ona zakovat klubi kuzgi mavsum 1-tur (10.09.2023)",
+      "questions": 25
+    },
+    {
+      "id": 495,
+      "title": "Ikkinchi liga 2022/23 kuzgi mavsumi 4-tur o‘yini  (30.09.2023)",
+      "questions": 25
+    },
+    {
+      "id": 496,
+      "title": "Oltiariq jamoasi Farg'ona zakovat klubi kuzgi mavsum 2-tur (17.09.2023)",
+      "questions": 24
+    },
+    {
+      "id": 497,
+      "title": "Kronos jamoasi Professional va 1-liga 2022/2023 kuzgi mavsum 5-tur (10.10.23)",
+      "questions": 37
+    },
+    {
+      "id": 498,
+      "title": "Toshkent viloyati Zakovat klubi Professional liga kuzgi mavsum 2-tur (09.10.2023)",
+      "questions": 25
+    },
+    {
+      "id": 499,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (24.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 500,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (24.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 501,
+      "title": "Вопросы для кружков \"Заковат\" среди русскоязычных школ",
+      "questions": 20
+    },
+    {
+      "id": 502,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (25.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 503,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi mavsum 6-tur savollari (12.10.2023)",
+      "questions": 25
+    },
+    {
+      "id": 504,
+      "title": "Mahallalardagi \"Zakovat\" to‘garagi 27.10.2023",
+      "questions": 20
+    },
+    {
+      "id": 505,
+      "title": "Sirdaryo viloyati \"Zakovat\" Professional ligasi kuzgi mavsum 2-tur savollari 15.09.2023",
+      "questions": 27
+    },
+    {
+      "id": 506,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi mavsum 7-tur savollari (19.10.2023)",
+      "questions": 27
+    },
+    {
+      "id": 507,
+      "title": "Nostalgy jamoasi Professional va 1- liga 2023-yil kuzgi mavsum 6-tur (17.10.2023)",
+      "questions": 40
+    },
+    {
+      "id": 508,
+      "title": "Sirdaryo viloyati \"Zakovat\" Professional ligasi kuzgi mavsum 3-tur savollari 22.09.2023",
+      "questions": 24
+    },
+    {
+      "id": 509,
+      "title": "Reunion jamoasi Farg'ona zakovat klubi kuzgi mavsum 3-tur (15.10.2023)",
+      "questions": 28
+    },
+    {
+      "id": 510,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 4-tur savollari 29.09.2023",
+      "questions": 30
+    },
+    {
+      "id": 511,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 5-tur savollari 06.10.2023",
+      "questions": 34
+    },
+    {
+      "id": 512,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (2-tur) 12.10.2023",
+      "questions": 24
+    },
+    {
+      "id": 513,
+      "title": "O'quvchilar va talaba-o'quvchilar ligasi kuzgi mavsum 3-tur (19.10.23)",
+      "questions": 24
+    },
+    {
+      "id": 514,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 6-tur savollari 13.10.2023",
+      "questions": 25
+    },
+    {
+      "id": 515,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 5-tur (12.10.2023)",
+      "questions": 25
+    },
+    {
+      "id": 517,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 6-tur (19.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 518,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 7-tur (26.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 519,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (31.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 520,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (31.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 521,
+      "title": "Вопросы для кружков \"Заковат\" среди русскоязычных школ (31.10.2023)",
+      "questions": 20
+    },
+    {
+      "id": 522,
+      "title": "\"NZK ligasi kuzgi mavsum\" 2-tur savollari. \"Antanta\" jamoasi savollari (16.09.2023)",
+      "questions": 15
+    },
+    {
+      "id": 523,
+      "title": "Vektor jamoasi Farg'ona zakovat klubi yozgi mavsum 4-tur (15.10.2023)",
+      "questions": 29
+    },
+    {
+      "id": 524,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (01.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 525,
+      "title": "\"NZK ligasi kuzgi mavsum\" 3-tur savollari. \"Black hole\" jamoasi savollari (13.09.2023)",
+      "questions": 18
+    },
+    {
+      "id": 526,
+      "title": "BUXORO ZAKOVAT KLUBI KUZGI LIGASI 8- TUR (27.10.2023)",
+      "questions": 37
+    },
+    {
+      "id": 527,
+      "title": "\"NZK ligasi kuzgi mavsum\" 4-tur savollari. \"Intellektual Team\" jamoasi savollari (13.09.2023)",
+      "questions": 15
+    },
+    {
+      "id": 528,
+      "title": "Toshkent viloyati Zakovat klubi Professional liga kuzgi mavsum 3-tur (16.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 529,
+      "title": "\"NZK ligasi kuzgi mavsum\" 5-tur savollari. \"Cogito\" jamoasi savollari (13.09.2023)",
+      "questions": 15
+    },
+    {
+      "id": 530,
+      "title": "\"NZK ligasi kuzgi mavsum\" 6-tur savollari. \"Darts\" jamoasi savollari (13.09.2023)",
+      "questions": 15
+    },
+    {
+      "id": 531,
+      "title": "\"NZK ligasi kuzgi mavsum\" 8-tur savollari. \"Slytherin\" jamoasi savollari (13.09.2023)",
+      "questions": 15
+    },
+    {
+      "id": 532,
+      "title": "Professional va Birinchi liga 2023-yil kuzgi mavsumi 7-tur  Benom jamoasi  savollari (24.10.2023))",
+      "questions": 38
+    },
+    {
+      "id": 533,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi mavsum 8-tur savollari (26.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 534,
+      "title": "Toshkent viloyati Zakovat klubi Professional liga kuzgi mavsum 4-tur (20.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 535,
+      "title": "Toshkent viloyati Zakovat klubi Professional liga kuzgi mavsum 5-tur (23.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 536,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Abdurasul Abdullayev savollari (31.10.2023)",
+      "questions": 38
+    },
+    {
+      "id": 537,
+      "title": "BUXORO ZAKOVAT KLUBI KUZGI LIGASI 9- TUR (03.11.2023)",
+      "questions": 40
+    },
+    {
+      "id": 538,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (15.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 539,
+      "title": "Qashqadaryo professional ligasi kuzgi mavsum 5-tur Saturn jamoasi navbatchliligi",
+      "questions": 40
+    },
+    {
+      "id": 540,
+      "title": "Qashqadaryo professional ligasi  kuzgi mavsum 6-tur Iceberg jamoasi navbatchliligi",
+      "questions": 41
+    },
+    {
+      "id": 541,
+      "title": "Qashqadaryo professional ligasi kuzgi mavsum 7-tur PIkovit jamoasi navbatchliligi",
+      "questions": 36
+    },
+    {
+      "id": 542,
+      "title": "Qashqadaryo professional ligasi kuzgi mavsum 8-tur Abror Rahimov navbatchiligi savollari",
+      "questions": 39
+    },
+    {
+      "id": 543,
+      "title": "\"NZK ligasi kuzgi mavsum\" 2-tur savollari. \"Celestial\" jamoasi savollari (11.11.2023)",
+      "questions": 15
+    },
+    {
+      "id": 544,
+      "title": "\"NZK ligasi kuzgi mavsum\" 2-tur savollari. \"Monopoliya\" jamoasi savollari (11.11.2023)",
+      "questions": 15
+    },
+    {
+      "id": 545,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar (21.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 546,
+      "title": "Maktablardagi \"Zakovat \"to‘garagi 5-6-7-sinflar (21.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 547,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi Mavsum 9-tur (02.11.23)",
+      "questions": 24
+    },
+    {
+      "id": 548,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 8-tur (02.11.2023)",
+      "questions": 26
+    },
+    {
+      "id": 549,
+      "title": "Вопросы для кружков \"Заковат\" среди русскоязычных школ (21.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 550,
+      "title": "Ma'naviyat marafoni savollari (10.11.2023)",
+      "questions": 24
+    },
+    {
+      "id": 551,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi Mavsum 10-tur (11.11.23)",
+      "questions": 24
+    },
+    {
+      "id": 552,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Respect jamoasi savollari (04.11.2023)",
+      "questions": 43
+    },
+    {
+      "id": 553,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 9-tur (09.11.2023)",
+      "questions": 27
+    },
+    {
+      "id": 554,
+      "title": "Ayollar ligasi 1-tur (11.11.2023)",
+      "questions": 26
+    },
+    {
+      "id": 555,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (4-tur) 26.10.2023",
+      "questions": 24
+    },
+    {
+      "id": 556,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (5-tur) 02.11.2023",
+      "questions": 24
+    },
+    {
+      "id": 557,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi (6-tur) kuzgi mavsum 16.11.2023",
+      "questions": 24
+    },
+    {
+      "id": 558,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (22.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 559,
+      "title": "“Besh tashabbus” olimpiadasi doirasida “Zakovat” turnirining hududiy bosqichi",
+      "questions": 38
+    },
+    {
+      "id": 560,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Renessans jamoasi savollari (11.11.2023)",
+      "questions": 37
+    },
+    {
+      "id": 561,
+      "title": "Talabalar ligasi 2022/23 kuzgi mavsum 10-tur (16.11.2023)",
+      "questions": 24
+    },
+    {
+      "id": 562,
+      "title": "Yakudza jamoasi Farg'ona zakovat klubi kuzgi mavsum 5-tur (22.10.2023)",
+      "questions": 24
+    },
+    {
+      "id": 563,
+      "title": "Konstanta jamoasi Farg'ona zakovat klubi kuzgi mavsum 6-tur (29.10.2023)",
+      "questions": 26
+    },
+    {
+      "id": 564,
+      "title": "Maktabdagi Zakovat to‘garagi 5-6-7-sinflar (10.05.2023)",
+      "questions": 20
+    },
+    {
+      "id": 565,
+      "title": "Maktabdagi Zakovat to‘garagi 8-9-10-11-sinflar (28.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 566,
+      "title": "Вопросы для кружков \"Заковат\" среди русскоязычных школ (28.11.2023)",
+      "questions": 20
+    },
+    {
+      "id": 567,
+      "title": "Buxoro Zakovat klubi ochiq marafoni uchun Uzbek Power jamoasi savollari (05.11.2023)",
+      "questions": 12
+    },
+    {
+      "id": 568,
+      "title": "Buxoro Zakovat klubi ochiq marafoni uchun 2-legion jamoasi savollari (05.11.2023)",
+      "questions": 12
+    },
+    {
+      "id": 569,
+      "title": "Buxoro Zakovat klubi ochiq marafoni uchun Insayt jamoasi savollari (05.11.2023)",
+      "questions": 15
+    },
+    {
+      "id": 570,
+      "title": "Buxoro Zakovat klubi ochiq marafoni uchun Pedagog jamoasi savollari (05.11.2023)",
+      "questions": 12
+    },
+    {
+      "id": 571,
+      "title": "Buxoro Zakovat klubi ochiq marafoni uchun Avangard jamoasi savollari (05.11.2023)",
+      "questions": 16
+    },
+    {
+      "id": 572,
+      "title": "BUXORO ZAKOVAT KLUBI OCHIQ MARAFONI UCHUN''YANDEX' JAMOASI SAVOLLARI (05.11.2023)",
+      "questions": 13
+    },
+    {
+      "id": 573,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 7-tur savollari (20.10.2023)",
+      "questions": 34
+    },
+    {
+      "id": 574,
+      "title": "Lirika jamoasi Farg'ona zakovat klubi kuzgi mavsum 7-tur (05.11.2023)",
+      "questions": 24
+    },
+    {
+      "id": 575,
+      "title": "BUXORO ZAKOVAT KLUBI OCHIQ MARAFONI UCHUN''ALBION'' JAMOASI SAVOLLARI (05.11.2023)",
+      "questions": 13
+    },
+    {
+      "id": 576,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 8-tur savollari (27.10.2023)",
+      "questions": 32
+    },
+    {
+      "id": 577,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 9-tur savollari (03.11.2023)",
+      "questions": 34
+    },
+    {
+      "id": 578,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 10-tur savollari (03.11.2023)",
+      "questions": 26
+    },
+    {
+      "id": 579,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi mavsum 11-tur savollari (25.11.2023)",
+      "questions": 26
+    },
+    {
+      "id": 580,
+      "title": "\"NZK ligasi kuzgi mavsum\" 11-tur savollari. \"Movarounnahr\" jamoasi savollari (18.11.2023)",
+      "questions": 15
+    },
+    {
+      "id": 581,
+      "title": "\"NZK ligasi kuzgi mavsum\" 12-tur savollari. \"Union Team\" jamoasi savollari (18.11.2023)",
+      "questions": 15
+    },
+    {
+      "id": 582,
+      "title": "\"NZK ligasi kuzgi mavsum\" 13-tur savollari. \"Albion\" jamoasi savollari (25.11.2023)",
+      "questions": 15
+    },
+    {
+      "id": 583,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (05.12.2023)",
+      "questions": 20
+    },
+    {
+      "id": 584,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (05.12.2023)",
+      "questions": 21
+    },
+    {
+      "id": 585,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 11-tur Farrux Rafiqov jamoasi savollari (15.11.2023)",
+      "questions": 41
+    },
+    {
+      "id": 586,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (06.12.2023)",
+      "questions": 21
+    },
+    {
+      "id": 587,
+      "title": "Ikkinchi Liga 2022/2023 kuzgi mavsum 12-tur savollari (30.11.2023)",
+      "questions": 24
+    },
+    {
+      "id": 588,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 12-tur Jobir Ahmedov jamoasi savollari (28.11.2023)",
+      "questions": 37
+    },
+    {
+      "id": 589,
+      "title": "Maktablardagi \"Zakovat\" to‘garagi 5-6-7-sinlar  (12.12.2023)",
+      "questions": 20
+    },
+    {
+      "id": 590,
+      "title": "Maktablardagi \"Zakovat\" to‘garagi 8-9-10-11-sinlar  (12.12.2023)",
+      "questions": 20
+    },
+    {
+      "id": 591,
+      "title": "ВОПРОСЫ ZAKOVAT (12.12.2023)",
+      "questions": 20
+    },
+    {
+      "id": 592,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (7-tur) 23.11.2023",
+      "questions": 25
+    },
+    {
+      "id": 593,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (8-tur) 30.11.2023",
+      "questions": 24
+    },
+    {
+      "id": 594,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (9-tur) 7.12.2023",
+      "questions": 24
+    },
+    {
+      "id": 595,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (13.12..2023)",
+      "questions": 21
+    },
+    {
+      "id": 596,
+      "title": "Navoiy zakovat klubi ichki marafoni 1-tur. \"Benilyuks\" jamoasi savollari. (08.12.2023)",
+      "questions": 10
+    },
+    {
+      "id": 597,
+      "title": "Navoiy zakovat klubi ichki marafoni 2-tur. \"Darts\" jamoasi savollari. (08.12.2023)",
+      "questions": 10
+    },
+    {
+      "id": 598,
+      "title": "Navoiy zakovat klubi ichki marafoni 3-tur. \"Cogito\" jamoasi savollari. (08.12.2023)",
+      "questions": 10
+    },
+    {
+      "id": 599,
+      "title": "Professional va Birinchi liga qishki mavsumi 1-tur Metaverse jamoasi savollari (02.12.2023)",
+      "questions": 37
+    },
+    {
+      "id": 600,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (26.12.2023)",
+      "questions": 20
+    },
+    {
+      "id": 601,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (26.12.2023)",
+      "questions": 20
+    },
+    {
+      "id": 602,
+      "title": "Ikkinchi Liga 2022/2023 qishki mavsum 1-tur (02.12.23)",
+      "questions": 24
+    },
+    {
+      "id": 603,
+      "title": "Buxoro zakovat klubi 1-liga 1 tur savollari",
+      "questions": 24
+    },
+    {
+      "id": 604,
+      "title": "Buxoro zakovat klubi 1-liga 2 tur savollari",
+      "questions": 24
+    },
+    {
+      "id": 605,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 1-tur (23.11.2023)",
+      "questions": 24
+    },
+    {
+      "id": 606,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 2-tur (30.11.2023)",
+      "questions": 25
+    },
+    {
+      "id": 607,
+      "title": "Buxoro zakovat klubi professional liga 1-tur savollari",
+      "questions": 36
+    },
+    {
+      "id": 608,
+      "title": "Ikkinchi Liga 2022/2023 qishki mavsum 2-tur (07.12.2023)",
+      "questions": 24
+    },
+    {
+      "id": 609,
+      "title": "Buxoro zakovat klubi professional liga  2-tur Maestro Academy jamoasi savollari (15.12.2023)",
+      "questions": 38
+    },
+    {
+      "id": 610,
+      "title": "Professional va Birinchi liga qishki mavsumi 2-tur Renessans jamoasi savollari (05.12.2023)",
+      "questions": 39
+    },
+    {
+      "id": 611,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 11-tur savollari 17.11.2023",
+      "questions": 26
+    },
+    {
+      "id": 612,
+      "title": "Buxoro zakovat klubi professional liga  4-tur Insayt jamoasi savollari (29.12.2023)",
+      "questions": 39
+    },
+    {
+      "id": 613,
+      "title": "\"NZK ligasi\" 9-mavsum 1-tur savollari. \"Union Team\" jamoasi savollari (06.01.2024)",
+      "questions": 17
+    },
+    {
+      "id": 614,
+      "title": "\"NZK ligasi\" 9-mavsum 2-tur savollari. \"Cogito\" jamoasi savollari (06.01.2024)",
+      "questions": 19
+    },
+    {
+      "id": 615,
+      "title": "Navoiy zakovat klubi ichki marafoni 4-tur. \"Aventador\" jamoasi savollari. (08.12.2023)",
+      "questions": 10
+    },
+    {
+      "id": 616,
+      "title": "Navoiy zakovat klubi ichki marafoni 6-tur. \"Slytherin\" jamoasi savollari. (08.12.2023)",
+      "questions": 11
+    },
+    {
+      "id": 617,
+      "title": "Navoiy zakovat klubi ichki marafoni 5-tur. \"Movarounnahr\" jamoasi savollari. (08.12.2023)",
+      "questions": 9
+    },
+    {
+      "id": 618,
+      "title": "Navoiy zakovat klubi ichki marafoni 7-tur. \"Black hole\" jamoasi savollari. (08.12.2023)",
+      "questions": 14
+    },
+    {
+      "id": 619,
+      "title": "Navoiy zakovat klubi ichki marafoni 8-tur. \"Union team\" jamoasi savollari. (08.12.2023)",
+      "questions": 10
+    },
+    {
+      "id": 620,
+      "title": "Navoiy zakovat klubi ichki marafoni 9-tur. \"Antanta\" jamoasi savollari. (08.12.2023)",
+      "questions": 12
+    },
+    {
+      "id": 621,
+      "title": "Navoiy zakovat klubi ichki marafoni 10-tur. \"Monopoliya\" jamoasi savollari. (08.12.2023)",
+      "questions": 11
+    },
+    {
+      "id": 622,
+      "title": "Navoiy zakovat klubi ichki marafoni 11-tur. \"O'tukan\" jamoasi savollari. (08.12.2023)",
+      "questions": 11
+    },
+    {
+      "id": 623,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (16.01.2024)",
+      "questions": 20
+    },
+    {
+      "id": 624,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (16.01.2024)",
+      "questions": 20
+    },
+    {
+      "id": 625,
+      "title": "Professional va Birinchi liga qishki mavsumi 3-tur Ekspromt jamoasi savollari (23.12.2023)",
+      "questions": 36
+    },
+    {
+      "id": 626,
+      "title": "Ikkinchi Liga 2022/2023 qishki mavsum 3-tur (06.01.2024)",
+      "questions": 25
+    },
+    {
+      "id": 627,
+      "title": "Professional va Birinchi liga qishki mavsumi 4-tur Tesla jamoasi savollari (30.12.2023)",
+      "questions": 37
+    },
+    {
+      "id": 628,
+      "title": "Ikkinchi Liga qishki mavsum 4-tur (13.01.2024)",
+      "questions": 24
+    },
+    {
+      "id": 629,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi kuzgi mavsum (10-tur) 11.01.2023",
+      "questions": 23
+    },
+    {
+      "id": 630,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (1-tur) 18.01.2023",
+      "questions": 24
+    },
+    {
+      "id": 631,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" kuzgi mavsum 12-tur savollari 24.11.2023",
+      "questions": 25
+    },
+    {
+      "id": 632,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 1-tur savollari 06.12.2023",
+      "questions": 30
+    },
+    {
+      "id": 633,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 2-tur savollari 15.12.2023",
+      "questions": 32
+    },
+    {
+      "id": 634,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 3-tur savollari 22.12.2023",
+      "questions": 24
+    },
+    {
+      "id": 635,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 4-tur savollari 15.01.2024",
+      "questions": 33
+    },
+    {
+      "id": 636,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 5-tur savollari (19.01.2024)",
+      "questions": 28
+    },
+    {
+      "id": 637,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (23.01.2024)",
+      "questions": 20
+    },
+    {
+      "id": 638,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (23.01.2024)",
+      "questions": 20
+    },
+    {
+      "id": 639,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (30.01.2024)",
+      "questions": 20
+    },
+    {
+      "id": 640,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (30.01.2024)",
+      "questions": 20
+    },
+    {
+      "id": 641,
+      "title": "O‘zbekiston chempionati savollari  (14.01.2024)",
+      "questions": 64
+    },
+    {
+      "id": 642,
+      "title": "Ikkinchi Liga qishki mavsum 5-tur (20.01.2024)",
+      "questions": 24
+    },
+    {
+      "id": 643,
+      "title": "Professional va Birinchi liga qishki mavsumi 5-tur Espero jamoasi savollari (20.01.2024)",
+      "questions": 40
+    },
+    {
+      "id": 644,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (2-tur) 25.01.2023",
+      "questions": 24
+    },
+    {
+      "id": 645,
+      "title": "Professional va Birinchi liga qishki mavsumi 6-tur Zero jamoasi savollari (27.01.2024)",
+      "questions": 37
+    },
+    {
+      "id": 646,
+      "title": "Вопросы для кружков \"Заковат\" среди русскоязычных школ (06.02.2023)",
+      "questions": 20
+    },
+    {
+      "id": 647,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (06.02.2024)",
+      "questions": 22
+    },
+    {
+      "id": 648,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (06.02.2024)",
+      "questions": 20
+    },
+    {
+      "id": 649,
+      "title": "Ikkinchi Liga qishki mavsum 6-tur (27.01.2024)",
+      "questions": 26
+    },
+    {
+      "id": 650,
+      "title": "NZK ligasi 9-mavsum 3-tur savollari. \"M-26\" jamoasi savollari (20.01.2024)",
+      "questions": 16
+    },
+    {
+      "id": 651,
+      "title": "NZK ligasi 9-mavsum 4-tur savollari. \"Slytherin\" jamoasi savollari (27.01.2024)",
+      "questions": 18
+    },
+    {
+      "id": 652,
+      "title": "NZK ligasi 9-mavsum 5-tur savollari. \"Darts\" jamoasi savollari (27.01.2024)",
+      "questions": 22
+    },
+    {
+      "id": 653,
+      "title": "NZK ligasi 9-mavsum 5-tur savollari. \"Black hole\" jamoasi savollari (03.02.2024)",
+      "questions": 19
+    },
+    {
+      "id": 654,
+      "title": "Professional va Birinchi liga qishki mavsumining 7-tur “Benom” jamoasi savollari (03.02.2024)",
+      "questions": 37
+    },
+    {
+      "id": 655,
+      "title": "Ikkinchi Liga qishki mavsum 7-tur (03.02.2024)",
+      "questions": 24
+    },
+    {
+      "id": 656,
+      "title": "OTMlardagi \"Zakovat\" klubi to‘garagi (14.02.2023)",
+      "questions": 21
+    },
+    {
+      "id": 657,
+      "title": "Professional va Birinchi liga qishki mavsumi 8-tur Farruh Rafiqov jamoasi savollari (10.02.2024)",
+      "questions": 40
+    },
+    {
+      "id": 658,
+      "title": "Maktablardagi \"Zakovat\" to‘garagi 8-9-10-11-sinlar  (20.02.2023)",
+      "questions": 21
+    },
+    {
+      "id": 659,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (20.02.2024)",
+      "questions": 20
+    },
+    {
+      "id": 660,
+      "title": "Пакет вопросов для русских школ (20.02.2023)",
+      "questions": 20
+    },
+    {
+      "id": 661,
+      "title": "Ikkinchi Liga qishki mavsum 8-tur savollari (10.02.2024)",
+      "questions": 24
+    },
+    {
+      "id": 662,
+      "title": "Ikkinchi Liga qishki mavsum 9-tur savollari (17.02.2024)",
+      "questions": 25
+    },
+    {
+      "id": 663,
+      "title": "NZK ligasi 9-mavsum 7-tur savollari. \"Aventador\" jamoasi savollari (10.02.2024)",
+      "questions": 15
+    },
+    {
+      "id": 664,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 6-tur savollari (26.01.2024)",
+      "questions": 31
+    },
+    {
+      "id": 665,
+      "title": "NZK ligasi 9-mavsum 8-tur savollari. \"Antanta\" jamoasi savollari (10.02.2024)",
+      "questions": 15
+    },
+    {
+      "id": 666,
+      "title": "NZK ligasi 9-mavsum 9-tur savollari. \"Monopoliya\" jamoasi savollari (17.02.2024)",
+      "questions": 16
+    },
+    {
+      "id": 667,
+      "title": "Maktablardagi Zakovat to‘garagi 5-6-7-sinflar uchun (27.02.2024)",
+      "questions": 20
+    },
+    {
+      "id": 668,
+      "title": "Maktablardagi Zakovat to‘garagi 8-9-10-11-sinflar uchun (27.02.2024)",
+      "questions": 20
+    },
+    {
+      "id": 669,
+      "title": "Chempionlar kubogi Kuzgi mavsum 2023-yil savollar paketi (4.02.2024)",
+      "questions": 39
+    },
+    {
+      "id": 670,
+      "title": "Ayollar ligasi 3-tur(17.02.2024)",
+      "questions": 24
+    },
+    {
+      "id": 671,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 7-tur savollari (02.02.2024)",
+      "questions": 24
+    },
+    {
+      "id": 672,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 8-tur savollari (09.02.2024)",
+      "questions": 28
+    },
+    {
+      "id": 673,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 9-tur savollari (09.02.2024)",
+      "questions": 32
+    },
+    {
+      "id": 674,
+      "title": "Professional va Birinchi liga qishki mavsumi 9-tur Bingo jamoasi savollari (17.02.2024)",
+      "questions": 36
+    },
+    {
+      "id": 675,
+      "title": "Ikkinchi liga qishki mavsum 10-tur savollari (24.02.2024)",
+      "questions": 24
+    },
+    {
+      "id": 676,
+      "title": "Buxoro zakovat klubi ichki marafoni savollari (03.03.2024)",
+      "questions": 10
+    },
+    {
+      "id": 677,
+      "title": "Buxoro zakovat klubi ichki marafoni Maestro Academy jamoasi savollari (03.03.2024)",
+      "questions": 10
+    },
+    {
+      "id": 678,
+      "title": "Buxoro zakovat klubi ichki marafoni Avangard jamoasi savollari (03.03.2024)",
+      "questions": 10
+    },
+    {
+      "id": 679,
+      "title": "Buxoro zakovat klubi ichki marafoni Insayt jamoasi savollari (03.03.2024)",
+      "questions": 11
+    },
+    {
+      "id": 680,
+      "title": "Buxoro zakovat klubi ichki marafoni Progress jamoasi savollari (03.03.2024)",
+      "questions": 14
+    },
+    {
+      "id": 681,
+      "title": "Buxoro zakovat klubi ichki marafoni Gipokrat jamoasi savollari (03.03.2024)",
+      "questions": 11
+    },
+    {
+      "id": 682,
+      "title": "Professional va Birinchi liga qishki mavsumi 10-tur Magnum jamoasi savollari (24.02.2024)",
+      "questions": 38
+    },
+    {
+      "id": 683,
+      "title": "Buxoro Zakovat klubi qishgi mavsumi Y8 jamoasi savollari",
+      "questions": 39
+    },
+    {
+      "id": 684,
+      "title": "NZK ligasi 9-mavsum 11-tur savollari. \"O'tukan\" jamoasi savollari (24.02.2024)",
+      "questions": 17
+    },
+    {
+      "id": 685,
+      "title": "NZK ligasi 9-mavsum 12-tur savollari. \"Celeatial\" jamoasi savollari (2.03.2024)",
+      "questions": 16
+    },
+    {
+      "id": 686,
+      "title": "NZK ligasi 9-mavsum 13-tur savollari. \"Movarounnahr\" jamoasi savollari (9.03.2024)",
+      "questions": 16
+    },
+    {
+      "id": 687,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum 2-legion jamoasi savollari",
+      "questions": 40
+    },
+    {
+      "id": 688,
+      "title": "Professional va Birinchi liga qishki mavsumi 11-tur Abdurasul Abdullayev savollari (02.03.2024)",
+      "questions": 38
+    },
+    {
+      "id": 689,
+      "title": "Professional va Birinchi liga qishki mavsumi 12-tur Jobir Ahmedov jamoasi savollari (09.03.2024)",
+      "questions": 39
+    },
+    {
+      "id": 690,
+      "title": "Ikkinchi Liga qishki mavsum 11-tur  savollari (02.03.2024)",
+      "questions": 27
+    },
+    {
+      "id": 691,
+      "title": "Ikkinchi Liga qishki mavsum 12-tur savollari (09.03.2024)",
+      "questions": 26
+    },
+    {
+      "id": 692,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 10-tur savollari (09.02.2024)",
+      "questions": 28
+    },
+    {
+      "id": 693,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 1-tur Renessans jamoasi savollari (16.03.2024)",
+      "questions": 37
+    },
+    {
+      "id": 694,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 2-tur Metaverse jamoasi savollari (23.03.2024)",
+      "questions": 39
+    },
+    {
+      "id": 695,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 11-tur savollari (01.03.2024)",
+      "questions": 33
+    },
+    {
+      "id": 696,
+      "title": "Sirdaryo viloyati \"Zakovat\" klubi \"Professional ligasi\" qishki mavsum 12-tur savollari (08.03.2024)",
+      "questions": 28
+    },
+    {
+      "id": 697,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum Avangard jamoasi savollari",
+      "questions": 38
+    },
+    {
+      "id": 698,
+      "title": "Ikkinchi Liga Bahorgi mavsum 1-tur savollari (16.03.2024)",
+      "questions": 24
+    },
+    {
+      "id": 699,
+      "title": "Ikkinchi Liga Bahorgi mavsum 2-tur savollari (23.03.2024)",
+      "questions": 24
+    },
+    {
+      "id": 700,
+      "title": "Chempionlar kubogi savollari (07.04.2024)",
+      "questions": 36
+    },
+    {
+      "id": 701,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 3-tur Ekspromt jamoasi savollari (30.03.2024)",
+      "questions": 37
+    },
+    {
+      "id": 702,
+      "title": "Ayollar ligasi 4-tur(16.03.2024)",
+      "questions": 24
+    },
+    {
+      "id": 703,
+      "title": "Ayollar ligasi 5-tur(06.04.2024)",
+      "questions": 24
+    },
+    {
+      "id": 704,
+      "title": "Ikkinchi Liga Bahorgi mavsum 3-tur savollari (30.03.2024)",
+      "questions": 24
+    },
+    {
+      "id": 705,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (3-tur) 01.02.2024",
+      "questions": 24
+    },
+    {
+      "id": 706,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (4-tur) 08.02.2024",
+      "questions": 24
+    },
+    {
+      "id": 707,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (5-tur) 15.02.2024",
+      "questions": 24
+    },
+    {
+      "id": 708,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (6-tur) 22.02.2024",
+      "questions": 24
+    },
+    {
+      "id": 709,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (7-tur) 29.02.2024",
+      "questions": 24
+    },
+    {
+      "id": 710,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi qishgi mavsum (8-tur) 07.03.2024",
+      "questions": 24
+    },
+    {
+      "id": 711,
+      "title": "Xorazm - Qoraqalpog'iston hududiy marafoni Armageddon jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 712,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Marafoni Idrok jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 713,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Marafoni Polimat jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 714,
+      "title": "Xorazm - Qoraqalpog'iston hududiy marafoni Astron jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 715,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Intellektual Marafoni KarSU jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 716,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Marafoni Remix jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 717,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Marafoni Mag'ripat jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 718,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Intellektual Marafoni URAL jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 719,
+      "title": "Xorazm - Qoraqalpog'iston hududiy Intellektual Marafoni XIII Legion jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 720,
+      "title": "Xorazm - Qoraqalpog'iston hududiy  Marafoni Berkut jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 721,
+      "title": "Buxoro-Navoiy hududiy marafoni. Antanta jamoasi savollari. 1-tur. (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 722,
+      "title": "Buxoro-Navoiy hududiy marafoni. Insayt jamoasi savollari. 2-tur. (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 723,
+      "title": "Buxoro-Navoiy hududiy marafoni. Black hole jamoasi savollari. 3-tur. (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 724,
+      "title": "Buxoro-Navoiy hududiy marafoni. Maestro Academy jamoasi savollari. 4-tur. (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 725,
+      "title": "Buxoro-Navoiy hududiy marafoni. O'tukan jamoasi savollari. 5-tur. (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 726,
+      "title": "Buxoro-Navoiy hududiy marafoni. Y8jamoasi savollari. 6-tur. (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 727,
+      "title": "Buxoro-Navoiy hududiy marafoni. Avangard jamoasi savollari. 7-tur. (14.04.2024)",
+      "questions": 15
+    },
+    {
+      "id": 728,
+      "title": "Buxoro-Navoiy hududiy marafoni. Slytherin jamoasi savollari. 8-tur. (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 729,
+      "title": "Buxoro-Navoiy hududiy marafoni. Misteriya jamoasi savollari. 9-tur. (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 730,
+      "title": "Buxoro-Navoiy hududiy marafoni. Cogito jamoasi savollari. 10-tur. (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 731,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Diamond  jamoasi savollari(14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 732,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Tafakkur time jamoasi savollari(14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 733,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni  Dofamin+ jamoasi savollari(14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 734,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Magnum jamoasi savollari(14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 735,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Galacticos jamoasi savollari 5-tur(14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 736,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Alpha  jamoasi savollari 6-tur(14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 737,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Google jamoasi savollari 7-tur(14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 738,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni Fenix jamoasi savollari 8-tur(14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 739,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafoni No Comment jamoasi savollari 9-tur(14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 740,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafon Ideal Plus jamoasi savollar 10-tur (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 741,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafon Tafakkur jamoasi savollar 11-tur (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 742,
+      "title": "\"Samarqand -Qashqadaro -Surxondaryo\" hududiy marafon Antanta jamoasi savollar 12-tur (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 743,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Infinity\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 744,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Seven\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 745,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"BizA\" jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 746,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Anduril\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 747,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Sarbon\" jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 748,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Salam school\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 749,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Milliy\" jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 750,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Maestro\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 751,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Meta\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 752,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"Qora kvadrat\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 753,
+      "title": "Toshkent viloyati-Sirdaryo-Jizzax hududiy marafoni \"1-IMI\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 754,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Mobius\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 755,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Oltiariq\" jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 756,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Revolver\" jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 757,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Introvert\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 758,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Yakudza\" jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 759,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Brigada\" jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 760,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Shedevr\" jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 761,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Alif\" jamoasi savollari (14.04.2024)",
+      "questions": 15
+    },
+    {
+      "id": 762,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Alfraganuz\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 763,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Pentagon\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 764,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Reunion\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 765,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Tiki-Taka\" jamoasi savollari (14.04.2024)",
+      "questions": 13
+    },
+    {
+      "id": 766,
+      "title": "Toshkent shahri intellektual marafoni \"Renessans\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 767,
+      "title": "Toshkent shahri intellektual marafoni \"Tesla\" jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 768,
+      "title": "Toshkent shahri intellektual marafoni \"Magnum\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 769,
+      "title": "Toshkent shahri intellektual marafoni \"Sodiq School\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 770,
+      "title": "Toshkent shahri intellektual marafoni \"Legion\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 771,
+      "title": "Toshkent shahri intellektual marafoni \"Bingo\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 772,
+      "title": "Toshkent shahri intellektual marafoni \"Ekspromt\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 773,
+      "title": "Toshkent shahri intellektual marafoni \"Zero\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 774,
+      "title": "Toshkent shahri intellektual marafoni \"Concorde\" jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 775,
+      "title": "Toshkent shahri intellektual marafoni Farrux Rafiqov jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 776,
+      "title": "Toshkent shahri intellektual marafoni \"Metaverse\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 777,
+      "title": "Toshkent shahri intellektual marafoni \"Yengil kavaleriya\" jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 778,
+      "title": "Toshkent shahri intellektual marafoni \"Espero\" jamoasi savollari (14.04.2024)",
+      "questions": 12
+    },
+    {
+      "id": 779,
+      "title": "Toshkent shahri intellektual marafoni \"Benom\" jamoasi savollari (14.04.2024)",
+      "questions": 10
+    },
+    {
+      "id": 780,
+      "title": "Toshkent shahri intellektual marafoni Jobir Ahmedov jamoasi savollari (14.04.2024)",
+      "questions": 11
+    },
+    {
+      "id": 781,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 4-tur Tesla jamoasi savollari (06.04.2024)",
+      "questions": 39
+    },
+    {
+      "id": 782,
+      "title": "NZK ligasi 10-mavsum 1-tur savollari. \"Monopoliya\" jamoasi savollari (23.03.2024)",
+      "questions": 16
+    },
+    {
+      "id": 783,
+      "title": "NZK ligasi 10-mavsum 2-tur savollari. \"Celestial\" jamoasi savollari (30.03.2024)",
+      "questions": 15
+    },
+    {
+      "id": 784,
+      "title": "NZK ligasi 10-mavsum 3-tur savollari. \"Union team\" jamoasi savollari (30.03.2024)",
+      "questions": 15
+    },
+    {
+      "id": 786,
+      "title": "NZK ligasi 10-mavsum 5-tur savollari. \"Navbahor\" jamoasi savollari (06.04.2024)",
+      "questions": 15
+    },
+    {
+      "id": 787,
+      "title": "NZK ligasi 10-mavsum 6-tur savollari. \"Darts\" jamoasi savollari (13.04.2024)",
+      "questions": 16
+    },
+    {
+      "id": 788,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum Maestro Academy jamoasi savollari",
+      "questions": 36
+    },
+    {
+      "id": 789,
+      "title": "Ikkinchi Liga Bahorgi mavsum 4-tur savollari (06.04.2024)",
+      "questions": 26
+    },
+    {
+      "id": 790,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum Avangard jamoasi savollari",
+      "questions": 36
+    },
+    {
+      "id": 791,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum 2-Legion jamoasi savollari",
+      "questions": 36
+    },
+    {
+      "id": 792,
+      "title": "Intellektual haftalik-2024 saralash savollari (14.05.2024)",
+      "questions": 37
+    },
+    {
+      "id": 793,
+      "title": "Ikkinchi Liga Bahorgi mavsum 5-tur savollari (13.04.2024)",
+      "questions": 28
+    },
+    {
+      "id": 794,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 5-tur Sodiq School jamoasi savollari (13.04.2024)",
+      "questions": 42
+    },
+    {
+      "id": 795,
+      "title": "NZK ligasi 10-mavsum 7-tur savollari. \"O'tukan\" jamoasi savollari (20.04.2024)",
+      "questions": 15
+    },
+    {
+      "id": 796,
+      "title": "NZK ligasi 10-mavsum 8-tur savollari. \"Antanta\" jamoasi savollari (27.04.2024)",
+      "questions": 17
+    },
+    {
+      "id": 797,
+      "title": "NZK ligasi 10-mavsum 9-tur savollari. \"Cogito\" jamoasi savollari (04.05.2024)",
+      "questions": 15
+    },
+    {
+      "id": 798,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 3-tur (07.12.2023)",
+      "questions": 24
+    },
+    {
+      "id": 799,
+      "title": "NZK ligasi 10-mavsum 10-tur savollari. \"Slytherin\" jamoasi savollari (04.05.2024)",
+      "questions": 19
+    },
+    {
+      "id": 800,
+      "title": "NZK ligasi 10-mavsum 11-tur savollari. \"Turon\" jamoasi savollari (11.05.2024)",
+      "questions": 16
+    },
+    {
+      "id": 801,
+      "title": "NZK ligasi 10-mavsum 12-tur savollari. \"Movarounnahr\" jamoasi savollari (11.05.2024)",
+      "questions": 17
+    },
+    {
+      "id": 802,
+      "title": "Ayollar ligasi 6-tur(27.04.2024)",
+      "questions": 24
+    },
+    {
+      "id": 803,
+      "title": "Ayollar ligasi 7-tur(18.05.2024)",
+      "questions": 24
+    },
+    {
+      "id": 804,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 4-tur (11.01.2024)",
+      "questions": 24
+    },
+    {
+      "id": 805,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 5-tur (18.01.2024)",
+      "questions": 24
+    },
+    {
+      "id": 806,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 6-tur (25.01.2024)",
+      "questions": 24
+    },
+    {
+      "id": 807,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 6-tur Espero jamoasi savollari (20.04.2024)",
+      "questions": 41
+    },
+    {
+      "id": 808,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 7-tur Farruh Rafiqov jamoasi savollari (27.04.2024)",
+      "questions": 38
+    },
+    {
+      "id": 809,
+      "title": "Sirdaryo viloyati \"Professional ligasi\" bahorgi mavsum 1-tur Qora kvadrat  savollari (16.03.2024)",
+      "questions": 31
+    },
+    {
+      "id": 810,
+      "title": "Sirdaryo viloyati  \"Professional ligasi\" bahorgi mavsum 2-tur Sarbon jamoasi savollari (24.03.2024)",
+      "questions": 28
+    },
+    {
+      "id": 811,
+      "title": "Sirdaryo viloyati \"Professional ligasi\" bahorgi mavsum 3-tur  Seven jamoasi savollari (05.04.2024))",
+      "questions": 30
+    },
+    {
+      "id": 812,
+      "title": "Sirdaryo viloyati \"Professional ligasi\" bahorgi mavsum  4-tur Maestro jamoasi savollari (12.04.2024)",
+      "questions": 30
+    },
+    {
+      "id": 813,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 8-tur Bingo jamoasi savollari (04.05.2024)",
+      "questions": 39
+    },
+    {
+      "id": 814,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 9-tur Benom jamoasi savollari (11.05.2024)",
+      "questions": 38
+    },
+    {
+      "id": 815,
+      "title": "Sirdaryo viloyati \"Professional ligasi\" bahorgi mavsum5-tur Avitsenna jamoasi savollari (19.04.2024)",
+      "questions": 31
+    },
+    {
+      "id": 816,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 10-tur Magnum jamoasi savollari (18.05.2024)",
+      "questions": 38
+    },
+    {
+      "id": 817,
+      "title": "Sirdaryo viloyati \"Professional ligasi\" bahorgi mavsum 6-tur Tafakkur jamoasi savollari(26.04.2024)",
+      "questions": 28
+    },
+    {
+      "id": 818,
+      "title": "Intellektual haftalik 2024 doirasida “Zakovat” savollari (28.05.24)",
+      "questions": 51
+    },
+    {
+      "id": 819,
+      "title": "Intellektual haftalik Breyn-ring o‘yini saralash va guruh bosqichi savollari (29.05.24)",
+      "questions": 140
+    },
+    {
+      "id": 820,
+      "title": "Intellektual haftalik Breyn-ring o‘yini chorak final va yarim final bosqichi savollari (29.05.24)",
+      "questions": 60
+    },
+    {
+      "id": 821,
+      "title": "Intellektual haftalik Breyn-ring o‘yini 3-o'rin va final bosqichi savollari (30.05.24)",
+      "questions": 40
+    },
+    {
+      "id": 822,
+      "title": "Ikkinchi Liga Bahorgi mavsum 6-tur savollari (20.04.2024)",
+      "questions": 25
+    },
+    {
+      "id": 823,
+      "title": "Sirdaryo \"Professional ligasi\" bahorgi mavsum 7-tur Qora kvadrat  jamoasi savollari (03.05.2024)",
+      "questions": 30
+    },
+    {
+      "id": 824,
+      "title": "Sirdaryo viloyati \"Professional ligasi\" bahorgi mavsum 8-tur Sarbon jamoasi savollari (10.05.2024)",
+      "questions": 28
+    },
+    {
+      "id": 825,
+      "title": "Ikkinchi Liga Bahorgi mavsum 7-tur savollari (27.04.2024)",
+      "questions": 26
+    },
+    {
+      "id": 826,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 11-tur Jobir Ahmedov jamoasi savollari (25.05.2024)",
+      "questions": 40
+    },
+    {
+      "id": 827,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 7-tur (01.02.2024)",
+      "questions": 25
+    },
+    {
+      "id": 828,
+      "title": "Ikkinchi Liga Bahorgi mavsum 8-tur savollari (04.05.2024)",
+      "questions": 24
+    },
+    {
+      "id": 829,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 8-tur (08.02.2024)",
+      "questions": 25
+    },
+    {
+      "id": 830,
+      "title": "Ikkinchi Liga Bahorgi mavsum 9-tur savollari (11.05.2024)",
+      "questions": 25
+    },
+    {
+      "id": 831,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 9-tur (15.02.2024)",
+      "questions": 24
+    },
+    {
+      "id": 832,
+      "title": "Talabalar ligasi 2023/24 qishgi mavsum 10-tur (22.02.2024)",
+      "questions": 26
+    },
+    {
+      "id": 833,
+      "title": "Ikkinchi Liga Bahorgi mavsum 10-tur savollari (18.05.2024)",
+      "questions": 27
+    },
+    {
+      "id": 834,
+      "title": "Ikkinchi Liga Bahorgi mavsum 11-tur savollar (25.05.2024)",
+      "questions": 24
+    },
+    {
+      "id": 835,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 1-tur (07.03.2024)",
+      "questions": 24
+    },
+    {
+      "id": 836,
+      "title": "Ikkinchi Liga Bahorgi mavsum 12-tur savollari (01.06.2024)",
+      "questions": 24
+    },
+    {
+      "id": 837,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 12-tur Saidakrom Rasulev savollari (01.06.2024)",
+      "questions": 36
+    },
+    {
+      "id": 838,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 2-tur (14.03.2024)",
+      "questions": 25
+    },
+    {
+      "id": 839,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 3-tur (28.03.2024)",
+      "questions": 24
+    },
+    {
+      "id": 840,
+      "title": "NZK ligasi 10-mavsum 13-tur savollari. \"Aventador\" jamoasi savollari (18.05.2024)",
+      "questions": 15
+    },
+    {
+      "id": 841,
+      "title": "NZK ligasi 10-mavsum 14-tur savollari. \"Zarafshon\" jamoasi savollari (18.05.2024)",
+      "questions": 15
+    },
+    {
+      "id": 842,
+      "title": "NZK ligasi 10-mavsum 15-tur savollari. \"Benilyuks\" jamoasi savollari (25.05.2024)",
+      "questions": 15
+    },
+    {
+      "id": 843,
+      "title": "Professional va Birinchi liga yozgi mavsumi 1-tur Metaverse jamoasi savollari (08.06.2024)",
+      "questions": 38
+    },
+    {
+      "id": 844,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum Maestro jamoasi savollari",
+      "questions": 36
+    },
+    {
+      "id": 845,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (1-tur) 14.03.2024",
+      "questions": 26
+    },
+    {
+      "id": 846,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (2-tur) 28.03.2024",
+      "questions": 25
+    },
+    {
+      "id": 847,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (3-tur) 04.04.2024",
+      "questions": 24
+    },
+    {
+      "id": 848,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (4-tur) 18.04.2024",
+      "questions": 24
+    },
+    {
+      "id": 849,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (5-tur) 25.04.2024",
+      "questions": 24
+    },
+    {
+      "id": 850,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (6-tur) 02.05.2024",
+      "questions": 24
+    },
+    {
+      "id": 851,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (7-tur) 16.05.2024",
+      "questions": 24
+    },
+    {
+      "id": 852,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi bahorgi mavsum (8-tur) 23.05.2024",
+      "questions": 24
+    },
+    {
+      "id": 853,
+      "title": "Buxoro Zakovat klubi Bahorgi mavsum Kordinatorlar jamoasi savollari",
+      "questions": 12
+    },
+    {
+      "id": 854,
+      "title": "Professional va Birinchi liga yozgi mavsumi 2-tur Kronos jamoasi savollari (15.06.2024)",
+      "questions": 39
+    },
+    {
+      "id": 855,
+      "title": "“Qashqadaryo viloyati hokimi kubogi” respublika ochiq turniri savollari(23.06.2024)",
+      "questions": 49
+    },
+    {
+      "id": 857,
+      "title": "Professional va Birinchi liga yozgi mavsumi 3-tur Bingo jamoasi savollari (22.06.2024)",
+      "questions": 37
+    },
+    {
+      "id": 858,
+      "title": "Chempionlar kubogi savollari (07.07.24)",
+      "questions": 36
+    },
+    {
+      "id": 859,
+      "title": "Ikkinchi Liga yozgi mavsum 1-tur savollari (08.06.2024)",
+      "questions": 24
+    },
+    {
+      "id": 860,
+      "title": "Yoshlar kubogi saralash, nimchorak,chorak , yarim final va final bahslari savollari (27.06.2024)",
+      "questions": 76
+    },
+    {
+      "id": 861,
+      "title": "NZK ligasi 11-mavsum 1-tur savollari. \"Antanta\" jamoasi savollari (15.06.2024)",
+      "questions": 17
+    },
+    {
+      "id": 862,
+      "title": "NZK ligasi 11-mavsum 2-tur savollari. \"Slytherin\" jamoasi savollari (22.06.2024)",
+      "questions": 19
+    },
+    {
+      "id": 863,
+      "title": "NZK ligasi 11-mavsum 3-tur savollari. \"Monopoliya\" jamoasi savollari (06.07.2024)",
+      "questions": 17
+    },
+    {
+      "id": 864,
+      "title": "NZK ligasi 11-mavsum 4-tur savollari. \"Black hole\" jamoasi savollari (13.07.2024)",
+      "questions": 14
+    },
+    {
+      "id": 865,
+      "title": "NZK ligasi 11-mavsum 5-tur savollari. \"Afrosiyob\" jamoasi savollari (20.07.2024)",
+      "questions": 18
+    },
+    {
+      "id": 866,
+      "title": "Do'stlik kubogi savollari (14.07.2024)",
+      "questions": 38
+    },
+    {
+      "id": 867,
+      "title": "Ikkinchi Liga Yozgi mavsum 2-tur savollari (15.06.2024)",
+      "questions": 24
+    },
+    {
+      "id": 868,
+      "title": "Ikkinchi Liga Yozgi mavsum 3-tur savollari (22.06.2024)",
+      "questions": 24
+    },
+    {
+      "id": 869,
+      "title": "Professional va Birinchi liga yozgi mavsumi 4-tur Espero jamoasi savollari (29.06.2024)",
+      "questions": 39
+    },
+    {
+      "id": 870,
+      "title": "Professional va Birinchi liga yozgi mavsumi 5-tur Zero jamoasi savollari (06.07.2024)",
+      "questions": 39
+    },
+    {
+      "id": 871,
+      "title": "Professional va Birinchi liga yozgi mavsumi 6-tur Sodiq school jamoasi savollari (13.07.2024)",
+      "questions": 40
+    },
+    {
+      "id": 872,
+      "title": "Professional va Birinchi liga yozgi mavsumi 7-tur Benom jamoasi savollari (20.07.2024)",
+      "questions": 38
+    },
+    {
+      "id": 873,
+      "title": "Professional va Birinchi liga yozgi mavsumi 8-tur Magnum jamoasi savollari (27.07.2024)",
+      "questions": 36
+    },
+    {
+      "id": 874,
+      "title": "Professional va Birinchi liga yozgi mavsumi 9-tur Renessans jamoasi savollari (03.08.2024)",
+      "questions": 40
+    },
+    {
+      "id": 875,
+      "title": "Professional va Birinchi liga yozgi mavsumi 10-tur Farruh Rafiqov jamoasi savollari (10.08.2024)",
+      "questions": 39
+    },
+    {
+      "id": 876,
+      "title": "Professional va Birinchi liga yozgi mavsumi 11-tur Jobir Ahmedov jamoasi savollari (17.08.2024)",
+      "questions": 36
+    },
+    {
+      "id": 877,
+      "title": "Ikkinchi Liga Yozgi mavsum 4-tur savollari (29.06.2024)",
+      "questions": 24
+    },
+    {
+      "id": 878,
+      "title": "NZK ligasi 11-mavsum 6-tur savollari. \"Space-E\" jamoasi savollari (27.07.2024)",
+      "questions": 18
+    },
+    {
+      "id": 879,
+      "title": "NZK ligasi 11-mavsum 7-tur savollari. \"Darts\" jamoasi savollari (03.08.2024)",
+      "questions": 15
+    },
+    {
+      "id": 880,
+      "title": "NZK ligasi 11-mavsum 8-tur savollari. \"Zarafshon\" jamoasi savollari (03.08.2024)",
+      "questions": 15
+    },
+    {
+      "id": 881,
+      "title": "NZK ligasi 11-mavsum 9-tur savollari. \"Movarounnahr\" jamoasi savollari (10.08.2024)",
+      "questions": 18
+    },
+    {
+      "id": 882,
+      "title": "NZK ligasi 11-mavsum 10-tur savollari. \"M&Ms\" jamoasi savollari (17.08.2024)",
+      "questions": 18
+    },
+    {
+      "id": 883,
+      "title": "Ikkinchi Liga Yozgi mavsum 5-tur savollari (06.07.2024)",
+      "questions": 25
+    },
+    {
+      "id": 884,
+      "title": "NZK ligasi 11-mavsum 11-tur savollari. \"Triumf\" jamoasi savollari (17.08.2024)",
+      "questions": 17
+    },
+    {
+      "id": 885,
+      "title": "NZK ligasi 11-mavsum 12-tur savollari. \"O'tukan\" jamoasi savollari (24.08.2024)",
+      "questions": 15
+    },
+    {
+      "id": 886,
+      "title": "NZK ligasi 11-mavsum 13-tur savollari. \"Union Team\" jamoasi savollari (24.08.2024)",
+      "questions": 18
+    },
+    {
+      "id": 887,
+      "title": "Ikkinchi Liga Yozgi mavsum 6-tur savollari (13.07.2024)",
+      "questions": 25
+    },
+    {
+      "id": 888,
+      "title": "Professional va Birinchi liga yozgi mavsumi 12-tur Saidakrom Rasulev savollari (24.08.2024)",
+      "questions": 36
+    },
+    {
+      "id": 889,
+      "title": "Ikkinchi Liga Yozgi mavsum 7-tur savollari (20.07.2024)",
+      "questions": 24
+    },
+    {
+      "id": 890,
+      "title": "Ikkinchi Liga Yozgi mavsum 8-tur savollari (27.07.2024)",
+      "questions": 24
+    },
+    {
+      "id": 891,
+      "title": "Ikkinchi Liga Yozgi mavsum 9-tur savollari (03.08.2024)",
+      "questions": 28
+    },
+    {
+      "id": 892,
+      "title": "Ikkinchi Liga Yozgi mavsum 10-tur savollari (10.08.2024)",
+      "questions": 25
+    },
+    {
+      "id": 893,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 4-tur (04.04.2024)",
+      "questions": 25
+    },
+    {
+      "id": 894,
+      "title": "Ikkinchi Liga Yozgi mavsum 11-tur savollari (17.08.2024)",
+      "questions": 23
+    },
+    {
+      "id": 895,
+      "title": "\"Besh tashabbus olimpiadasi\" doirasida \"Zakovat\" intellektual o‘yini tuman bosqichi (22.07.2024)",
+      "questions": 24
+    },
+    {
+      "id": 896,
+      "title": "\"Besh tashabbus olimpiadasi\" doirasida \"Zakovat\" intellektual o‘yini tuman bosqichi (23.07.2024)",
+      "questions": 24
+    },
+    {
+      "id": 897,
+      "title": "\"Besh tashabbus olimpiadasi\" doirasida \"Zakovat\" intellektual o‘yini tuman bosqichi (24.07.2024)",
+      "questions": 24
+    },
+    {
+      "id": 898,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 1-tur \"Zarafshon\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 899,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 2-tur \"Slytherin\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 900,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 3-tur \"Antanta\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 901,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 4-tur \"Black hole\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 902,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 5-tur \"Eclipse\" jamoasi savollari",
+      "questions": 16
+    },
+    {
+      "id": 903,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 6-tur \"Triumf\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 904,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 7-tur \"O'tukan\" jamoasi savollari",
+      "questions": 13
+    },
+    {
+      "id": 905,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 8-tur \"Monopoliya\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 906,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 9-tur \"G'ozg'on\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 907,
+      "title": "Navoiy viloyati ichki intellektual marafoni. 10-tur \"Uchquduq\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 911,
+      "title": "Ikkinchi Liga Yozgi mavsum 12-tur savollari (24.08.2024)",
+      "questions": 25
+    },
+    {
+      "id": 912,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 5-tur (18.04.2024)",
+      "questions": 26
+    },
+    {
+      "id": 913,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 6-tur (25.04.2024)",
+      "questions": 26
+    },
+    {
+      "id": 914,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 7-tur (02.05.2024)",
+      "questions": 27
+    },
+    {
+      "id": 915,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 8-tur (16.05.2024)",
+      "questions": 24
+    },
+    {
+      "id": 918,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 9-tur (23.05.2024)",
+      "questions": 25
+    },
+    {
+      "id": 919,
+      "title": "Talabalar ligasi 2023/24 bahorgi mavsum 10-tur (30.05.2024)",
+      "questions": 24
+    },
+    {
+      "id": 922,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 1-tur (19.09.2024)",
+      "questions": 24
+    },
+    {
+      "id": 925,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 2-tur (26.09.2024)",
+      "questions": 25
+    },
+    {
+      "id": 926,
+      "title": "Chempionlar kubogi savollari (15.09.24)",
+      "questions": 37
+    },
+    {
+      "id": 930,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 3-tur (03.10.2024)",
+      "questions": 24
+    },
+    {
+      "id": 931,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Bingo jamoasi savollari (14.09.2024)",
+      "questions": 37
+    },
+    {
+      "id": 932,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Metaverse jamoasi savollari (21.09.2024)",
+      "questions": 38
+    },
+    {
+      "id": 933,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Sodiq school jamoasi savollari (28.09.2024)",
+      "questions": 37
+    },
+    {
+      "id": 934,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur Espero jamoasi savollari (05.10.2024)",
+      "questions": 39
+    },
+    {
+      "id": 935,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 4-tur (10.10.2024)",
+      "questions": 24
+    },
+    {
+      "id": 936,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 5-tur (17.10.2024)",
+      "questions": 24
+    },
+    {
+      "id": 937,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Doston Malikov jamoasi savollari (12.10.2024)",
+      "questions": 38
+    },
+    {
+      "id": 938,
+      "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari (14.09.2024)",
+      "questions": 24
+    },
+    {
+      "id": 939,
+      "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari (21.09.2024)",
+      "questions": 24
+    },
+    {
+      "id": 940,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 6-tur (24.10.2024)",
+      "questions": 27
+    },
+    {
+      "id": 941,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Farruh Rafiqov jamoasi savollari (19.10.2024)",
+      "questions": 38
+    },
+    {
+      "id": 942,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Jobir Ahmedov jamoasi savollari (26.10.2024)",
+      "questions": 36
+    },
+    {
+      "id": 943,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Benom jamoasi savollari (02.11.2024)",
+      "questions": 36
+    },
+    {
+      "id": 944,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Magnum jamoasi savollari (09.11.2024)",
+      "questions": 40
+    },
+    {
+      "id": 945,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 7-tur (31.10.2024)",
+      "questions": 25
+    },
+    {
+      "id": 946,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Saidakrom Rasulev savollari (16.11.2024)",
+      "questions": 36
+    },
+    {
+      "id": 947,
+      "title": "Ikkinchi Liga Kuzgi mavsum 3-tur savollari (28.09.2024)",
+      "questions": 24
+    },
+    {
+      "id": 948,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 8-tur (07.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 949,
+      "title": "Ikkinchi Liga Kuzgi mavsum 4-tur savollari (05.10.2024)",
+      "questions": 24
+    },
+    {
+      "id": 950,
+      "title": "Ikkinchi Liga Kuzgi mavsum 5-tur savollari (12.10.2024)",
+      "questions": 25
+    },
+    {
+      "id": 951,
+      "title": "Ikkinchi Liga Kuzgi mavsum 6-tur savollari (19.10.2024)",
+      "questions": 24
+    },
+    {
+      "id": 952,
+      "title": "Ikkinchi Liga Kuzgi mavsum 7-tur savollari (26.10.2024)",
+      "questions": 24
+    },
+    {
+      "id": 953,
+      "title": "Ikkinchi Liga Kuzgi mavsum 8-tur savollari (02.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 954,
+      "title": "Ikkinchi Liga Kuzgi mavsum 9-tur savollari (09.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 955,
+      "title": "Ikkinchi Liga Kuzgi mavsum 10-tur savollari (16.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 956,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 9-tur (14.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 957,
+      "title": "Professional va Birinchi liga qishki mavsumi 1-tur Yengil kavaleriya jamoasi savollari (30.11.2024)",
+      "questions": 36
+    },
+    {
+      "id": 958,
+      "title": "Intellektual Olimpiada saralash bosqichi savollari (06.12.2024)",
+      "questions": 48
+    },
+    {
+      "id": 959,
+      "title": "Intellektual Olimpiada doirasidagi “Zakovat” o‘yini savollari (19.12.2024–20.12.2024)",
+      "questions": 54
+    },
+    {
+      "id": 960,
+      "title": "Professional va Birinchi liga qishki mavsumi 2-tur Espero jamoasi savollari (07.12.2024)",
+      "questions": 40
+    },
+    {
+      "id": 961,
+      "title": "Professional va Birinchi liga qishki mavsumi 3-tur Sodiq school jamoasi savollari (14.12.2024)",
+      "questions": 38
+    },
+    {
+      "id": 962,
+      "title": "Professional va Birinchi liga qishki mavsumi 4-tur Metaverse jamoasi savollari (21.12.2024)",
+      "questions": 36
+    },
+    {
+      "id": 963,
+      "title": "Ayollar ligasi 2-tur(20.01.2024)",
+      "questions": 25
+    },
+    {
+      "id": 964,
+      "title": "Ayollar ligasi 8-tur(08.06.2024)",
+      "questions": 24
+    },
+    {
+      "id": 965,
+      "title": "Ayollar ligasi 9-tur (03.08.2024)",
+      "questions": 24
+    },
+    {
+      "id": 966,
+      "title": "Ayollar ligasi 10-tur (24.08.2024)",
+      "questions": 24
+    },
+    {
+      "id": 967,
+      "title": "Ayollar ligasi 1-tur (21.09.2024)",
+      "questions": 24
+    },
+    {
+      "id": 968,
+      "title": "Ayollar ligasi 2-tur (16.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 969,
+      "title": "Ayollar ligasi 3-tur (30.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 970,
+      "title": "Talabalar ligasi 2024/25 kuzgi mavsum 10-tur (21.11.2024)",
+      "questions": 26
+    },
+    {
+      "id": 971,
+      "title": "Ayollar ligasi 4-tur (11.01.2025)",
+      "questions": 24
+    },
+    {
+      "id": 972,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 1-tur (28.11.2024)",
+      "questions": 25
+    },
+    {
+      "id": 973,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 2-tur (05.12.2024)",
+      "questions": 25
+    },
+    {
+      "id": 974,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 3-tur (12.12.2024)",
+      "questions": 25
+    },
+    {
+      "id": 975,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 4-tur (16.01.2025)",
+      "questions": 25
+    },
+    {
+      "id": 976,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 5-tur (23.01.2025)",
+      "questions": 24
+    },
+    {
+      "id": 977,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 6-tur (30.01.2025)",
+      "questions": 25
+    },
+    {
+      "id": 978,
+      "title": "Professional va Birinchi liga qishki mavsumi 5-tur Farrux Rafiqov  jamoasi savollari (11.01.2025)",
+      "questions": 39
+    },
+    {
+      "id": 979,
+      "title": "Professional va Birinchi liga qishki mavsumi 6-tur Magnum jamoasi savollari (18.01.2025)",
+      "questions": 37
+    },
+    {
+      "id": 980,
+      "title": "Professional va Birinchi liga qishki mavsumi 7-tur Bingo jamoasi savollari (25.01.2025)",
+      "questions": 36
+    },
+    {
+      "id": 981,
+      "title": "Professional va Birinchi liga qishki mavsumi 8-tur Jobir Ahmedov jamoasi savollari (01.02.2025)",
+      "questions": 37
+    },
+    {
+      "id": 982,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 1-tur 19.09.2024",
+      "questions": 25
+    },
+    {
+      "id": 983,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 2-tur 26.09.2024",
+      "questions": 24
+    },
+    {
+      "id": 984,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 3-tur 03.10.2024",
+      "questions": 24
+    },
+    {
+      "id": 985,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 4-tur 10.10.2024",
+      "questions": 24
+    },
+    {
+      "id": 986,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 5-tur 17.10.2024",
+      "questions": 24
+    },
+    {
+      "id": 987,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 6-tur 24.10.2024",
+      "questions": 24
+    },
+    {
+      "id": 988,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 7-tur 31.10.2024",
+      "questions": 24
+    },
+    {
+      "id": 989,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 8-tur 14.11.2024",
+      "questions": 24
+    },
+    {
+      "id": 990,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 9-tur 21.11.2024",
+      "questions": 24
+    },
+    {
+      "id": 991,
+      "title": "O‘quvchilar va Talaba-o‘quvchilar ligasi 2024/2025 o‘quv yili kuzgi mavsum 10-tur 28.11.2024",
+      "questions": 24
+    },
+    {
+      "id": 992,
+      "title": "Ikkinchi Liga qishki mavsum 1-tur savollari (30.11.2024)",
+      "questions": 24
+    },
+    {
+      "id": 993,
+      "title": "NZK ligasi 12-mavsum 1-tur savollari. \"SQB\" jamoasi savollari (07.12.2024)",
+      "questions": 12
+    },
+    {
+      "id": 994,
+      "title": "NZK ligasi 12-mavsum 2-tur savollari. \"Afrosiyob\" jamoasi savollari (14.12.2024)",
+      "questions": 15
+    },
+    {
+      "id": 995,
+      "title": "NZK ligasi 12-mavsum 3-tur savollari. \"Slytherin\" jamoasi savollari (21.12.2024)",
+      "questions": 14
+    },
+    {
+      "id": 996,
+      "title": "NZK ligasi 12-mavsum 4-tur savollari. \"MVPs\" jamoasi savollari (21.12.2024)",
+      "questions": 12
+    },
+    {
+      "id": 997,
+      "title": "NZK ligasi 12-mavsum 5-tur savollari. \"Zarafshon\" jamoasi savollari (11.01.2025)",
+      "questions": 13
+    },
+    {
+      "id": 998,
+      "title": "NZK ligasi 12-mavsum 6-tur savollari. \"Astro\" jamoasi savollari (11.01.2025)",
+      "questions": 13
+    },
+    {
+      "id": 999,
+      "title": "NZK ligasi 12-mavsum 7-tur savollari. \"Antanta\" jamoasi savollari (25.01.2025)",
+      "questions": 13
+    },
+    {
+      "id": 1000,
+      "title": "NZK ligasi 12-mavsum 8-tur savollari. \"Monopoliya\" jamoasi savollari (25.01.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1001,
+      "title": "NZK ligasi 12-mavsum 9-tur savollari. \"O'tukan\" jamoasi savollari (01.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1002,
+      "title": "NZK ligasi 12-mavsum 10-tur savollari. \"Goodfellas\" jamoasi savollari (01.02.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1003,
+      "title": "Ikkinchi Liga qishki mavsum 2-tur savollar (07.12.2024)",
+      "questions": 24
+    },
+    {
+      "id": 1004,
+      "title": "Ikkinchi Liga qishki mavsum 3-tur savollari (14.12.2024)",
+      "questions": 24
+    },
+    {
+      "id": 1005,
+      "title": "Ikkinchi Liga qishki mavsum 4-tur savollari (21.12.2024)",
+      "questions": 26
+    },
+    {
+      "id": 1006,
+      "title": "Ikkinchi Liga qishki mavsum 5-tur savollari (11.01.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1007,
+      "title": "Ikkinchi Liga qishki mavsum 6-tur savollari (18.01.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1008,
+      "title": "Ikkinchi Liga qishki mavsum 7-tur savollari (25.01.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1009,
+      "title": "Ikkinchi Liga qishki mavsum 8-tur savollari (01.02.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1010,
+      "title": "Ikkinchi Liga qishki mavsum 9-tur savollari (08.02.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1011,
+      "title": "Ikkinchi Liga qishki mavsum 10-tur savollari (15.02.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1012,
+      "title": "Xotin-qizlar o‘rtasidagi 2024-yilgi \"Zakovat\" turniri saralash bosqichi savollari (24.02.2024)",
+      "questions": 50
+    },
+    {
+      "id": 1013,
+      "title": "Xotin-qizlar o‘rtasidagi 2024-yilgi \"Zakovat\" turniri Respublika bosqichi savollari (03.03.2024)",
+      "questions": 36
+    },
+    {
+      "id": 1014,
+      "title": "Xotin-qizlar o‘rtasidagi 2025-yilgi \"Zakovat\" turniri saralash bosqichi savollari (22.02.2025)",
+      "questions": 52
+    },
+    {
+      "id": 1015,
+      "title": "NZK ligasi 12-mavsum 11-tur savollari. \"Allegro\" jamoasi savollari (08.02.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1016,
+      "title": "NZK ligasi 12-mavsum 12-tur savollari. \"Black hole\" jamoasi savollari (08.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1017,
+      "title": "NZK ligasi 12-mavsum 13-tur savollari. \"Cogito\" jamoasi savollari (15.02.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1018,
+      "title": "NZK ligasi 12-mavsum 14-tur savollari. \"Eclipse\" jamoasi savollari (15.02.2025)",
+      "questions": 16
+    },
+    {
+      "id": 1019,
+      "title": "NZK ligasi 12-mavsum 15-tur savollari. \"Silk Road\" jamoasi savollari (15.02.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1020,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Rebellion\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1021,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Shedevr\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1022,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Brigada\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1023,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Oltiariq\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1024,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Tiki taka\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1025,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Pentagon\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1026,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Reunion\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1027,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Introvert\" jamoasi savollari (23.02.2025)",
+      "questions": 13
+    },
+    {
+      "id": 1028,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Kapitoliy\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1029,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Balans\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1030,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Alif\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1031,
+      "title": "Andijon-Namangan-Farg'ona hududiy marafoni \"Alfraganuz\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1032,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Positive Intriga\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1033,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Sarbon\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1034,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Anduril\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1035,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"NotIQ\" jamoasi savollari (23.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1036,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Seven\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1037,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Infinity\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1038,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Fight Club\" jamoasi savollari (23.02.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1039,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Alliance\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1040,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Semper fortis\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1041,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Sonador\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1042,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"Intellekt\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1043,
+      "title": "Toshkent-Sirdaryo-Jizzax hududiy marafoni \"C.S.G.O\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1044,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Tafakkur\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1045,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Diamond\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1046,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"No Comment\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1047,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Better Team\" jamoasi savollari (23.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1048,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Antanta\" jamoasi savollari (23.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1049,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Everest\" jamoasi savollari (23.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1050,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Galacticos\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1051,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Google\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1052,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Enigma\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1053,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Nevermore\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1054,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Ideal Plus\" jamoasi savollari (23.02.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1055,
+      "title": "Samarqand-Qashqadaryo-Surxondaryo hududiy marafoni \"Legion\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1056,
+      "title": "Buxoro Navoiy hududiy marafoni \"Avanard\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1057,
+      "title": "Buxoro Navoiy hududiy marafoni \"Cogito\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1058,
+      "title": "Buxoro Navoiy hududiy marafoni \"F8\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1059,
+      "title": "Buxoro Navoiy hududiy marafoni \"O'tukan\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1060,
+      "title": "Buxoro Navoiy hududiy marafoni \"Insayt\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1061,
+      "title": "Buxoro Navoiy hududiy marafoni \"Black Hole\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1062,
+      "title": "Buxoro Navoiy hududiy marafoni \"Misteriya\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1063,
+      "title": "Buxoro Navoiy hududiy marafoni \"Antanta\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1064,
+      "title": "Buxoro Navoiy hududiy marafoni \"Slytherin\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1065,
+      "title": "Buxoro Navoiy hududiy marafoni \"Maestro academy\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1066,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Mag'ripat\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1067,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"E-Auksion\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1068,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Armageddon\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1069,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Idrok\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1070,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Polimat\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1071,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"URAL\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1072,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Ziyali Jaslar\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1073,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Zehn\" jamoasi savollari",
+      "questions": 9
+    },
+    {
+      "id": 1074,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"XIII Legion\" jamoasi savollari",
+      "questions": 11
+    },
+    {
+      "id": 1075,
+      "title": "Qoraqalpog'iston-Xorazm hududiy marafoni \"Berkut\" jamoasi savollari",
+      "questions": 10
+    },
+    {
+      "id": 1076,
+      "title": "Toshkent shahri intellektual marafoni \"Espero\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1077,
+      "title": "Toshkent shahri intellektual marafoni \"Ekspromt\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1078,
+      "title": "Toshkent shahri intellektual marafoni \"Kronos\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1079,
+      "title": "Toshkent shahri intellektual marafoni \"Benom\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1080,
+      "title": "Toshkent shahri intellektual marafoni \"Metaverse\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1081,
+      "title": "Toshkent shahri intellektual marafoni \"Doston Malikov\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1082,
+      "title": "Toshkent shahri intellektual marafoni \"Yengil kavaleriya\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1083,
+      "title": "Toshkent shahri intellektual marafoni \"De Facto\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1084,
+      "title": "Toshkent shahri intellektual marafoni \"Sodiq School\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1085,
+      "title": "Toshkent shahri intellektual marafoni \"Jobir Ahmedov\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1086,
+      "title": "Toshkent shahri intellektual marafoni \"Farrux Rafiqov\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1087,
+      "title": "Toshkent shahri intellektual marafoni \"Renessans\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1088,
+      "title": "Toshkent shahri intellektual marafoni \"Kriptonit\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1089,
+      "title": "Toshkent shahri intellektual marafoni \"Nostalgy\" jamoasi savollari (23.02.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1090,
+      "title": "Toshkent shahri intellektual marafoni \"Magnum\" jamoasi savollari (23.02.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1091,
+      "title": "Professional va Birinchi liga qishki mavsumi 9-tur Benom jamoasi savollari (08.02.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1092,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Saidakrom Rasulev savollari (15.02.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1093,
+      "title": "Xotin-qizlar o‘rtasidagi 2025-yilgi \"Zakovat\" turniri Respublika bosqichi savollari (02.03.2025)",
+      "questions": 36
+    },
+    {
+      "id": 1094,
+      "title": "Chempionlar kubogi savollari (04.05.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1095,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 1-tur Metaverse jamoasi savollari (01.03.2025)",
+      "questions": 38
+    },
+    {
+      "id": 1096,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 2-tur Nostalgy jamoasi savollari (15.03.2025)",
+      "questions": 38
+    },
+    {
+      "id": 1097,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 3-tur Farrux Rafiqov jamoasi savollari (29.03.2025)",
+      "questions": 38
+    },
+    {
+      "id": 1098,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 4-tur Espero jamoasi savollari (05.04.2025)",
+      "questions": 39
+    },
+    {
+      "id": 1099,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 5-tur Sodiq school jamoasi savollari (12.04.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1100,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 6-tur Renessans jamoasi savollari (19.04.2025)",
+      "questions": 36
+    },
+    {
+      "id": 1101,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 7-tur Benom jamoasi savollari (26.04.2025)",
+      "questions": 42
+    },
+    {
+      "id": 1102,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 8-tur Jobir Ahmedov  jamoasi savollari (03.05.2025)",
+      "questions": 39
+    },
+    {
+      "id": 1103,
+      "title": "Ikkinchi Liga bahorgi mavsum 1-tur savollari (01.03.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1104,
+      "title": "Ikkinchi Liga bahorgi mavsum 2-tur savollar (15.03.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1105,
+      "title": "Ikkinchi Liga bahorgi mavsum 3-tur savollari (29.03.2025)",
+      "questions": 26
+    },
+    {
+      "id": 1106,
+      "title": "Ikkinchi Liga bahorgi mavsum 4-tur savollari (05.04.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1107,
+      "title": "Ikkinchi Liga bahorgi mavsum 5-tur savollari (12.04.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1108,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 9-tur Magnum jamoasi savollari (10.05.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1109,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 10-tur Yengil kavaleriya jamoasi savollari 10.05.2025",
+      "questions": 38
+    },
+    {
+      "id": 1110,
+      "title": "Ikkinchi Liga bahorgi mavsum 6-tur savollari (19.04.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1111,
+      "title": "Ikkinchi Liga bahorgi mavsum 7-tur savollari (26.04.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1112,
+      "title": "Ikkinchi Liga bahorgi mavsum 8-tur savollari (03.05.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1113,
+      "title": "Ikkinchi Liga bahorgi mavsum 9-tur savollari (10.05.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1114,
+      "title": "Ikkinchi Liga bahorgi mavsum 10-tur savollari (17.05.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1115,
+      "title": "Professional va Birinchi liga yozgi mavsumi 1-tur Ekspromt jamoasi savollari 31.05.2025",
+      "questions": 40
+    },
+    {
+      "id": 1116,
+      "title": "Professional va Birinchi liga yozgi mavsumi 2-tur Nostalgy jamoasi savollari 14.06.2025",
+      "questions": 40
+    },
+    {
+      "id": 1117,
+      "title": "Ikkinchi Liga yozgi mavsum 1-tur savollari (31.05.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1118,
+      "title": "Ikkinchi Liga yozgi mavsum 2-tur savollari (14.06.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1119,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili qishgi mavsum 1-tur 05.12.2024",
+      "questions": 24
+    },
+    {
+      "id": 1120,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili qishgi mavsum 2-tur 12.12.2024",
+      "questions": 24
+    },
+    {
+      "id": 1126,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili qishgi mavsum 8-tur 20.02.2025",
+      "questions": 24
+    },
+    {
+      "id": 1127,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili qishgi mavsum 9-tur 27.02.2025",
+      "questions": 24
+    },
+    {
+      "id": 1128,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 1-tur 06.03.2025",
+      "questions": 24
+    },
+    {
+      "id": 1129,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 2-tur 13.03.2025",
+      "questions": 24
+    },
+    {
+      "id": 1130,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 3-tur 20.03.2025",
+      "questions": 24
+    },
+    {
+      "id": 1131,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 4-tur 03.04.2025",
+      "questions": 24
+    },
+    {
+      "id": 1132,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 5-tur 10.04.2025",
+      "questions": 25
+    },
+    {
+      "id": 1133,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 6-tur 24.04.2025",
+      "questions": 24
+    },
+    {
+      "id": 1134,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 7-tur 01.05.2025",
+      "questions": 24
+    },
+    {
+      "id": 1135,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 8-tur 08.05.2025",
+      "questions": 24
+    },
+    {
+      "id": 1136,
+      "title": "O'quvchilar va Talaba-o'quvchilar ligasi 2024/2025 o'quv yili bahorgi mavsum 9-tur 15.05.2025",
+      "questions": 24
+    },
+    {
+      "id": 1137,
+      "title": "Ayollar ligasi 5-tur (25.01.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1138,
+      "title": "Ayollar ligasi 6-tur (08.02.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1139,
+      "title": "Navoiy zakovat klubi ichki marafoni. 1-tur. \"Cogito\" jamoasi savollari",
+      "questions": 12
+    },
+    {
+      "id": 1140,
+      "title": "Navoiy zakovat klubi ichki marafoni. 2-tur. \"Antanta\" jamoasi savollari (25.05.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1141,
+      "title": "Navoiy zakovat klubi ichki marafoni. 3-tur. \"Afrosiyob\" jamoasi savollari (25.05.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1142,
+      "title": "Navoiy zakovat klubi ichki marafoni. 4-tur. \"Zarafshon\" jamoasi savollari (25.05.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1143,
+      "title": "Navoiy zakovat klubi ichki marafoni. 5-tur. \"Black hole\" jamoasi savollari (25.05.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1144,
+      "title": "Navoiy zakovat klubi ichki marafoni. 6-tur. \"Allegro\" jamoasi savollari (25.05.2025)",
+      "questions": 11
+    },
+    {
+      "id": 1145,
+      "title": "Navoiy zakovat klubi ichki marafoni. 7-tur. \"O'tukan\" jamoasi savollari (25.05.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1146,
+      "title": "Navoiy zakovat klubi ichki marafoni. 8-tur. \"Uchquduq\" jamoasi savollari (25.05.2025)",
+      "questions": 10
+    },
+    {
+      "id": 1147,
+      "title": "Ayollar ligasi 7-tur (15.03.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1148,
+      "title": "Ayollar ligasi 8-tur (05.04.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1149,
+      "title": "Ayollar ligasi 9-tur (03.05.2025)",
+      "questions": 26
+    },
+    {
+      "id": 1150,
+      "title": "Ayollar ligasi 10-tur(14.06.2025)",
+      "questions": 26
+    },
+    {
+      "id": 1151,
+      "title": "Ikkinchi Liga Yozgi mavsum 3-tur savollari (21.06.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1152,
+      "title": "Professional va Birinchi liga yozgi mavsumi 3-tur Farruh Rafiqov jamoasi savollari 21.06.2025",
+      "questions": 36
+    },
+    {
+      "id": 1153,
+      "title": "Professional va Birinchi liga yozgi mavsumi 4-tur Salam School jamoasi savollari 28.06.2025",
+      "questions": 36
+    },
+    {
+      "id": 1154,
+      "title": "Ikkinchi Liga Yozgi mavsum 4-tur savollari (28.06.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1155,
+      "title": "Mualliflar kubogi 1-tur (04.07.2025)",
+      "questions": 42
+    },
+    {
+      "id": 1156,
+      "title": "Professional va Birinchi liga yozgi mavsumi 5-tur Metaverse jamoasi savollari 05.07.2025",
+      "questions": 37
+    },
+    {
+      "id": 1157,
+      "title": "Ikkinchi Liga Yozgi mavsum 5-tur savollari (05.07.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1158,
+      "title": "Ikkinchi Liga Yozgi mavsum 6-tur savollari (12.07.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1159,
+      "title": "Professional va Birinchi liga yozgi mavsumi 6-tur Magnum jamoasi savollari 12..07.2025",
+      "questions": 36
+    },
+    {
+      "id": 1160,
+      "title": "II Открытый чемпионат Азии по игре Zakovat (11–12.05.2024)",
+      "questions": 72
+    },
+    {
+      "id": 1161,
+      "title": "Ikkinchi Liga Yozgi mavsum 7-tur savollari (19.07.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1162,
+      "title": "“Zakovat” oʻyini bo‘yicha Mualliflar kubogi 2-tur savollari (22.07.2025)",
+      "questions": 41
+    },
+    {
+      "id": 1163,
+      "title": "Professional va Birinchi liga yozgi mavsumi 7-tur Espero jamoasi savollari (19.07.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1164,
+      "title": "Ikkinchi Liga Yozgi mavsum 8-tur savollari (26.07.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1165,
+      "title": "Professional va Birinchi liga yozgi mavsumi 8-tur J.Ahmedov jamoasi savollari (26.07.2025)",
+      "questions": 36
+    },
+    {
+      "id": 1166,
+      "title": "Professional va Birinchi liga yozgi mavsumi 9-tur Benom jamoasi savollari (02.08.2025)",
+      "questions": 36
+    },
+    {
+      "id": 1167,
+      "title": "Ikkinchi Liga Yozgi mavsum 9-tur savollari (02.08.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1168,
+      "title": "Professional va Birinchi liga yozgi mavsumi 10-tur Sodiq school jamoasi savollari (09.08.2025)",
+      "questions": 36
+    },
+    {
+      "id": 1169,
+      "title": "Ikkinchi Liga Yozgi mavsum 10-tur savollari (09.08.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1170,
+      "title": "Mustaqillik kubogi 2025 savollari (07.09.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1171,
+      "title": "Mualliflar kubogi 3-tur (08.08.2025)",
+      "questions": 41
+    },
+    {
+      "id": 1172,
+      "title": "Mualliflar kubogi 4-tur (29.08.2025)",
+      "questions": 38
+    },
+    {
+      "id": 1173,
+      "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollar (06.09.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1174,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Farrux Rafiqov jamoasi savollari 06.09.2025",
+      "questions": 36
+    },
+    {
+      "id": 1175,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 7-tur (06.02.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1176,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 8-tur (13.02.2025)",
+      "questions": 26
+    },
+    {
+      "id": 1177,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 9-tur (20.02.2025)",
+      "questions": 26
+    },
+    {
+      "id": 1178,
+      "title": "Talabalar ligasi 2024/25 qishki mavsum 10-tur (27.02.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1179,
+      "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari (13.09.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1180,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Sodiq school jamoasi savollari (13.09.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1181,
+      "title": "Ayollar ligasi 11-tur(26.07.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1182,
+      "title": "Ayollar ligasi 12-tur 23.08.2025",
+      "questions": 24
+    },
+    {
+      "id": 1183,
+      "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari (20.09.2025)",
+      "questions": 26
+    },
+    {
+      "id": 1184,
+      "title": "Professional va Birinchi liga yozgi mavsumi 3-tur Salam School jamoasi savollari 20.09.2025",
+      "questions": 39
+    },
+    {
+      "id": 1185,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 1-tur (06.03.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1186,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 2-tur (13.03.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1187,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 3-tur (20.03.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1188,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 4-tur (27.03.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1189,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 5-tur (03.04.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1190,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 6-tur (10.04.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1191,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 7-tur (24.04.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1192,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 8-tur (01.05.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1193,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 9-tur (08.05.2025)",
+      "questions": 27
+    },
+    {
+      "id": 1194,
+      "title": "Talabalar ligasi 2024/25 bahorgi mavsum 10-tur (15.05.2025)",
+      "questions": 27
+    },
+    {
+      "id": 1195,
+      "title": "Professional va Birinchi liga yozgi mavsumi 4-tur Espero jamoasi savollari 27.09.2025",
+      "questions": 36
+    },
+    {
+      "id": 1196,
+      "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari (27.09.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1197,
+      "title": "2025-yil O‘qituvchilar o‘rtasidagi Zakovat musobaqasining hududiy bosqich saralash savollari",
+      "questions": 51
+    },
+    {
+      "id": 1198,
+      "title": "2025-yil O‘qituvchilar o‘rtasida “Zakovat” musobaqasining final bosqichi savollari",
+      "questions": 48
+    },
+    {
+      "id": 1199,
+      "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari (04.10.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1200,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Metaverse jamoasi savollari 04.10.2025",
+      "questions": 39
+    },
+    {
+      "id": 1201,
+      "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari (11.10.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1202,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari 11.10.2025",
+      "questions": 37
+    },
+    {
+      "id": 1203,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur De Facto jamoasi savollari 18.10.2025",
+      "questions": 38
+    },
+    {
+      "id": 1204,
+      "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari (18.10.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1205,
+      "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari (25.10.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1206,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Benom  jamoasi savollari 25.10.2025",
+      "questions": 37
+    },
+    {
+      "id": 1207,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 1-tur (11.09.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1209,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Magnum jamoasi savollari 01.11.2025",
+      "questions": 36
+    },
+    {
+      "id": 1210,
+      "title": "Intellektual Marafon 1-tur Jobir Ahmedov jamoasi navbatchiligi  (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1211,
+      "title": "Intellektual Marafon 2-tur Sodiq School jamoasi navbatchiligi (02.11.2025)",
+      "questions": 13
+    },
+    {
+      "id": 1212,
+      "title": "Intellektual Marafon 3-tur Farrux Rafiqov jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1213,
+      "title": "Intellektual Marafon 4-tur Metaverse jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1214,
+      "title": "Intellektual Marafon 5-tur Doston Malikov jamoasi navbatchiligi (02.11.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1215,
+      "title": "Intellektual Marafon 6-tur Espero jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1216,
+      "title": "Intellektual Marafon 7-tur Magnum jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1217,
+      "title": "Intellektual Marafon 8-tur Benom jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1218,
+      "title": "Intellektual Marafon 9-tur Yengil Kavaleriya jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1219,
+      "title": "Intellektual Marafon 10-tur Zero jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1220,
+      "title": "Intellektual Marafon 11-tur Salam School  jamoasi navbatchiligi (02.11.2025)",
+      "questions": 12
+    },
+    {
+      "id": 1221,
+      "title": "Intellektual Marafon 12-tur Kronos jamoasi navbatchiligi (02.11.2025)",
+      "questions": 14
+    },
+    {
+      "id": 1222,
+      "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari (08.11.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1223,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Jobir Ahmedov  jamoasi savollari 08.11.2025",
+      "questions": 36
+    },
+    {
+      "id": 1224,
+      "title": "Professional va Birinchi liga qishki mavsumi 1-tur Metaverse jamoasi savollari (29.11.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1225,
+      "title": "Ikkinchi Liga qishki mavsum 1-tur savollari (29.11.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1226,
+      "title": "Ikkinchi Liga qishki mavsum 2-tur savollari (06.12.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1227,
+      "title": "Professional va Birinchi liga qishki mavsumi 2-tur Benom jamoasi savollari (06.12.2025)",
+      "questions": 38
+    },
+    {
+      "id": 1228,
+      "title": "Professional va Birinchi liga qishki mavsumi 3-tur Farrux Rafiqov jamoasi savollari 20.12.2025",
+      "questions": 36
+    },
+    {
+      "id": 1229,
+      "title": "Ikkinchi Liga qishki mavsum 3-tur savollari (20.12.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1230,
+      "title": "Professional va Birinchi liga qishki mavsumi 4-tur Jobir Ahmedov  jamoasi savollari 10.01.2026",
+      "questions": 36
+    },
+    {
+      "id": 1231,
+      "title": "Ikkinchi Liga qishki mavsum 4-tur savollari (10.01.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1233,
+      "title": "Ikkinchi Liga qishki mavsum 5-tur savollari (17.01.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1234,
+      "title": "Professional va Birinchi liga qishki mavsumi 5-tur Doston Malikov jamoasi savollari 17.01.2026",
+      "questions": 36
+    },
+    {
+      "id": 1235,
+      "title": "Ikkinchi Liga qishki mavsum 6-tur savollari (24.01.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1236,
+      "title": "Professional va Birinchi liga qishki mavsumi 6-tur Zero jamoasi savollari 24.01.2026",
+      "questions": 36
+    },
+    {
+      "id": 1237,
+      "title": "Ikkinchi Liga qishki mavsum 7-tur savollari (31.01.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1238,
+      "title": "Ikkinchi Liga qishki mavsum 8-tur savollari (07.02.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1239,
+      "title": "Professional va Birinchi liga qishki mavsumi 7-tur Magnum jamoasi savollari 31.01.2026",
+      "questions": 36
+    },
+    {
+      "id": 1240,
+      "title": "Professional va Birinchi liga qishki mavsumi 8-tur Espero jamoasi savollari 07.02.2026",
+      "questions": 38
+    },
+    {
+      "id": 1241,
+      "title": "Ikkinchi Liga qishki mavsum 9-tur savollari (21.02.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1242,
+      "title": "Ikkinchi Liga qishki mavsum 10-tur savollari (28.02.2026)",
+      "questions": 26
+    },
+    {
+      "id": 1243,
+      "title": "Professional va Birinchi liga qishki mavsumi 9-tur Kronos jamoasi savollari 21.02.2026",
+      "questions": 36
+    },
+    {
+      "id": 1244,
+      "title": "Professional va Birinchi liga qishki mavsumi 10-tur Yengil kavaleriya jamoasi savollari 28.02.2026",
+      "questions": 38
+    },
+    {
+      "id": 1245,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 1-tur Renessans Universiteti jamoasi savollari 14.03.2",
+      "questions": 37
+    },
+    {
+      "id": 1246,
+      "title": "Ikkinchi Liga Bahorgi mavsum 1-tur savollari (14.03.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1247,
+      "title": "Ikkinchi Liga bahorgi mavsum 2-tur savollari (04.04.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1248,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 2-tur Zero jamoasi savollari 4.04.2026",
+      "questions": 36
+    },
+    {
+      "id": 1249,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 2-tur (18.09.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1250,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 3-tur (25.09.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1251,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 4-tur (02.10.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1252,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 5-tur (09.10.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1253,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 6-tur (16.10.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1254,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 7-tur (30.10.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1255,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 8-tur (06.11.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1256,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 9-tur (13.11.2025)",
+      "questions": 25
+    },
+    {
+      "id": 1257,
+      "title": "Talabalar ligasi 2025/26 kuzgi mavsum 10-tur (20.11.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1258,
+      "title": "Ikkinchi Liga bahorgi mavsum 3-tur savollari (11.04.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1259,
+      "title": "Ikkinchi Liga bahorgi mavsum 4-tur savollari (18.04.2026)",
+      "questions": 25
+    },
+    {
+      "id": 1260,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 3-tur Magnum jamoasi savollari 11.04.2026",
+      "questions": 36
+    },
+    {
+      "id": 1261,
+      "title": "Ikkinchi Liga bahorgi mavsum 5-tur savollari (25.04.2026)",
+      "questions": 26
+    },
+    {
+      "id": 1262,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 4-tur Espero jamoasi savollari 18.04.2026",
+      "questions": 39
+    },
+    {
+      "id": 1263,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 5-tur Paxtaqand jamoasi savollari 25.04.2026",
+      "questions": 36
+    },
+    {
+      "id": 1264,
+      "title": "Ikkinchi Liga bahorgi mavsum 6-tur savollari (02.05.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1265,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 6-tur Farruh Rafiqov jamoasi savollari 02.05.2026",
+      "questions": 36
+    },
+    {
+      "id": 1266,
+      "title": "Ikkinchi Liga bahorgi mavsum 7-tur savollari (16.05.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1267,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 7-tur Metaverse jamoasi savollari 16.05.2026",
+      "questions": 36
+    },
+    {
+      "id": 1268,
+      "title": "Ikkinchi Liga bahorgi mavsum 8-tur savollari (23.05.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1269,
+      "title": "Ikkinchi Liga bahorgi mavsum 9-tur savollari (06.06.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1270,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 8-tur Kronos jamoasi savollari 23.05.2026",
+      "questions": 39
+    },
+    {
+      "id": 1271,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari 06.06.2026",
+      "questions": 38
+    },
+    {
+      "id": 1272,
+      "title": "Professional va Birinchi liga bahorgi mavsumi 10-tur Benom jamoasi savollari 13.06.2026",
+      "questions": 36
+    },
+    {
+      "id": 1273,
+      "title": "Ikkinchi Liga bahorgi mavsum 10-tur savollari (12.06.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1274,
+      "title": "Ikkinchi Liga Yozgi mavsum 1-tur savollari (20.06.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1275,
+      "title": "Professional va Birinchi liga yozgi mavsumi 1-tur Metaverse jamoasi savollari 20.06.2026",
+      "questions": 36
+    },
+    {
+      "id": 1276,
+      "title": "Professional va Birinchi liga yozgi mavsumi 2-tur Renessans Universiteti jamoasi savollari  27.06.26",
+      "questions": 36
+    },
+    {
+      "id": 1277,
+      "title": "Ikkinchi Liga Yozgi mavsum 2-tur savollari (27.06.2026)",
+      "questions": 26
+    },
+    {
+      "id": 1279,
+      "title": "Professional va Birinchi liga yozgi mavsumi 3-tur Jobir Ahmedov jamoasi savollari 04.06.2026",
+      "questions": 36
+    },
+    {
+      "id": 1280,
+      "title": "Professional va Birinchi liga yozgi mavsumi 4-tur Magnum jamoasi savollari 11.07.2026",
+      "questions": 37
+    },
+    {
+      "id": 1281,
+      "title": "Ikkinchi Liga Yozgi mavsum 3-tur savollari (04.07.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1282,
+      "title": "Ikkinchi Liga Yozgi mavsum 4-tur savollari (11.07.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1283,
+      "title": "Professional va Birinchi liga yozgi mavsumi 5-tur Farruh Rafiqov jamoasi savollari 18.07.2026",
+      "questions": 36
+    },
+    {
+      "id": 1284,
+      "title": "Professional va Birinchi liga yozgi mavsumi 6-tur Kronos jamoasi savollari 25.07.2026",
+      "questions": 36
+    },
+    {
+      "id": 1285,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 1-tur (04.12.2025)",
+      "questions": 24
+    },
+    {
+      "id": 1286,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 2-tur (15.01.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1287,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 3-tur (22.01.2026)",
+      "questions": 25
+    },
+    {
+      "id": 1288,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 4-tur (29.01.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1289,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 5-tur (05.02.2026)",
+      "questions": 25
+    },
+    {
+      "id": 1290,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 6-tur (12.02.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1291,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 7-tur (19.02.2026)",
+      "questions": 25
+    },
+    {
+      "id": 1292,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 8-tur (26.02.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1293,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 9-tur (05.03.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1294,
+      "title": "Talabalar ligasi 2025/26 qishki mavsum 10-tur (12.03.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1295,
+      "title": "Ikkinchi Liga Yozgi mavsum 5-tur savollari (18.07.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1296,
+      "title": "Intellektual Marafon 1-tur Tesla jamoasi navbatchiligi (23.08.2026)",
+      "questions": 13
+    },
+    {
+      "id": 1297,
+      "title": "Ikkinchi Liga Yozgi mavsum 6-tur savollari (25.07.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1298,
+      "title": "Intellektual Marafon 2-tur Zero jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1299,
+      "title": "Intellektual Marafon 3-tur Espero jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1300,
+      "title": "Intellektual Marafon 4-tur Jobir Ahmedov jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1301,
+      "title": "Intellektual Marafon 5-tur Renessans Universiteti jamoasi navbatchiligi (23.08.2026)",
+      "questions": 13
+    },
+    {
+      "id": 1302,
+      "title": "Intellektual Marafon 6-tur Magnum jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1303,
+      "title": "Intellektual Marafon 7-tur Kaydzen jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1304,
+      "title": "Intellektual Marafon 8-tur Metaverse jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1305,
+      "title": "Intellektual Marafon 9-tur Kronos jamoasi navbatchiligi (23.08.2026)",
+      "questions": 14
+    },
+    {
+      "id": 1306,
+      "title": "Intellektual Marafon 10-tur Benom jamoasi navbatchiligi (23.08.2026)",
+      "questions": 13
+    },
+    {
+      "id": 1307,
+      "title": "Intellektual Marafon 11-tur Farrux Rafiqov jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1308,
+      "title": "Intellektual Marafon 12-tur Nostalgy jamoasi navbatchiligi (23.08.2026)",
+      "questions": 12
+    },
+    {
+      "id": 1309,
+      "title": "Ikkinchi Liga Yozgi mavsum 7-tur savollari (01.08.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1310,
+      "title": "Ikkinchi Liga Yozgi mavsum 8-tur savollari (08.08.2026)",
+      "questions": 26
+    },
+    {
+      "id": 1311,
+      "title": "Ikkinchi Liga Yozgi mavsum 9-tur savollari (15.08.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1312,
+      "title": "Ikkinchi Liga Yozgi mavsum 10-tur savollari (22.08.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1313,
+      "title": "Professional va Birinchi liga yozgi mavsumi 7-tur Zero jamoasi savollari 01.08.2026",
+      "questions": 36
+    },
+    {
+      "id": 1314,
+      "title": "Professional va Birinchi liga yozgi mavsumi 8-tur Kaydzen jamoasi savollari 08.08.2026",
+      "questions": 36
+    },
+    {
+      "id": 1315,
+      "title": "Professional va Birinchi liga yozgi mavsumi 9-tur Espero jamoasi savollari 15.08.2026",
+      "questions": 39
+    },
+    {
+      "id": 1316,
+      "title": "Professional va Birinchi liga yozgi mavsumi 10-tur Benom jamoasi savollari 22.08.2026",
+      "questions": 36
+    },
+    {
+      "id": 1317,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 1-tur (26.03.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1318,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 2-tur (02.04.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1319,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 3-tur (09.04.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1320,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 4-tur (23.04.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1321,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 5-tur (07.05.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1322,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 6-tur (14.05.2026)",
+      "questions": 26
+    },
+    {
+      "id": 1323,
+      "title": "Talabalar ligasi 2025/26 bahorgi mavsum 7-tur (21.05.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1324,
+      "title": "Intellektual haftalik-2025 hududiy saralash bosqichi savollari (16.05.2025)",
+      "questions": 37
+    },
+    {
+      "id": 1325,
+      "title": "Intellektual haftalik-2025 Respublika bosqichi savollari (29.05.2025)",
+      "questions": 49
+    },
+    {
+      "id": 1326,
+      "title": "Intellektual Olimpiada -2025 hududiy saralash bosqichi savollari (21.11.2025)",
+      "questions": 48
+    },
+    {
+      "id": 1327,
+      "title": "Intellektual Olimpiada -2025 Respublika bosqichi savollari (17.12.2025)",
+      "questions": 53
+    },
+    {
+      "id": 1328,
+      "title": "Intellektual haftalik-2026 hududiy saralash bosqichi savollari (13.05.2026)",
+      "questions": 37
+    },
+    {
+      "id": 1329,
+      "title": "Intellektual haftalik-2026 Respublika bosqichi savollari (02.06.2026)",
+      "questions": 49
+    },
+    {
+      "id": 1330,
+      "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari (12.09.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1331,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari 12.09.2026",
+      "questions": 36
+    },
+    {
+      "id": 1332,
+      "title": "Ayollar ligasi 1-tur 04.10.2025",
+      "questions": 24
+    },
+    {
+      "id": 1333,
+      "title": "Ayollar ligasi 2-tur 08.11.2025",
+      "questions": 24
+    },
+    {
+      "id": 1334,
+      "title": "Ayollar ligasi 3-tur 24.01.2026",
+      "questions": 24
+    },
+    {
+      "id": 1335,
+      "title": "Ayollar ligasi 4-tur 28.03.2026",
+      "questions": 24
+    },
+    {
+      "id": 1336,
+      "title": "Ayollar ligasi 5-tur 25.04.2026",
+      "questions": 24
+    },
+    {
+      "id": 1337,
+      "title": "Ayollar ligasi 6-tur 23.05.2026",
+      "questions": 24
+    },
+    {
+      "id": 1338,
+      "title": "Ayollar ligasi 7-tur 27.06.2026",
+      "questions": 24
+    },
+    {
+      "id": 1339,
+      "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari (19.09.2026)",
+      "questions": 25
+    },
+    {
+      "id": 1340,
+      "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari (26.09.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1341,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari 19.09.2026",
+      "questions": 37
+    },
+    {
+      "id": 1342,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari 26.09.2026",
+      "questions": 38
+    },
+    {
+      "id": 1343,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari 03.10.2026",
+      "questions": 36
+    },
+    {
+      "id": 1344,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari 10.10.2026",
+      "questions": 38
+    },
+    {
+      "id": 1345,
+      "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari (03.10.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1346,
+      "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari (10.10.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1347,
+      "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari (17.10.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1348,
+      "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari (24.10.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1349,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari 17.10.2026",
+      "questions": 38
+    },
+    {
+      "id": 1350,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari 24.10.2026",
+      "questions": 37
+    },
+    {
+      "id": 1351,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari 31.10.2026",
+      "questions": 36
+    },
+    {
+      "id": 1352,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari 07.11.2026",
+      "questions": 36
+    },
+    {
+      "id": 1353,
+      "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari (31.10.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1354,
+      "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari (07.11.2026)",
+      "questions": 24
+    },
+    {
+      "id": 1355,
+      "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari (14.11.2026)",
+      "questions": 27
+    },
+    {
+      "id": 1356,
+      "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari 14.11.2026",
+      "questions": 36
+    }
+  ]
+}
