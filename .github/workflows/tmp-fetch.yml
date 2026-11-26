@@ -1,0 +1,26 @@
+name: Temporary fetch helper
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: URL to fetch
+        required: true
+      name:
+        description: Artifact file name
+        required: true
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch URL
+        env:
+          FETCH_URL: ${{ inputs.url }}
+          OUT_NAME: ${{ inputs.name }}
+        run: |
+          curl -sSL --compressed "$FETCH_URL" -o "$OUT_NAME"
+          wc -c "$OUT_NAME"
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetched
+          path: ${{ inputs.name }}
