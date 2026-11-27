@@ -1,17 +1,9 @@
-[import] package 7732: no questions parsed (site says 0)
-[import] package 7733: no questions parsed (site says 0)
-[list] page 1: 30 cards · 42 pages · 1238 packages announced
-[list] 25/41 pages · 780 packages
-[list] 41/41 pages · 1238 packages
-[import] 1238 packages listed · 6560 already stored · 1238 to fetch
+[list] page 1: 30 cards · 260 pages · 7798 packages announced
+[list] 3/3 pages · 120 packages
+[import] 120 packages listed · 7404 already stored · 62 to fetch
 [import] dedupe against 30378 known questions
-[import] 150 packages · 820 questions · 45 shards · 6231 duplicates skipped
-[import] 300 packages · 1946 questions · 46 shards · 11222 duplicates skipped
-[import] 450 packages · 2896 questions · 47 shards · 14155 duplicates skipped
-[import] 600 packages · 4034 questions · 48 shards · 16811 duplicates skipped
-[import] 750 packages · 5915 questions · 49 shards · 19949 duplicates skipped
-[import] done: {'packages': 844, 'questions': 6915, 'duplicates': 21546, 'failed': 0, 'empty': 392, 'images': 794, 'missing': 2}
-[import] sample → data/turnirlar/sample.json (17689 bytes)
+[import] done: {'packages': 0, 'questions': 0, 'duplicates': 1596, 'failed': 0, 'empty': 62, 'images': 0, 'missing': 0}
+[import] sample → data/turnirlar/sample.json (6510 bytes)
 packages 7404 questions 388388 shards 50 bytes 112397517
   {"id": 906457, "source_id": 6457, "title": "Draje-3", "questions": 36, "rounds": 3, "date": "16.04.2024", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6457", "images": 1, "shard":
   {"id": 906146, "source_id": 6146, "title": "Sibir ligasi. IV tur", "questions": 36, "rounds": 1, "date": "23.02.2025", "section": "", "origin": "IQGA", "url": "https://turnirlar.uz/savollar/paket/6146", "images": 1, "sha
