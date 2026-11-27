@@ -285,28 +285,129 @@ def _try_json(text: str):
         return text
 
 
-async def probe() -> dict:
-    """Check the configured store end to end: write a marker, read it back."""
+def _empty_document(marker: str) -> dict:
+    return {"v": 1, "s": int(time.time()), "c": {}, "u": {}, "h": {}, "p": {},
+            "e": [{"t": int(time.time()), "k": "probe", "x": marker}]}
+
+
+async def _put(client, url: str, body: str, headers: dict | None = None):
+    """Write a document, falling back to POST where PUT is not allowed."""
+    headers = _headers() if headers is None else headers
+    written = await client.put(url, content=body, headers=headers)
+    if written.status_code in (405, 501):
+        written = await client.post(url, content=body, headers=headers)
+    return written
+
+
+# --- free document stores -------------------------------------------------
+# No sign-up and no key: the bot creates the document itself and reports where
+# it lives. Each provider answers GET with the document and accepts PUT/POST.
+async def _provision_jsonblob(client) -> str:
+    response = await client.post("https://jsonblob.com/api/jsonBlob",
+                                 content=json.dumps(_empty_document("init")),
+                                 headers={"content-type": "application/json"})
+    location = (response.headers.get("location") or "").strip()
+    if response.status_code >= 400 or not location:
+        return ""
+    return ("https://jsonblob.com" + location) if location.startswith("/") else location
+
+
+async def _provision_kvdb(client) -> str:
+    response = await client.post("https://kvdb.io/")
+    bucket = response.text.strip()
+    if response.status_code >= 400 or not bucket or len(bucket) > 64 or " " in bucket:
+        return ""
+    return f"https://kvdb.io/{bucket}/zakovat-stats"
+
+
+async def _provision_extendsclass(client) -> str:
+    response = await client.post("https://extendsclass.com/api/json-storage",
+                                 content=json.dumps(_empty_document("init")),
+                                 headers={"content-type": "application/json"})
+    try:
+        blob_id = str(response.json().get("id") or "")
+    except Exception:
+        return ""
+    return f"https://extendsclass.com/api/json-storage/{blob_id}" if blob_id else ""
+
+
+PROVIDERS: tuple[tuple[str, object], ...] = (
+    ("jsonblob", _provision_jsonblob),
+    ("kvdb", _provision_kvdb),
+    ("extendsclass", _provision_extendsclass),
+)
+
+
+async def create_store(transport=None) -> dict:
+    """Create a free JSON document store, verify it and report its address.
+
+    Serverless has no database and registering a service for a dashboard is one
+    chore too many, so the bot provisions one and hands back the URL: put it in
+    ``ZAKOVAT_STATS_URL`` and every instance shares the same numbers.
+    """
+    marker = f"init-{int(time.time())}"
+    body = json.dumps(_empty_document(marker), ensure_ascii=False)
+    plain = {"content-type": "application/json"}
+    attempts: list[dict] = []
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(12.0, connect=5.0),
+                                     follow_redirects=True, transport=transport) as client:
+            for name, provision in PROVIDERS:
+                try:
+                    url = await provision(client)
+                except Exception as exc:
+                    attempts.append({"xizmat": name, "xato": f"{type(exc).__name__}: {exc}"})
+                    continue
+                if not url:
+                    attempts.append({"xizmat": name, "xato": "manzil qaytmadi"})
+                    continue
+                try:
+                    written = await _put(client, url, body, plain)
+                    read = await client.get(url, headers=plain)
+                except Exception as exc:
+                    attempts.append({"xizmat": name, "manzil": url,
+                                     "xato": f"{type(exc).__name__}: {exc}"})
+                    continue
+                if written.status_code < 400 and marker in read.text:
+                    return {"ok": True, "xizmat": name, "manzil": url,
+                            "yozish": written.status_code, "oqish": read.status_code,
+                            "urinishlar": attempts,
+                            "izoh": "shu manzilni ZAKOVAT_STATS_URL ga yozing"}
+                attempts.append({"xizmat": name, "manzil": url,
+                                 "yozish": written.status_code, "oqish": read.status_code,
+                                 "xato": "yozib-qayta o‘qish ishlamadi"})
+    except Exception as exc:
+        return {"ok": False, "xato": f"{type(exc).__name__}: {exc}", "urinishlar": attempts}
+    return {"ok": False, "urinishlar": attempts,
+            "izoh": "hech bir bepul xizmat javob bermadi"}
+
+
+async def probe(transport=None) -> dict:
+    """Check the configured store end to end without losing what it holds."""
     if not STORE_URL:
         return {"ok": False, "reason": "ZAKOVAT_STATS_URL berilmagan — hisob faqat shu nusxada",
                 "rejim": "lokal"}
-    token = f"probe-{int(time.time())}"
-    document = {"v": 1, "s": int(time.time()), "c": {}, "u": {}, "h": {}, "p": {},
-                "e": [{"t": int(time.time()), "k": "probe", "x": token}]}
+    marker = f"probe-{int(time.time())}"
     host = STORE_URL.split("//")[-1].split("/")[0]
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=4.0)) as client:
-            written = await client.put(STORE_URL, content=json.dumps(document, ensure_ascii=False),
-                                       headers=_headers())
-            if written.status_code in (405, 501):
-                written = await client.post(STORE_URL,
-                                            content=json.dumps(document, ensure_ascii=False),
-                                            headers=_headers())
+        async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=4.0),
+                                     follow_redirects=True, transport=transport) as client:
+            # Keep whatever is already stored: a check must not erase history.
+            before = await client.get(STORE_URL, headers=_headers())
+            existing = _normalise(_try_json(before.text)) if before.status_code == 200 else {}
+            document = {"v": 1, "s": int(time.time()),
+                        "c": {str(k): int(v) for k, v in (existing.get("c") or {}).items()},
+                        "u": _cap(Counter(existing.get("u") or {})),
+                        "h": _cap(Counter(existing.get("h") or {})),
+                        "p": _cap(Counter(existing.get("p") or {})),
+                        "e": ([{"t": int(time.time()), "k": "probe", "x": marker}]
+                              + list(existing.get("e") or []))[:EVENT_LIMIT]}
+            written = await _put(client, STORE_URL, json.dumps(document, ensure_ascii=False))
             read = await client.get(STORE_URL, headers=_headers())
-        found = token in read.text
+        found = marker in read.text
         return {"ok": written.status_code < 400 and found, "manzil": host,
                 "yozish": written.status_code, "oqish": read.status_code,
-                "qayta_oqildi": found,
+                "qayta_o‘qildi": found, "saqlangan_hisoblar": document["c"],
                 "izoh": ("saqlash ishlaydi: yozildi va qayta o‘qildi"
                          if found else "yozildi, lekin qayta o‘qishda topilmadi")}
     except Exception as exc:

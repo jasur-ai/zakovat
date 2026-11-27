@@ -1545,7 +1545,7 @@ async def status():
         f"qadam {TICK_SECONDS} s · usul {TICK_MODE} · "
         f"javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
         f"Statistika: {stats.STORE_URL.split('//')[-1].split('/')[0] if stats.STORE_URL else 'faqat shu nusxa'}"
-        f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1",
+        f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1 (create=1 — yangi saqlash)",
         f"Jonli soat: /api/timer (Mini App) · server vaqti: /api/now",
         f"Yashirin holat: {HIDDEN_MODE} · fon ishi: "
         f"{_bg_probe_log[-1] if _bg_probe_log else 'tekshirilmagan'} · "
@@ -1685,7 +1685,9 @@ async def index(request: Request):
     if request.query_params.get("bgprobe") == "1":
         return await bg_probe()
     if request.query_params.get("statsprobe") == "1":
-        report = await stats.probe()
+        # create=1 provisions a free JSON document store and reports its address
+        report = (await stats.create_store() if request.query_params.get("create") == "1"
+                  else await stats.probe())
         report["hisoblagichlar"] = dict(stats._pending["c"])
         return JSONResponse(report)
     if request.query_params.get("bgstep") == "1":

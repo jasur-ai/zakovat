@@ -47,7 +47,8 @@ Ixtiyoriy: `ZAKOVAT_ROUNDS`, `ZAKOVAT_PER_ROUND`, `ZAKOVAT_TIMER_SECONDS`, `ZAKO
 - `.../api/index?setup=1` — webhook’ni qayta o‘rnatadi va natijani ko‘rsatadi;
 - `.../api/index?test=1` — Telegram’ga chiqmasdan `/start`, `/rules`, `/solo 959`, bitta to‘g‘ri javob, **uchta javobsiz savolni** va `/stats` panelini haqiqiy handlerlar orqali o‘tkazib, bot yuboradigan xabarlarni (ogohlantirish, avto-to‘xtatish va statistika bilan) ko‘rsatadi. Sinov statistikani tashqi saqlashga **yozmaydi**. Deploy muvaffaqiyatli bo‘ldimi — shu sahifa aytib beradi;
 - `.../api/index?tickprobe=1` — jonli taymer transportini tekshiradi: funksiya o‘ziga `tick` so‘rovini yuborib, natijani qaytaradi (Telegram’ga hech narsa ketmaydi) va ko‘rinmas holat kodini ham tekshirib ko‘rsatadi;
-- `.../api/index?statsprobe=1` — statistika saqlashini tekshiradi: hujjatga sinov belgisini yozadi va qayta o‘qiydi (`ZAKOVAT_STATS_URL` berilmagan bo‘lsa, shuni aytadi);
+- `.../api/index?statsprobe=1` — statistika saqlashini tekshiradi: mavjud hisoblarni saqlab, sinov belgisini yozadi va qayta o‘qiydi (`ZAKOVAT_STATS_URL` berilmagan bo‘lsa, shuni aytadi);
+- `.../api/index?statsprobe=1&create=1` — bepul JSON saqlashni o‘zi yaratadi va tayyor manzilni qaytaradi (uni `ZAKOVAT_STATS_URL` ga yozasiz);
 - `.../api/index?bgprobe=1` — platforma javob yuborilgandan **keyin** ham ish bajarishiga ruxsat berishini o‘zi tekshiradi: o‘ziga bir necha sekundlik fon ishi buyuradi, ichki javob qancha tez qaytganini o‘lchaydi va ish bajarildimi — ko‘radi. `xulosa` maydoni `bg` rejimi ishlaydimi yoki `ZAKOVAT_TICK_MODE=sleep` qo‘yish kerakligini aytadi. Jonli taymer aynan shu mexanizmga tayanadi.
 
 `scripts/set_webhook.py` — qo‘lda bajarish uchun yana bir zaxira usul.
@@ -130,20 +131,18 @@ Panel ostidagi tugmalar: **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **
 
 Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda saqlanadi: `ZAKOVAT_STATS_URL` — `GET` ga JSON qaytaradigan va `PUT` ni qabul qiladigan istalgan manzil (jsonblob.com, kvdb.io, o‘zingizning funksiyangiz). `ZAKOVAT_STATS_TOKEN` berilsa `Authorization: Bearer` sifatida yuboriladi. Yozuvlar `ZAKOVAT_STATS_FLUSH` (standart 20) sekundda bir to‘planib, **javob yuborilgandan keyin** yoziladi — o‘yin sekinlashmaydi; o‘yin boshlanishi va yakuni darhol yoziladi. Manzil berilmagan bo‘lsa, hisob shu nusxa ichida yuradi va panel buni ochiq aytadi. Arxiv bo‘limi (turkumlar, bo‘limlar, savollar, rasmlar) hech qanday saqlashni talab qilmaydi — u manifestdan hisoblanadi.
 
-**Saqlashni yoqish (bir martalik, ro‘yxatdan o‘tishsiz).** Hisoblar nusxalar orasida yo‘qolmasligi uchun `ZAKOVAT_STATS_URL` ga JSON hujjat manzilini bering. Eng oddiy ikki variant:
+**Saqlashni yoqish (bir martalik).** Bot hujjatni o‘zi yaratadi: `.../api/index?statsprobe=1&create=1` ni oching. Javobdagi `manzil` — tayyor saqlash manzili (avval jsonblob, u javob bermasa kvdb, keyin extendsclass sinab ko‘riladi va yozib-qayta o‘qib tekshiriladi). Shu manzilni Vercel → Settings → Environment Variables’da `ZAKOVAT_STATS_URL` nomi bilan saqlang va yangi deploy qiling.
+
+Xohlasangiz o‘zingiz ham yaratishingiz mumkin:
 
 ```bash
-# 1-variant: jsonblob (bepul, kalit so‘ramaydi) — Location sarlavhasidagi manzilni oling
 curl -i -X POST https://jsonblob.com/api/jsonBlob -H 'Content-Type: application/json' -d '{}'
-
-# 2-variant: kvdb (bepul, kalit so‘ramaydi) — javobda qaytgan bucket id ni oling
-curl -X POST https://kvdb.io/
-# keyin: ZAKOVAT_STATS_URL=https://kvdb.io/<bucket>/zakovat-stats
+# Location sarlavhasidagi manzilni ZAKOVAT_STATS_URL ga bering
 ```
 
-Olingan manzilni Vercel’da Environment Variables’ga qo‘ying (`ZAKOVAT_STATS_URL`), deploy qayta ishga tushadi. Manzil maxfiy emas — uni bilgan odam hujjatni o‘zgartira oladi, shuning uchun token talab qiladigan joy (Vercel KV/Blob, o‘zingizning funksiyangiz) bo‘lsa, `ZAKOVAT_STATS_TOKEN` ham bering: u `Authorization: Bearer` sifatida yuboriladi. Saqlash `GET` ga JSON qaytarishi va `PUT` (yoki `POST`) ni qabul qilishi kifoya.
+Manzil maxfiy emas — uni bilgan odam hujjatni o‘zgartira oladi, shuning uchun token talab qiladigan joy (Vercel KV/Blob, o‘zingizning funksiyangiz) bo‘lsa, `ZAKOVAT_STATS_TOKEN` ham bering: u `Authorization: Bearer` sifatida yuboriladi. Saqlash `GET` ga JSON qaytarishi va `PUT` (yoki `POST`) ni qabul qilishi kifoya.
 
-Yoqilgandan keyin tekshirish: `.../api/index?statsprobe=1` — yozib, qayta o‘qib, natijani ko‘rsatadi (`"ok": true` bo‘lsa saqlash ishlaydi).
+Yoqilgandan keyin tekshirish: `.../api/index?statsprobe=1` — hujjatni **buzmasdan** (mavjud hisoblarni saqlab) sinov belgisini yozadi va qayta o‘qiydi; `"ok": true` bo‘lsa saqlash ishlaydi.
 
 **Ko‘rinmas holat.** Serverless xotirasiz, shuning uchun o‘yin holati (paket, savol, hisob, deadline, javobsizlik seriyasi) xabar ichida nol kenglikli belgilar ketma-ketligi sifatida yuradi: sentinel va nazorat yig‘indisi bilan tekshiriladi, buzilgan bo‘lsa e’tiborsiz qoldiriladi, xabar 4096 belgi chegarasidan oshmaydi. Ekranda na matn, na ochib o‘qiladigan spoiler qoladi; eski `#ZS`/`#ZS2` ko‘rinishidagi xabarlar ham o‘qilaveradi. Kerak bo‘lsa `ZAKOVAT_HIDDEN_STATE=spoiler` bilan eski usulga qaytish mumkin.
 
