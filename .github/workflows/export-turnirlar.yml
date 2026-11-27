@@ -1,19 +1,24 @@
 name: Export turnirlar.uz question base
 
 # turnirlar.uz has no JSON API, so its pages are read here — in CI, which has a
-# route to the site. Two jobs:
+# route to the site (the development sandbox does not). Two jobs:
 #
-#   probe   runs on every push that touches the exporter: it fetches a list page
-#           and a package page, parses them offline and commits a small digest,
-#           so the parsers can be checked without reaching the site;
-#   import  is started by hand (Actions → Export turnirlar.uz → Run workflow).
-#           It walks the whole catalogue, drops questions that are already in
+#   probe   runs when the exporter or this file changes: it fetches a list page
+#           and a package page, parses them offline (--mode check) and commits a
+#           few-KB digest plus a sample, so the parsers can be verified from a
+#           sandbox that cannot reach the site. The raw pages stay in the
+#           Actions artifact.
+#   import  walks the whole catalogue, drops questions already present in
 #           data/all, writes gzipped shards and publishes them to the Release
-#           "savollar-bazasi". Only the manifest (≈2 MB) is committed — the
-#           shards (≈170 MB) would bloat the repository and the deployment.
+#           "savollar-bazasi". Only the manifest and a sample (≈2 MB) are
+#           committed — 160 MB of shards would bloat the repository and the
+#           Vercel bundle (.vercelignore, .gitignore).
 #
-# The import is resumable: shards already in the Release are downloaded first and
-# the packages they hold are skipped.
+# import is started by hand (Actions → Run workflow) or by a push that touches
+# .turnirlar-run, a small JSON file with the run options — the sandbox can push
+# but cannot send workflow_dispatch. The import is resumable: shards already in
+# the Release are downloaded first and the packages they hold are skipped, and a
+# manifest that lists shards which are not on disk is pruned.
 
 on:
   workflow_dispatch:
@@ -45,11 +50,14 @@ on:
         description: "Shardlarni GitHub Release ga yuklash"
         type: boolean
         default: true
+  repository_dispatch:
+    types: [archive-turnirlar]
   push:
     branches: ['**']
     paths:
       - scripts/export_turnirlar.py
       - .github/workflows/export-turnirlar.yml
+      - .turnirlar-run
 
 permissions:
   contents: write
@@ -61,7 +69,11 @@ concurrency:
 jobs:
   probe:
     name: Sahifa tuzilishini tekshirish
-    if: github.event_name == 'push' || inputs.mode == 'probe'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'probe') ||
+      (github.event_name == 'push' &&
+       !contains(github.event.head_commit.modified, '.turnirlar-run') &&
+       !contains(github.event.head_commit.added, '.turnirlar-run'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -76,8 +88,8 @@ jobs:
           mkdir -p data/turnirlar/probe
           python3 scripts/export_turnirlar.py --mode probe \
             --probe-dir data/turnirlar/probe \
-            --probe-package "${{ inputs.probe_package || 7800 }}" \
-            --probe-page 1 2>&1 | tee data/turnirlar/probe/digest.txt
+            --probe-package 7800 --probe-package2 7742 --probe-page 1 \
+            2>&1 | tee data/turnirlar/probe/digest.txt
 
       - name: Parse them offline
         run: |
@@ -85,9 +97,6 @@ jobs:
             --probe-dir data/turnirlar/probe \
             --sample data/turnirlar/probe/sample.json 2>&1 | tee -a data/turnirlar/probe/digest.txt
 
-      # The sandbox that writes the parsers cannot reach the Actions artifact
-      # store, so the digest (a few KB) is committed and read back through the
-      # repository API. The raw pages stay in the artifact for a human.
       - name: Publish the digest
         run: |
           git config user.name "Zakovat Archive Bot"
@@ -107,7 +116,12 @@ jobs:
 
   import:
     name: Bazani yig‘ish
-    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'import'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'import') ||
+      github.event_name == 'repository_dispatch' ||
+      (github.event_name == 'push' &&
+       (contains(github.event.head_commit.modified, '.turnirlar-run') ||
+        contains(github.event.head_commit.added, '.turnirlar-run')))
     runs-on: ubuntu-latest
     timeout-minutes: 350
     steps:
@@ -116,6 +130,52 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Read the run options
+        id: opts
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
+        run: |
+          python3 - <<'PY' | tee -a "$GITHUB_OUTPUT"
+          import json, os, pathlib
+
+          def flat(text):
+              out = {}
+              for item in (text or "").split(";"):
+                  if "=" in item:
+                      key, value = item.split("=", 1)
+                      if value.strip():
+                          out[key.strip()] = value.strip()
+              return out
+
+          # .turnirlar-run (a JSON file in the push) wins: it is how a run is
+          # started from somewhere that cannot send workflow_dispatch.
+          options = {}
+          path = pathlib.Path(".turnirlar-run")
+          if path.exists():
+              try:
+                  loaded = json.loads(path.read_text(encoding="utf-8"))
+                  options = loaded if isinstance(loaded, dict) else {}
+              except json.JSONDecodeError as exc:
+                  print(f"# .turnirlar-run is not valid JSON: {exc}")
+          try:
+              payload = json.loads(os.environ.get("PAYLOAD") or "{}")
+          except json.JSONDecodeError:
+              payload = {}
+          if not isinstance(payload, dict):
+              payload = {}
+
+          merged = {}
+          for source in (payload, flat(os.environ.get("DISPATCH_INPUTS")), options):
+              merged.update({k: v for k, v in source.items() if v not in (None, "")})
+
+          for key, default in (("max_packages", 0), ("pages", 0), ("workers", 8), ("source", "all")):
+              print(f"{key}={merged.get(key, default)}")
+          for key, default in (("commit", "true"), ("release", "true")):
+              value = str(merged.get(key, default)).lower()
+              print(f"{key}={'true' if value in ('true', '1', 'yes') else 'false'}")
+          PY
 
       - name: Restore the shards that are already stored
         env:
@@ -131,19 +191,19 @@ jobs:
 
       - name: Import
         run: |
+          echo "options: max_packages=${{ steps.opts.outputs.max_packages }} pages=${{ steps.opts.outputs.pages }} workers=${{ steps.opts.outputs.workers }} source=${{ steps.opts.outputs.source }}"
           python3 scripts/export_turnirlar.py --mode import \
             --out-dir data/turnirlar \
-            --max-packages "${{ inputs.max_packages }}" \
-            --pages "${{ inputs.pages }}" \
-            --source "${{ inputs.source }}" \
-            --workers "${{ inputs.workers }}" \
+            --max-packages "${{ steps.opts.outputs.max_packages }}" \
+            --pages "${{ steps.opts.outputs.pages }}" \
+            --source "${{ steps.opts.outputs.source }}" \
+            --workers "${{ steps.opts.outputs.workers }}" \
             --sample data/turnirlar/sample.json
 
       - name: Show the result
         run: |
           du -sh data/turnirlar/shards 2>/dev/null || true
-          ls data/turnirlar/shards | head -5
-          ls data/turnirlar/shards | wc -l
+          echo "shard files: $(ls data/turnirlar/shards | wc -l)"
           python3 - <<'PY'
           import json, pathlib
           manifest = json.loads(pathlib.Path("data/turnirlar/manifest.json").read_text(encoding="utf-8"))
@@ -155,27 +215,25 @@ jobs:
           PY
 
       - name: Publish the shards
-        if: inputs.release
+        if: steps.opts.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cd data/turnirlar/shards
           if ! gh release view savollar-bazasi >/dev/null 2>&1; then
             gh release create savollar-bazasi --title "Zakovat savollar bazasi" \
-              --notes "turnirlar.uz bazasining to‘liq eksporti. Bot kerakli shardni shu yerdan oladi: https://github.com/jasur-ai/zakovat/releases/download/savollar-bazasi/<fayl>"
+              --notes "turnirlar.uz bazasining to‘liq eksporti: gzip shardlar va manifest. Bot kerakli shardni shu yerdan oladi: https://github.com/jasur-ai/zakovat/releases/download/savollar-bazasi/<fayl>"
           fi
-          total=$(ls | wc -l)
-          number=0
+          cd data/turnirlar/shards
+          total=$(ls | wc -l); number=0
           for file in *.json.gz; do
-            number=$((number + 1))
-            echo "[$number/$total] $file"
+            number=$((number + 1)); echo "[$number/$total] $file"
             gh release upload savollar-bazasi "$file" --clobber
           done
-          cd ../../..
+          cd "$GITHUB_WORKSPACE"
           gh release upload savollar-bazasi data/turnirlar/manifest.json --clobber
 
       - name: Commit the manifest
-        if: inputs.commit
+        if: steps.opts.outputs.commit == 'true'
         run: |
           git config user.name "Zakovat Archive Bot"
           git config user.email "archive@users.noreply.github.com"

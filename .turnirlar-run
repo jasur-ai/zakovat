@@ -1,0 +1,9 @@
+{
+  "_comment": "Options for the next 'Export turnirlar.uz question base' run. Pushing a change to this file starts the import job — it is the only way to trigger a run from a sandbox that cannot send workflow_dispatch. max_packages/pages/workers: 0 means everything; source: all | zakovat-klubi | boshqa; commit: push manifest.json + sample.json back to this branch; release: upload the shards to the Release 'savollar-bazasi'.",
+  "max_packages": 20,
+  "pages": 2,
+  "workers": 6,
+  "source": "all",
+  "commit": true,
+  "release": true
+}
