@@ -1,35 +1,18 @@
-[list] page 111: 30 cards · 219 pages · 6560 packages announced
-[list] 25/108 pages · 780 packages
-[list] 50/108 pages · 1530 packages
-[list] 75/108 pages · 2280 packages
-[list] 100/108 pages · 3030 packages
-[list] 108/108 pages · 3260 packages
-[import] 3260 packages listed · 3302 already stored · 3260 to fetch
+[import] package 7732: no questions parsed (site says 0)
+[import] package 7733: no questions parsed (site says 0)
+[list] page 1: 30 cards · 42 pages · 1238 packages announced
+[list] 25/41 pages · 780 packages
+[list] 41/41 pages · 1238 packages
+[import] 1238 packages listed · 6562 already stored · 1236 to fetch
 [import] dedupe against 30378 known questions
-[import] 150 packages · 4993 questions · 24 shards · 1 duplicates skipped
-[import] 300 packages · 10179 questions · 25 shards · 1 duplicates skipped
-[import] 450 packages · 15448 questions · 26 shards · 1 duplicates skipped
-[import] 600 packages · 20533 questions · 27 shards · 2 duplicates skipped
-[import] 750 packages · 25916 questions · 28 shards · 3 duplicates skipped
-[import] 900 packages · 30744 questions · 29 shards · 3 duplicates skipped
-[import] 1050 packages · 35763 questions · 30 shards · 3 duplicates skipped
-[import] 1200 packages · 40872 questions · 31 shards · 3 duplicates skipped
-[import] 1350 packages · 45832 questions · 32 shards · 3 duplicates skipped
-[import] 1500 packages · 50802 questions · 33 shards · 3 duplicates skipped
-[import] 1650 packages · 55733 questions · 34 shards · 4 duplicates skipped
-[import] 1800 packages · 60573 questions · 35 shards · 6 duplicates skipped
-[import] 1950 packages · 65251 questions · 36 shards · 6 duplicates skipped
-[import] 2100 packages · 70318 questions · 37 shards · 6 duplicates skipped
-[import] 2250 packages · 75051 questions · 38 shards · 6 duplicates skipped
-[import] 2400 packages · 80014 questions · 39 shards · 6 duplicates skipped
-[import] 2550 packages · 84690 questions · 40 shards · 6 duplicates skipped
-[import] 2700 packages · 89898 questions · 41 shards · 6 duplicates skipped
-[import] 2850 packages · 94380 questions · 42 shards · 6 duplicates skipped
-[import] 3000 packages · 99436 questions · 43 shards · 7 duplicates skipped
-[import] 3150 packages · 104064 questions · 44 shards · 10 duplicates skipped
-[import] done: {'packages': 3260, 'questions': 107460, 'duplicates': 10, 'failed': 0, 'empty': 0, 'images': 2904, 'missing': 0}
-[import] sample → data/turnirlar/sample.json (17454 bytes)
-packages 6562 questions 221279 shards 45 bytes 65032899
+[import] 150 packages · 860 questions · 46 shards · 6444 duplicates skipped
+[import] 300 packages · 1950 questions · 47 shards · 11180 duplicates skipped
+[import] 450 packages · 2892 questions · 48 shards · 14146 duplicates skipped
+[import] 600 packages · 4031 questions · 49 shards · 16786 duplicates skipped
+[import] 750 packages · 5945 questions · 50 shards · 19919 duplicates skipped
+[import] done: {'packages': 842, 'questions': 6908, 'duplicates': 21481, 'failed': 0, 'empty': 392, 'images': 793, 'missing': 2}
+[import] sample → data/turnirlar/sample.json (18237 bytes)
+packages 7404 questions 228187 shards 51 bytes 67011853
   {"id": 907785, "source_id": 7785, "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari", "questions": 4, "rounds": 1, "date": "10.10.2026", "section": "Professional", "origin": "Zakovat kl
   {"id": 907783, "source_id": 7783, "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari", "questions": 3, "rounds": 1, "date": "26.09.2026", "section": "Professional", "origin": "Zakovat kl
   {"id": 906089, "source_id": 6089, "title": "LETIda bahor 2025", "questions": 15, "rounds": 1, "date": "09.03.2025", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6089", "images": 1
