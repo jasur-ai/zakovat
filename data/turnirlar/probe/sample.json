@@ -1,0 +1,483 @@
+{
+ "generated_at": "2026-11-27T17:28:23+00:00",
+ "listed_packages": [
+  {
+   "source_id": 7794,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "14.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7793,
+   "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari",
+   "questions": 27,
+   "rounds": 1,
+   "date": "14.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7792,
+   "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "07.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7790,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "07.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7791,
+   "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "31.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7797,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "31.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7796,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari",
+   "questions": 37,
+   "rounds": 1,
+   "date": "24.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7789,
+   "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "24.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7788,
+   "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "17.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7795,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "17.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7787,
+   "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "10.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7785,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "10.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7784,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "03.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7786,
+   "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "03.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7781,
+   "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "26.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7783,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "26.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7780,
+   "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari",
+   "questions": 25,
+   "rounds": 1,
+   "date": "19.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7782,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari",
+   "questions": 37,
+   "rounds": 1,
+   "date": "19.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7779,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "12.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7778,
+   "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "12.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  }
+ ],
+ "questions": [
+  {
+   "id": 900559880,
+   "question_id": 559880,
+   "package_id": 907800,
+   "index": 1,
+   "round": 1,
+   "text": "Mexanik turk bilan shaxmat o‘ynamoqchi bo‘lganlarga Volfgang fon Kempelen ikkita shart qo‘ygan. Mexanik turk oq figuralarda o‘ynaydi va BU ISHNI QILADI.\nSavol: Bu ishni qilish bilan almashtirilgan so‘zlarni yozib bering.",
+   "answer": "Birinchi yurishni amalga oshiradi.",
+   "comment": "Mexanik turk 1770-yilda yaratilgan. Bu vaqtda ham shaxmatni oqlar boshlab bergan, ammo aynan oq figuralar birinchi yurishni amalga oshirishi haqidagi qoida mustahkamlab qo‘yilmagan edi. Ushbu qoida 19-asr oxirida kiritilgan.",
+   "accepted": [
+    "Ma’nodosh javoblar."
+   ],
+   "sources": [
+    "https://en.wikipedia.org/wiki/Mechanical_Turk",
+    "https://aif.ru/sport/other/pochemu_belye_figury_hodyat_pervymi"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559881,
+   "question_id": 559881,
+   "package_id": 907800,
+   "index": 2,
+   "round": 1,
+   "text": "Diqqat, savolda almashtirish bor.\nAbduqodir Husanov uzoq vaqt Ravshan Haydarov boshqaruvi ostida o‘ynagan. Husanov haqida ijobiy fikrlarni aytar ekan, Haydarov hozirga kelib Abduqodirning X Factori qandayligini eslay olmasligini aytadi.\nSavol: Savolda almashtirilganni unli harflari bir xil so‘z bilan yozib bering.",
+   "answer": "Ovoz.",
+   "comment": "Murabbiy Husanovning odobli, kamgapligini ta’kidlar ekan, u bilan haftalab yig‘inlarda ishtirok etgan bo‘lsa-da, hozirga kelib Abduqodirning ovozi qandayligini eslay olmasligini aytadi. Savolda O‘zbekistondagi bir musiqiy loyiha nomi boshqasi bilan almashtirilgandi.",
+   "sources": [
+    "https://youtu.be/VHYWXTtYEFs?t=1503"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559882,
+   "question_id": 559882,
+   "package_id": 907800,
+   "index": 3,
+   "round": 1,
+   "text": "Chingiz Aytmatovning so‘zlariga ko‘ra, bir qirg‘iz fuqarosi mamlakat konstitutsiyasiga «oltin» to‘g‘risida qo‘shimcha kiritishni taklif qilgan. Taklifga ko‘ra xalq g‘amini o‘ylagan rahbarlarga beriladigan faxriy unvon nomida «oltin» so‘zi bo‘lishi kerak edi.\nSavol: Savol matnida ikki o‘rinda almashtirilgan so‘zni yozib bering.",
+   "answer": "Duo.",
+   "comment": "Qirg‘izistonlikning taklifiga ko‘ra, o‘z xalqi uchun mehnati singgan, og‘ir damlarda xalqni yolg‘izlatib qo‘ymagan rahbarlar duo qilinadi. Unday rahbarlar o‘sha daqiqadan boshlab «Duo olgan inson» degan faxriy unvonga sazovor bo‘ladi. O‘zbek maqolida «oltin olma, duo ol» deyiladi.",
+   "sources": [
+    "Ch. Aytmatov, M. Shoxonov, «Cho‘qqida qolgan ovchining ohi zori». «Zabarjad Media», 2023-yil. 276-bet."
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559883,
+   "question_id": 559883,
+   "package_id": 907800,
+   "index": 4,
+   "round": 1,
+   "text": "Chernobil fojiasi — SSSR intihosi sabablaridan biri hisoblanadi. Chernobil AESdagi fojiaga bag‘ishlangan hujjatli film boshida televizor orqali U namoyish etilayotgani ko‘rsatiladi.\nSavol: Uni yozib bering.",
+   "answer": "«Oqqush ko‘li» baleti.",
+   "comment": "SSSRda televizor orqali «Oqqush ko‘li» baleti namoyish etilishi mamlakatda jiddiy siyosiy o‘zgarishlar bo‘layotgani belgisi hisoblangan. Brejnev, Andropov va Chernenko vafot etganida, shuningdek, SSSR parchalanishiga olib kelgan 1991-yildagi Avgust voqealari paytida ham televideniye orqali «Oqqush ko‘li» namoyish etilgan.",
+   "sources": [
+    "https://ru.wikipedia.org/wiki/Лебединое_озеро",
+    "Chernobyl: The Lost Tapes"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559884,
+   "question_id": 559884,
+   "package_id": 907800,
+   "index": 5,
+   "round": 1,
+   "text": "Abdulla Qahhor «Uning hikoyalarida Minorayi Kalon ham kulib turganga o‘xshaydi» degan. Abdulla Qahhorga U bilan ko‘rishish nasib etmagan.\nSavol: U kim?",
+   "answer": "Ne’mat Aminov.",
+   "comment": "O‘zbek hajviy adabiyoti namoyondasi Ne’mat Aminov Buxoroda tug‘ilgan. Abdulla Qahhor Ne’mat Aminovning asarlariga yuksak baho bergan, ammo o‘zi bilan ko‘rishish nasib etmagan.",
+   "sources": [
+    "Said Ahmad, «Yo‘qotganlarim va topganlarim», «Sharq» nashriyot-matbaa konserni. 2000-yil. 111-bet va 126-bet."
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559885,
+   "question_id": 559885,
+   "package_id": 907800,
+   "index": 6,
+   "round": 1,
+   "text": "Bir roman qahramoni it sotib olishga boradi. Sotuvchi itni juda maqtaydi va itning shajarasi Ungacha borishini ta’kidlaydi.\nSavol: Uni ikki so‘zda yozib bering.",
+   "answer": "Nuh kemasi.",
+   "comment": "Sotuvchi itni maqtar ekan, shajarasi Nuh kemasigacha borishini aytadi.",
+   "sources": [
+    "Erix Mariya Remark, «Uch og‘ayni»."
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559886,
+   "question_id": 559886,
+   "package_id": 907800,
+   "index": 7,
+   "round": 1,
+   "text": "Donald Tramp administratsiyasi 100 dan ortiq davlatlar uchun savdo bojlari joriy etdi. Bu mavzudagi karikaturada Trampga chizilgan mo‘ylov U ko‘rinishida tasvirlangan. Videoo‘yinlarning eng buyuk personajlari ro‘yxatida 47-o‘rinda joylashgan qahramonda U ko‘rinishidagi tatuirovka bor.\nSavol: U nima?",
+   "answer": "Shtrixkod.",
+   "comment": "Shtrixkodga qarab tovarlarning qaysi mamlakatdan ekanligini bilish mumkin. Hitman o‘yinlar seriyasi qahramoni Agent 47 Gamesradar tomonidan tuzilgan videoo‘yinlarning eng buyuk personajlari ro‘yxatida 47-o‘ringa joylashtirilgan. Agent 47 ning boshida shtrixkod tatuirovkasi bor.",
+   "sources": [
+    "https://www.cartoonmovement.com/cartoon/barcode-mustache",
+    "https://ru.wikipedia.org/wiki/Агент_47"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559887,
+   "question_id": 559887,
+   "package_id": 907800,
+   "index": 8,
+   "round": 1,
+   "text": "Savolda ALFA almashtirish hisoblanadi.\nSaid Ahmad qamalib chiqqanidan so‘ng ALFAsini eshitganda har safar qo‘rqib ketgan. G‘arbiy yevropalik rassom Lyuve ko‘rgazmalar oldidan suratlarini hech kim sotib olmasligidan xavotirlanadi.\nSavol: Lyuvening ALFAsini yozib bering.",
+   "answer": "Van Gog.",
+   "comment": "Lyuve mashhur rassom Vinsent van Gogning ukasi Teoning avlodi hisoblanadi. Ko‘rgazmalar oldidan Lyuve «Suratlarimni hech kim sotib olmasachi? Axir men Van Gogman-ku…» deb xavotirlanadi. Ammo xavotirlariga qaramay, uning ishlari yaxshi ketmoqda. Vinsent van Gog hayoti davomida bironta ham suratini sota olmagani aytiladi.",
+   "sources": [
+    "Shodmon Otabek, «Do‘rmon hangomalari».",
+    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zd…",
+    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zdes-ya-kak-naslednik-velikogo-hudojnika-sozdaet-iskusstvo-pod-tehno-i-soul/"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559888,
+   "question_id": 559888,
+   "package_id": 907800,
+   "index": 9,
+   "round": 1,
+   "text": "Lyuve van Gog pitbul zotli iti bilan ko‘chalarni sayr qilishi haqida gapirar ekan, o‘zini Qadimiy Misrda tug‘ilgan Unga qiyoslaydi.\nSavol: Uning ismini yozib bering.",
+   "answer": "Muso.",
+   "comment": "Lyuve iti bilan gavjum ko‘chada sayr qilganda, odamlar unga va itiga yo‘l ochgani uchun Lyuve o‘zini Musoga qiyoslagan. Muso payg‘ambar Qizil dengizdan o‘tayotganida dengiz ikkiga ajralib, unga yo‘l ochilgan.",
+   "sources": [
+    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zd…",
+    "https://ru.wikipedia.org/wiki/Моисей",
+    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zdes-ya-kak-naslednik-velikogo-hudojnika-sozdaet-iskusstvo-pod-tehno-i-soul/"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559889,
+   "question_id": 559889,
+   "package_id": 907800,
+   "index": 10,
+   "round": 1,
+   "text": "O‘zbek filmida qishloqdan shaharga kelgan qahramonning xotini yo‘qolib qoladi. Xotinini topib kelgan kishini qahramon duo qilar ekan, «Sochilib yotgan IKSlaringiz birlashib, katta IKSga aylansin» deydi.\nSavol: IKSni yozib bering.",
+   "answer": "Yulduz.",
+   "comment": "«Aka Sharif Toshkentda» filmi qahramoni yulduz deganda militsionerning pogonidagi yulduzlarni nazarda tutgandi. Aka Sharif kapitan unvoniga ega militsionerning martabasi yuqori bo‘lishini so‘rab duo qiladi.",
+   "sources": [
+    "«Aka Sharif Toshkentda» filmi (1995-yil). 42-minut"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559890,
+   "question_id": 559890,
+   "package_id": 907800,
+   "index": 11,
+   "round": 1,
+   "text": "Savolda bir so‘zdan harflar tushirib qoldirilgan.\n«Doctor Who» serialida o‘z-o‘zini modernizatsiya qilgan vaqt mashinasida U paydo bo‘ladi. Shundan keyin qahramonlardan biri Doktorga «21-asrga yetib kelding» deydi. Qahramonning so‘ziga qaramay, Ular Qadimiy Yunonistonda, misol uchun, Asklepiy ibodatxonalarida ham bo‘lgan.\nSavol: Harflari tushirib qoldirilgan o‘zlashgan so‘zni asl holida yozib bering.",
+   "answer": "Pandus.",
+   "comment": "«Doctor Who» serialining 2023-yildagi qismlaridan birida vaqt mashinasi hisoblangan TARDISga chiqishda pandus paydo bo‘ldi. Tibbiyot ma’budi Asklepiy ibodatxonasiga bemorlar kelishi tabiiy. Ularga qulaylik yaratish uchun panduslar o‘sha paytdayoq qurilgan.",
+   "sources": [
+    "Doctor Who, The Giggle. 54-daqiqa",
+    "https://knife.media/ancient-greece-ramps/"
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  },
+  {
+   "id": 900559891,
+   "question_id": 559891,
+   "package_id": 907800,
+   "index": 12,
+   "round": 1,
+   "text": "Qozog‘istonlik polvon Hojimuqonning bo‘yi deyarli 2 metr, og‘irligi 150 kg atrofida bo‘lgan. Shoir Muxtor Shoxonov bir tomoshadan so‘ng Hojimuqon ularning uyida mehmon bo‘lganini eslar ekan, Hojimuqonning IKSi IGREKday kelishini aytadi.\nSavol: IKS va IGREKni dastlabki to‘rt harfi bir xil bo‘lgan ikki so‘zda yozib bering.",
+   "answer": "Dastro‘mol, dasturxon.",
+   "comment": "Muxtor Shoxonovning eslashicha, uy to‘rida o‘tirgan Hojimuqonning yuzidan tinimsiz ter oqar, polvon dasturxonday keladigan dastro‘moli bilan terlarini artgan.",
+   "sources": [
+    "Ch.Aytmatov, M.Shoxonov, «Cho‘qqida qolgan ovchining ohi zori». «Zabarjad Media», 2023-yil. 116-bet."
+   ],
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich"
+   ]
+  }
+ ],
+ "fields": [
+  "accepted",
+  "answer",
+  "attachments",
+  "authors",
+  "badges",
+  "comment",
+  "id",
+  "index",
+  "package_id",
+  "question_id",
+  "round",
+  "sources",
+  "text"
+ ],
+ "average_bytes": 845
+}
