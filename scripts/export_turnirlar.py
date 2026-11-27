@@ -783,6 +783,28 @@ def save_manifest(root: Path, manifest: dict) -> None:
         encoding="utf-8")
 
 
+def save_last_run(root: Path, stats: dict, changed: bool) -> Path:
+    """What this run did, for the workflow that called it.
+
+    A run usually changes nothing: the weekly refresh walks the newest catalogue
+    pages and every package is already stored. The workflow reads this file to
+    decide whether the Release has to be uploaded again — 112 MB of shards for
+    an unchanged base is a waste of everybody's time.
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    payload = {"exported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+               "changed": bool(changed), "stats": {key: int(value)
+                                                   for key, value in dict(stats).items()}}
+    path = root / "last-run.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return path
+
+
+def exit_code(stats: dict) -> int:
+    """Finding nothing new is a success; fetching nothing but errors is not."""
+    return 1 if stats.get("failed") and not stats.get("packages") else 0
+
+
 def write_sample(path: Path, rows: list[dict], listed: list[dict]) -> None:
     """A small, human-readable slice of the run — readable without the site."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1152,9 +1174,13 @@ def main() -> int:
         return 1
     stats, sample = import_packages(rows, out_dir, args.workers, not args.no_gzip,
                                     dedupe, args.polite)
+    changed = bool(stats.get("packages"))
+    save_last_run(out_dir, stats, changed)
+    if not changed and not stats.get("failed"):
+        print("[import] nothing new — the stored base is unchanged")
     if args.sample:
         write_sample(Path(args.sample), sample, rows)
-    return 0 if stats.get("packages") or stats.get("empty") else 1
+    return exit_code(stats)
 
 
 if __name__ == "__main__":

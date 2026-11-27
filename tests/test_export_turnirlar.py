@@ -619,3 +619,33 @@ class TourPaginationTest(unittest.TestCase):
         self.assertEqual(len(questions), 3)
         self.assertEqual(meta["announced"], 60)
 
+
+class LastRunTest(unittest.TestCase):
+    """What the workflow learns from a run: did the base change, and did it work?"""
+
+    def test_the_run_file_says_whether_the_archive_changed(self):
+        root = pathlib.Path(tempfile.mkdtemp(prefix="turnirlar-lastrun-"))
+        self.addCleanup(shutil.rmtree, root, True)
+        path = ex.save_last_run(root, {"packages": 3, "questions": 40, "failed": 0}, True)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(path.name, "last-run.json")
+        self.assertTrue(data["changed"])
+        self.assertEqual(data["stats"], {"packages": 3, "questions": 40, "failed": 0})
+        self.assertIn("exported_at", data)
+
+    def test_an_unchanged_run_is_written_as_unchanged(self):
+        root = pathlib.Path(tempfile.mkdtemp(prefix="turnirlar-lastrun-"))
+        self.addCleanup(shutil.rmtree, root, True)
+        ex.save_last_run(root, {"packages": 0, "questions": 0, "failed": 0}, False)
+        data = json.loads((root / "last-run.json").read_text(encoding="utf-8"))
+        self.assertFalse(data["changed"])
+
+    def test_finding_nothing_new_is_a_success(self):
+        # the weekly refresh usually walks pages that are already stored
+        self.assertEqual(ex.exit_code({"packages": 0, "empty": 0, "failed": 0}), 0)
+        self.assertEqual(ex.exit_code({"packages": 0, "empty": 62, "failed": 0}), 0)
+        self.assertEqual(ex.exit_code({"packages": 12, "empty": 0, "failed": 2}), 0)
+
+    def test_a_run_that_only_collected_errors_is_a_failure(self):
+        self.assertEqual(ex.exit_code({"packages": 0, "empty": 0, "failed": 5}), 1)
+

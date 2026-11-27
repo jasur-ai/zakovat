@@ -9,6 +9,6 @@
   "dedupe": true,
   "commit": true,
   "release": true,
-  "run": "haftalik yengil yangilash — boshqa manbalarning eng yangi 4 sahifasi",
+  "run": "haftalik yengil yangilash — boshqa manbalarning eng yangi 4 sahifasi (o‘zgarmasa Release qayta yuklanmaydi)",
   "fresh": false
 }

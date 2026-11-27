@@ -164,6 +164,7 @@ jobs:
           fi
 
       - name: Import
+        id: import
         run: |
           set -o pipefail
           echo "options: source=${{ steps.opts.outputs.source }} start_page=${{ steps.opts.outputs.start_page }} pages=${{ steps.opts.outputs.pages }} max_packages=${{ steps.opts.outputs.max_packages }} workers=${{ steps.opts.outputs.workers }} polite=${{ steps.opts.outputs.polite }} dedupe=${{ steps.opts.outputs.dedupe }} fresh=${{ steps.opts.outputs.fresh }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
@@ -181,6 +182,10 @@ jobs:
             --workers "${{ steps.opts.outputs.workers }}" \
             $extra \
             --sample data/turnirlar/sample.json 2>&1 | tee data/turnirlar/run-log.txt
+          # Nothing new is the normal outcome of the weekly run: tell the
+          # publishing step so it does not upload 112 MB of unchanged shards.
+          changed=$(python3 -c "import json;print(str(bool(json.load(open('data/turnirlar/last-run.json')).get('changed'))).lower())" 2>/dev/null || echo true)
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Show the result
         run: |
@@ -201,7 +206,7 @@ jobs:
           PY
 
       - name: Publish the shards
-        if: steps.opts.outputs.release == 'true'
+        if: steps.opts.outputs.release == 'true' && steps.import.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

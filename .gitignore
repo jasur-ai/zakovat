@@ -12,3 +12,4 @@ data/answer_aliases.json
 data/turnirlar/shards/
 data/turnirlar/probe/*.html
 data/turnirlar/run-log.txt
+data/turnirlar/last-run.json
