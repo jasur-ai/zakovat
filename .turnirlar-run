@@ -1,12 +1,13 @@
 {
   "_comment": "Options for the next turnirlar-import run. Pushing a change to this file starts it — the sandbox cannot send workflow_dispatch. 0 means everything; source: all | zakovat-klubi | boshqa; pages/start_page cut the catalogue walk into resumable chunks; commit pushes manifest.json + sample.json back to this branch; release uploads the shards to 'savollar-bazasi'.",
-  "source": "boshqa",
-  "start_page": 111,
-  "pages": 109,
+  "source": "zakovat-klubi",
+  "start_page": 1,
+  "pages": 0,
   "max_packages": 0,
   "workers": 8,
   "polite": 0.4,
   "commit": true,
   "release": true,
-  "run": "2/3 — boshqa manbalar, 111–219 sahifa"
+  "run": "3/3 — Zakovat klubi bo‘limi (boshqa manbalar tugadi)",
+  "dedupe": true
 }
