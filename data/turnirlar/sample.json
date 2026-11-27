@@ -1,262 +1,207 @@
 {
- "generated_at": "2026-11-27T19:36:53+00:00",
+ "generated_at": "2026-11-27T19:39:12+00:00",
  "listed_packages": [
   {
-   "source_id": 7797,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari",
+   "source_id": 7800,
+   "title": "O‘zbekiston chempionati 2025 savollari",
+   "questions": 60,
+   "rounds": 4,
+   "date": "16.11.2025",
+   "section": "",
+   "authors": [
+    "Saidakrom Rasulev Farxadovich"
+   ],
+   "origin": "Foydalanuvchilar yuborgan savollar"
+  },
+  {
+   "source_id": 6559,
+   "title": "«MIFI kubogi 2025» intellektual o‘yinlar festivali",
+   "questions": 75,
+   "rounds": 7,
+   "date": "07.12.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6558,
+   "title": "Odamlar o‘ynaydigan harflar II",
+   "questions": 36,
+   "rounds": 3,
+   "date": "18.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6549,
+   "title": "Samarium. Do‘stlik kubogi.",
+   "questions": 36,
+   "rounds": 3,
+   "date": "06.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6548,
+   "title": "O‘ylash uchun bir.. beriladi",
+   "questions": 36,
+   "rounds": 3,
+   "date": "01.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6543,
+   "title": "OVSCH. 4-bosqich",
+   "questions": 36,
+   "rounds": 3,
+   "date": "23.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6542,
+   "title": "Gyombyots-8",
+   "questions": 54,
+   "rounds": 4,
+   "date": "28.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6541,
+   "title": "Meva: guava",
+   "questions": 36,
+   "rounds": 3,
+   "date": "08.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6540,
+   "title": "Borisfen 11: Irkley",
+   "questions": 35,
+   "rounds": 3,
+   "date": "16.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6539,
+   "title": "Balkanfest — 2025",
+   "questions": 94,
+   "rounds": 6,
+   "date": "23.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6538,
+   "title": "KVRM bo‘yicha ChSPbning uchinchi kuni",
+   "questions": 44,
+   "rounds": 3,
+   "date": "22.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6534,
+   "title": "KVRM bo‘yicha Sankt-Peterburg chempionatining ikkinchi kuni",
+   "questions": 44,
+   "rounds": 3,
+   "date": "21.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6533,
+   "title": "«Taras kubogi – 2025» ochiq yoshlar intellektual turniri",
+   "questions": 30,
+   "rounds": 2,
+   "date": "06.12.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6532,
+   "title": "All I Want For Christmas 2026",
+   "questions": 36,
+   "rounds": 3,
+   "date": "26.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6531,
+   "title": "Sankt-Peterburg KVRM chempionatining birinchi kuni",
+   "questions": 45,
+   "rounds": 3,
+   "date": "15.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6529,
+   "title": "OVSCH. 3-bosqich",
+   "questions": 36,
+   "rounds": 3,
+   "date": "17.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6528,
+   "title": "«Obormot» III ochiq maktab intellektual o‘yinlar festivali",
+   "questions": 60,
+   "rounds": 5,
+   "date": "25.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6526,
+   "title": "Simply White: Onemiya",
+   "questions": 36,
+   "rounds": 3,
+   "date": "21.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6525,
+   "title": "Cheksizlik kubogi. V bosqich: Aql toshi",
    "questions": 36,
    "rounds": 1,
-   "date": "31.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "date": "24.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7796,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari",
-   "questions": 37,
-   "rounds": 1,
-   "date": "24.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7795,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "17.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7794,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari",
+   "source_id": 6524,
+   "title": "Frankfurter Grie Soß krutonlar bilan, to‘rtinchi ko‘kat",
    "questions": 36,
-   "rounds": 1,
-   "date": "14.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7793,
-   "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari",
-   "questions": 27,
-   "rounds": 1,
-   "date": "14.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7792,
-   "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "07.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7791,
-   "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "31.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7790,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari",
-   "questions": 36,
-   "rounds": 1,
-   "date": "07.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7789,
-   "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "24.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7788,
-   "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "17.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7787,
-   "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "10.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7786,
-   "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "03.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7785,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "10.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7784,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari",
-   "questions": 36,
-   "rounds": 1,
-   "date": "03.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7783,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "26.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7782,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari",
-   "questions": 37,
-   "rounds": 1,
-   "date": "19.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7781,
-   "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "26.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7780,
-   "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari",
-   "questions": 25,
-   "rounds": 1,
-   "date": "19.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7779,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari",
-   "questions": 36,
-   "rounds": 1,
-   "date": "12.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7778,
-   "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "12.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "23.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   }
  ],
  "questions": [],
