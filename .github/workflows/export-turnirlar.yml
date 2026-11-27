@@ -64,7 +64,7 @@ jobs:
       - name: Probe the site
         run: |
           python3 scripts/export_turnirlar.py --mode probe \
-            --probe-dir /tmp/turnirlar-probe \
+            --probe-dir data/turnirlar/probe \
             --probe-package 7800 --probe-page 1
 
       - name: Try the list parser
@@ -96,10 +96,25 @@ jobs:
                   print(f"{key}: {str(row.get(key))[:220]}")
           PY
 
+      # The sandbox cannot reach the Actions artifact store, so the probe output
+      # is committed as well — it can then be read back through the repo API.
+      # This does not re-trigger the job: the push filter only watches the
+      # exporter and this workflow file.
+      - name: Publish probe output
+        run: |
+          git config user.name "Zakovat Archive Bot"
+          git config user.email "archive@users.noreply.github.com"
+          git add data/turnirlar/probe
+          if ! git diff --cached --quiet; then
+            git commit -m "Probe: turnirlar.uz sahifa tuzilishi"
+            git pull --rebase origin "${GITHUB_REF#refs/heads/}"
+            git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
           name: turnirlar-probe
-          path: /tmp/turnirlar-probe
+          path: data/turnirlar/probe
           retention-days: 14
 
   import:
