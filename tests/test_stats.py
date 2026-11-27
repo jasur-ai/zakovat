@@ -317,5 +317,115 @@ class StoreProvisioningTests(unittest.TestCase):
         self.assertTrue(any(event.get("k") == "probe" for event in after["e"]))
 
 
+def _blob_transport(store: dict):
+    """Stand in for the Vercel Blob REST API (write endpoint + public reads)."""
+    public = "https://shop.public.blob.vercel-storage.com/" + stats.BLOB_PATH
+
+    def handler(request):
+        url = str(request.url)
+        if request.method == "PUT" and url.startswith(stats.BLOB_WRITE_URL):
+            assert request.headers.get("authorization", "").startswith("Bearer ")
+            assert request.headers.get("x-api-version") == "7"
+            store["body"] = request.content.decode("utf-8")
+            return httpx.Response(200, text=json.dumps(
+                {"url": public, "pathname": stats.BLOB_PATH}))
+        if request.method == "GET" and url.startswith(stats.BLOB_WRITE_URL):
+            if "body" not in store:
+                return httpx.Response(200, text=json.dumps({"blobs": [], "hasMore": False}))
+            return httpx.Response(200, text=json.dumps(
+                {"blobs": [{"url": public, "pathname": stats.BLOB_PATH}], "hasMore": False}))
+        if request.method == "GET" and url == public:
+            if "body" not in store:
+                return httpx.Response(404, text="not found")
+            return httpx.Response(200, text=store["body"])
+        return httpx.Response(404, text="unexpected " + url)
+
+    return httpx.MockTransport(handler)
+
+
+@unittest.skipUnless(stats, "install requirements.txt to test statistics")
+class VercelBlobTests(unittest.TestCase):
+    """Connecting a Blob store is enough — no address has to be configured."""
+
+    def setUp(self):
+        stats.reset()
+        self.patchers = [
+            mock.patch.object(stats, "STORE_URL", ""),
+            mock.patch.object(stats, "STORE_TOKEN", ""),
+            mock.patch.object(stats, "BLOB_TOKEN", "vercel_blob_rw_test_abc123"),
+            mock.patch.object(stats, "DRY_RUN", False),
+        ]
+        for item in self.patchers:
+            item.start()
+        self.addCleanup(lambda: [item.stop() for item in self.patchers])
+        self.addCleanup(stats.reset)
+
+    def test_the_blob_backend_is_chosen_by_itself(self):
+        self.assertEqual(stats.backend(), "blob")
+
+    def test_the_document_is_written_and_found_again(self):
+        store: dict = {}
+        transport = _blob_transport(store)
+
+        async def run():
+            async with httpx.AsyncClient(transport=transport) as client:
+                code, _ = await stats.blob_write(client, json.dumps({"v": 1, "c": {"games_started": 3}}))
+                read_code, text = await stats.blob_read(client)
+                return code, read_code, text
+
+        code, read_code, text = asyncio.run(run())
+        self.assertEqual(code, 200)
+        self.assertEqual(read_code, 200)
+        self.assertIn("games_started", text)
+
+    def test_reading_without_a_known_address_lists_by_prefix(self):
+        store: dict = {}
+        transport = _blob_transport(store)
+
+        async def run():
+            async with httpx.AsyncClient(transport=transport) as client:
+                await stats.blob_write(client, json.dumps({"v": 1, "c": {"skips": 2}}))
+            stats._blob_url = ""                       # a fresh instance knows nothing
+            async with httpx.AsyncClient(transport=transport) as client:
+                return await stats.blob_read(client)
+
+        code, text = asyncio.run(run())
+        self.assertEqual(code, 200)
+        self.assertIn("skips", text)
+
+    def test_counters_survive_a_sync_through_the_blob(self):
+        store: dict = {}
+        transport = _blob_transport(store)
+        stats.record("game_start", user_id=8004724563, chat_id=-100, package_id=959,
+                     detail="solo", games_started=1)
+        stats.record("question", package_id=959, questions_asked=1, log=False)
+        with mock.patch.object(stats, "FLUSH_SECONDS", 0):
+            self.assertTrue(asyncio.run(stats.sync(force=True, transport=transport)))
+        saved = json.loads(store["body"])
+        self.assertEqual(saved["c"]["games_started"], 1)
+        self.assertEqual(saved["c"]["questions_asked"], 1)
+        self.assertEqual(saved["u"]["8004724563"], 1)
+        self.assertEqual(stats._pending["c"], {})       # sent deltas were dropped
+
+    def test_the_check_keeps_stored_numbers(self):
+        store: dict = {}
+        transport = _blob_transport(store)
+        with mock.patch.object(stats, "FLUSH_SECONDS", 0):
+            stats.record("game_start", games_started=5)
+            asyncio.run(stats.sync(force=True, transport=transport))
+            report = asyncio.run(stats.probe(transport=transport))
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["rejim"], "blob")
+        self.assertEqual(report["manzil"], "Vercel Blob")
+        self.assertEqual(json.loads(store["body"])["c"]["games_started"], 5)
+
+    def test_without_any_store_the_panel_says_so(self):
+        with mock.patch.object(stats, "BLOB_TOKEN", ""):
+            self.assertEqual(stats.backend(), "lokal")
+            report = asyncio.run(stats.probe())
+        self.assertFalse(report["ok"])
+        self.assertIn("Blob", report["reason"])
+
+
 if __name__ == "__main__":
     unittest.main()
