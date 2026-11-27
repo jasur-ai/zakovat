@@ -596,5 +596,41 @@ class TelegramStoreTests(unittest.TestCase):
                                                 transport=httpx.MockTransport(handler))))
 
 
+@unittest.skipUnless(stats, "install requirements.txt to test statistics")
+class DryRunIsolationTests(unittest.TestCase):
+    """A synthetic game must never leak into the real numbers."""
+
+    def setUp(self):
+        stats.reset()
+        self.addCleanup(stats.reset)
+
+    def test_the_dry_run_is_undone_completely(self):
+        stats.record("game_start", user_id=1, chat_id=-100, package_id=959, games_started=1)
+        frozen = stats.freeze()
+        with mock.patch.object(stats, "DRY_RUN", True):
+            stats.record("game_start", user_id=777, chat_id=-1, package_id=9, games_started=1)
+            stats.record("question", package_id=9, questions_asked=4, log=False)
+            stats.record("skip", chat_id=-1, skips=3, detail="sinov")
+        stats.restore(frozen)
+        self.assertEqual(stats._pending["c"]["games_started"], 1)
+        self.assertEqual(stats._pending["c"]["questions_asked"], 0)
+        self.assertEqual(stats._pending["c"]["skips"], 0)
+        self.assertNotIn("777", stats._pending["u"])
+        self.assertNotIn("9", stats._pending["p"])
+        # the real event stays, the synthetic ones are gone
+        self.assertEqual([event["k"] for event in stats._pending["e"]], ["game_start"])
+        self.assertEqual(stats._instance["c"]["games_started"], 1)
+        self.assertEqual(stats._instance["u"], {1})
+
+    def test_restoring_keeps_what_was_really_counted(self):
+        stats.record("command", user_id=5, commands=2, log=False)
+        frozen = stats.freeze()
+        with mock.patch.object(stats, "DRY_RUN", True):
+            stats.record("command", user_id=777, commands=9, log=False)
+        stats.restore(frozen)
+        self.assertEqual(stats._pending["c"]["commands"], 2)
+        self.assertEqual(stats._pending["u"]["5"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
