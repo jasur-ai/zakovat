@@ -22,7 +22,7 @@ python3 run_bot.py
 
 ## Vercel ga deploy qilish (webhook)
 
-`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`); Mini App ishlatilmaydi, hammasi Telegram ichida. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
+`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/timer` — jonli soat oynasi (Mini App), `/api/now` — server vaqti. O‘yin Telegram ichida o‘ynaladi; Mini App faqat hisoblagich uchun ishlatiladi. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
 
 **Eng oddiy usul — repo’ni Vercel’ga qo‘shish kifoya:** Vercel dashboard → *Add New → Project* → shu reponi tanlang → *Deploy*. `vercel.json`, `.python-version` va `requirements.txt` tayyor, build buyrug‘i kerak emas. Keyingi `push` lar avtomatik deploy bo‘ladi.
 
@@ -31,7 +31,7 @@ Deploy qilgach Project → Settings → Environment Variables ga kirib, ikkita o
 - `BOT_TOKEN` — BotFather’dan olingan **yangi** token (chatga yuborilgani allaqachon oshkor bo‘lgan);
 - `WEBHOOK_SECRET` — o‘zingiz tanlagan tasodifiy sir (masalan `openssl rand -hex 24`).
 
-Ixtiyoriy: `ZAKOVAT_ROUNDS`, `ZAKOVAT_PER_ROUND`, `ZAKOVAT_TIMER_SECONDS`, `ZAKOVAT_IDLE_LIMIT`, `ZAKOVAT_TICK_SECONDS`, `ZAKOVAT_TICK_MODE`, `ZAKOVAT_LIVE_TIMER`, `ZAKOVAT_HIDDEN_STATE`, `WEBHOOK_URL` (o‘z domeningiz bo‘lsa).
+Ixtiyoriy: `ZAKOVAT_ROUNDS`, `ZAKOVAT_PER_ROUND`, `ZAKOVAT_TIMER_SECONDS`, `ZAKOVAT_IDLE_LIMIT`, `ZAKOVAT_TICK_SECONDS`, `ZAKOVAT_TICK_MODE`, `ZAKOVAT_LIVE_TIMER`, `ZAKOVAT_HIDDEN_STATE`, `ZAKOVAT_OWNER_ID`, `ZAKOVAT_STATS_URL`, `ZAKOVAT_STATS_TOKEN`, `ZAKOVAT_STATS_FLUSH`, `WEBHOOK_URL` (o‘z domeningiz bo‘lsa).
 
 **Webhook o‘zi o‘rnatiladi:** saytga birinchi marta kiritilganda bot `/api/index` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. Manzil quyidagi tartibda tanlanadi:
 
@@ -45,8 +45,9 @@ Ixtiyoriy: `ZAKOVAT_ROUNDS`, `ZAKOVAT_PER_ROUND`, `ZAKOVAT_TIMER_SECONDS`, `ZAKO
 
 - `https://<loyihangiz>.vercel.app/api/index` — muhit o‘zgaruvchilari bor-yo‘qligi, tanlangan webhook manzili, arxiv holati, Telegram’ning oxirgi xatoligi va so‘nggi handler xatolari;
 - `.../api/index?setup=1` — webhook’ni qayta o‘rnatadi va natijani ko‘rsatadi;
-- `.../api/index?test=1` — Telegram’ga chiqmasdan `/start`, `/rules`, `/solo 959`, bitta to‘g‘ri javob va **uchta javobsiz savolni** haqiqiy handlerlar orqali o‘tkazib, bot yuboradigan xabarlarni (ogohlantirish va avto-to‘xtatish bilan) ko‘rsatadi. Deploy muvaffaqiyatli bo‘ldimi — shu sahifa aytib beradi;
+- `.../api/index?test=1` — Telegram’ga chiqmasdan `/start`, `/rules`, `/solo 959`, bitta to‘g‘ri javob, **uchta javobsiz savolni** va `/stats` panelini haqiqiy handlerlar orqali o‘tkazib, bot yuboradigan xabarlarni (ogohlantirish, avto-to‘xtatish va statistika bilan) ko‘rsatadi. Sinov statistikani tashqi saqlashga **yozmaydi**. Deploy muvaffaqiyatli bo‘ldimi — shu sahifa aytib beradi;
 - `.../api/index?tickprobe=1` — jonli taymer transportini tekshiradi: funksiya o‘ziga `tick` so‘rovini yuborib, natijani qaytaradi (Telegram’ga hech narsa ketmaydi) va ko‘rinmas holat kodini ham tekshirib ko‘rsatadi;
+- `.../api/index?statsprobe=1` — statistika saqlashini tekshiradi: hujjatga sinov belgisini yozadi va qayta o‘qiydi (`ZAKOVAT_STATS_URL` berilmagan bo‘lsa, shuni aytadi);
 - `.../api/index?bgprobe=1` — platforma javob yuborilgandan **keyin** ham ish bajarishiga ruxsat berishini o‘zi tekshiradi: o‘ziga bir necha sekundlik fon ishi buyuradi, ichki javob qancha tez qaytganini o‘lchaydi va ish bajarildimi — ko‘radi. `xulosa` maydoni `bg` rejimi ishlaydimi yoki `ZAKOVAT_TICK_MODE=sleep` qo‘yish kerakligini aytadi. Jonli taymer aynan shu mexanizmga tayanadi.
 
 `scripts/set_webhook.py` — qo‘lda bajarish uchun yana bir zaxira usul.
@@ -62,7 +63,7 @@ BOT_TOKEN=... WEBHOOK_SECRET=... bash scripts/deploy_all.sh
 
 GitHub Actions orqali ham deploy qilish mumkin: repo Settings → Secrets and variables → Actions da `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secretlarini qo‘ying, keyin **Deploy Zakovat Agent to Vercel** workflow’sini ishga tushuring (`workflow_dispatch` yoki `repository_dispatch` `deploy-zakovat`). `BOT_TOKEN` va `WEBHOOK_SECRET` ni Vercel dashboard’ida qo‘yish shart — ular repo secretlariga yozilmaydi.
 
-**Jonli taymer serverless’da ham ishlaydi.** Vercel’da doimiy jarayon yo‘q, shuning uchun taymer qisqa «sakrashlar» zanjiridan iborat: har savoldan keyin funksiya o‘ziga `tick` so‘rovi yuboradi, u `ZAKOVAT_TICK_SECONDS` (standart 3) sekund kutib, hisoblagichni qayta chizadi va navbatagi `tick` ni chaqiradi.
+**Jonli taymer serverless’da ham ishlaydi.** Vercel’da doimiy jarayon yo‘q, shuning uchun taymer qisqa «sakrashlar» zanjiridan iborat: har savoldan keyin funksiya o‘ziga `tick` so‘rovi yuboradi, u `ZAKOVAT_TICK_SECONDS` (standart 5) sekund kutib, hisoblagichni qayta chizadi va navbatagi `tick` ni chaqiradi. Telegram’ning «flood» tanbehi kelsa zanjir o‘chmaydi — navbatagi sakrash shunchaki kechroqqa qo‘yiladi.
 
 - `ZAKOVAT_TICK_MODE=bg` (standart): `tick` so‘roviga **darhol** javob beriladi, kutish va chizish javob yuborilgandan keyin bajariladi. Telegram ham, zanjirning oldingi halqasi ham kutib qolmaydi, aloqa uzilib qolsa ham zanjir davom etadi;
 - `ZAKOVAT_TICK_MODE=sleep`: zaxira usul — halqa javob ichida kutadi (agar platforma javobdan keyingi ishni saqlab qolmasa, `?bgprobe=1` shuni ko‘rsatadi va shu rejim qo‘yiladi);
@@ -89,12 +90,60 @@ QOLGAN VAQT  00:45
 
 Hisoblagich **bir marta yozib qo‘yilgan son emas**: sekundlar `00:45` ko‘rinishida, ustun har sakrashda qisqarib boradi, tasma **o‘zi yangilanib turadi** (har `ZAKOVAT_TICK_SECONDS` sekundda) va vaqt tugaganda savolni o‘zi yopadi. Ostidagi tugmalar:
 
+- **Jonli soat** — Mini App oynasini ochadi (`/api/timer`). Bu **haqiqiy soatcha**: doira bo‘ylab qisqarib boradigan yoy, teskari aylanadigan mil, yirik `00:45` raqamlari va `▰▱` ustun. Sahifa telefoningizda `requestAnimationFrame` bilan har kadrda chiziladi, shuning uchun **tarmoq sekin bo‘lsa ham soniya to‘xtab qolmaydi** — serverga har sekund so‘rov ketmaydi. Ochilganda bir marta `/api/now` dan server vaqtini olib, qurilma soati noto‘g‘ri bo‘lsa ham hisobni tekislaydi;
 - **00:45 · Vaqtni yangilash** — tugmaning o‘zi ham jonli: yorlig‘idagi soat har sakrashda yangilanadi, bosilganda qolgan vaqtni darhol ko‘rsatadi; vaqt tugagan bo‘lsa javobni ochib, ochko Qarshi tarafga yozadi;
 - **O‘tkazish** — faqat admin;
 - **Hisob**;
 - **To‘xtatish**.
 
 Javob berilgach tasma o‘chiriladi (botda xabar o‘chirish ruxsati bo‘lmasa, bir qatorli «Savol 3 / 30 — yakunlandi» ga yig‘iladi), chat toza qoladi. Polling rejimida (`python3 run_bot.py`) tasma job queue orqali yangilanadi.
+
+**Statistika (faqat bot egasi).** `ZAKOVAT_OWNER_ID` (standart `8004724563`) dagi foydalanuvchi `/stats` yozsa, boshqa hech kim ko‘rmaydigan panel ochiladi:
+
+```
+STATISTIKA · Zakovat Agent
+Manba: store.example · yozildi
+
+O‘YINLAR
+• Boshlangan: 12 · Yakunlangan: 9
+• Avto-to‘xtagan: 2 · To‘xtatilgan: 1
+• Foydalanuvchilar: 7 · Chatlar: 5
+• O‘ynalgan paketlar: 6
+
+SAVOLLAR
+• Berilgan: 214
+• To‘g‘ri: 96 · Noto‘g‘ri: 61 · Javobsiz: 57
+• Aniqlik: 45%
+• Jonli soat oynasi: 34 marta
+
+ARXIV
+• Turkumlar (paketlar): 1266 · Savollar: 30853 · Bo‘limlar: 13
+• Rasmi bor savollar: 2912 · Eng katta paket: … (140 savol)
+
+BO‘LIMLAR
+• Intellektual marafon — 305 paket, 3489 savol
+• Professional va Birinchi liga — 285 paket, 9883 savol
+…
+```
+
+Panel ostidagi tugmalar: **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **O‘yinlar** (oxirgi harakatlar). `/stats` buyrug‘i faqat eganing buyruq menyusida ko‘rinadi.
+
+Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda saqlanadi: `ZAKOVAT_STATS_URL` — `GET` ga JSON qaytaradigan va `PUT` ni qabul qiladigan istalgan manzil (jsonblob.com, kvdb.io, o‘zingizning funksiyangiz). `ZAKOVAT_STATS_TOKEN` berilsa `Authorization: Bearer` sifatida yuboriladi. Yozuvlar `ZAKOVAT_STATS_FLUSH` (standart 20) sekundda bir to‘planib, **javob yuborilgandan keyin** yoziladi — o‘yin sekinlashmaydi; o‘yin boshlanishi va yakuni darhol yoziladi. Manzil berilmagan bo‘lsa, hisob shu nusxa ichida yuradi va panel buni ochiq aytadi. Arxiv bo‘limi (turkumlar, bo‘limlar, savollar, rasmlar) hech qanday saqlashni talab qilmaydi — u manifestdan hisoblanadi.
+
+**Saqlashni yoqish (bir martalik, ro‘yxatdan o‘tishsiz).** Hisoblar nusxalar orasida yo‘qolmasligi uchun `ZAKOVAT_STATS_URL` ga JSON hujjat manzilini bering. Eng oddiy ikki variant:
+
+```bash
+# 1-variant: jsonblob (bepul, kalit so‘ramaydi) — Location sarlavhasidagi manzilni oling
+curl -i -X POST https://jsonblob.com/api/jsonBlob -H 'Content-Type: application/json' -d '{}'
+
+# 2-variant: kvdb (bepul, kalit so‘ramaydi) — javobda qaytgan bucket id ni oling
+curl -X POST https://kvdb.io/
+# keyin: ZAKOVAT_STATS_URL=https://kvdb.io/<bucket>/zakovat-stats
+```
+
+Olingan manzilni Vercel’da Environment Variables’ga qo‘ying (`ZAKOVAT_STATS_URL`), deploy qayta ishga tushadi. Manzil maxfiy emas — uni bilgan odam hujjatni o‘zgartira oladi, shuning uchun token talab qiladigan joy (Vercel KV/Blob, o‘zingizning funksiyangiz) bo‘lsa, `ZAKOVAT_STATS_TOKEN` ham bering: u `Authorization: Bearer` sifatida yuboriladi. Saqlash `GET` ga JSON qaytarishi va `PUT` (yoki `POST`) ni qabul qilishi kifoya.
+
+Yoqilgandan keyin tekshirish: `.../api/index?statsprobe=1` — yozib, qayta o‘qib, natijani ko‘rsatadi (`"ok": true` bo‘lsa saqlash ishlaydi).
 
 **Ko‘rinmas holat.** Serverless xotirasiz, shuning uchun o‘yin holati (paket, savol, hisob, deadline, javobsizlik seriyasi) xabar ichida nol kenglikli belgilar ketma-ketligi sifatida yuradi: sentinel va nazorat yig‘indisi bilan tekshiriladi, buzilgan bo‘lsa e’tiborsiz qoldiriladi, xabar 4096 belgi chegarasidan oshmaydi. Ekranda na matn, na ochib o‘qiladigan spoiler qoladi; eski `#ZS`/`#ZS2` ko‘rinishidagi xabarlar ham o‘qilaveradi. Kerak bo‘lsa `ZAKOVAT_HIDDEN_STATE=spoiler` bilan eski usulga qaytish mumkin.
 
@@ -138,7 +187,9 @@ Hech qanday LLM, token yoki tashqi xizmat chaqirilmaydi.
 | `bot/archive.py` | manifest va shardlardan paket/savol olish, qidiruv, sahifalab ro‘yxat |
 | `bot/quiz.py` | sof o‘yin logikasi: raundlar, playlist, hisob, javobsizlik seriyasi (Telegramga bog‘liq emas) |
 | `bot/settings.py` | raund/savol/vaqt sozlamalari va inline tugma ma’lumotlari (64 bayt ichida) |
-| `bot/messages.py` | barcha matnlar (emojisiz): tanishtiruv, yordam, qoidalar, hisoblagich, avto-to‘xtatish |
+| `bot/messages.py` | barcha matnlar (emojisiz): tanishtiruv, yordam, qoidalar, hisoblagich, avto-to‘xtatish, statistika paneli |
+| `bot/stats.py` | statistika: hisoblagichlar, tashqi JSON saqlash, arxiv bo‘limlari |
+| `bot/clock.py` | Mini App soat sahifasi: yoy, mil, raqamlar — qurilmada chiziladi |
 | `bot/answers.py` | javob normalizatsiyasi, moslik va o‘rganish |
 | `bot/webhook.py` | Vercel serverless webhook: handlerlar, jonli taymer (`tick`), diagnostika, self-test |
 | `bot/selftest.py` | Telegram’ga chiqmasdan butun o‘yin oqimini sinash |
