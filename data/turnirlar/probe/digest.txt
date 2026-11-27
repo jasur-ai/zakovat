@@ -239,4 +239,9 @@ Intellektual Marafon 3-tur Espero jamoasi navbatchili
 [verify] list page 208: 8 of 8 cards
 [verify] list page 260: 8 of 8 cards
 [verify] checked 48 packages · announced 1845 questions · parsed 1845 · short 0 · empty 0 · failed 0 · card/page disagreement 8 · read over several tour pages 8
+[verify] package 6834: the card promises 27 questions, the package page 23 — parsed 23
+[verify] package 6843: the card promises 28 questions, the package page 24 — parsed 24
+[verify] package 7793: the card promises 27 questions, the package page 24 — parsed 24
+[verify] package 6860: the card promises 13 questions, the package page 10 — parsed 10
+[verify] package 6939: the card promises 27 questions, the package page 24 — parsed 24
 [verify] the parser keeps 100.0% of what those pages announce; over the whole catalogue that is 299735 questions in 7798 packages
