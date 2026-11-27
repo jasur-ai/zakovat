@@ -53,6 +53,13 @@ on:
     branches: ['**']
     paths:
       - .turnirlar-run
+  # A weekly refresh on the default branch. It reads .turnirlar-run like any other
+  # run, so the file decides how much is fetched: after the first full import it
+  # is left on a light setting (a few hundred newest packages), because the site
+  # only adds a handful of packages a week and everything already stored is
+  # skipped anyway.
+  schedule:
+    - cron: '40 4 * * 1'   # Monday 04:40 UTC
 
 permissions:
   contents: write
@@ -75,6 +82,8 @@ jobs:
 
       - name: Read the run options
         id: opts
+        # Options come from .turnirlar-run, then repository_dispatch payload, then
+        # workflow_dispatch inputs; a scheduled run has only the file.
         env:
           PAYLOAD: ${{ toJSON(github.event.client_payload) }}
           DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};start_page=${{ inputs.start_page }};polite=${{ inputs.polite }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
