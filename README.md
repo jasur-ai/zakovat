@@ -22,7 +22,7 @@ python3 run_bot.py
 
 ## Vercel ga deploy qilish (webhook)
 
-`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/timer` — jonli soat oynasi (Mini App), `/api/now` — server vaqti, `/app` — statistika paneli (Mini App, faqat ega va `/grant` olganlar), `/api/app` — shu panelning ma’lumotlari (imzo tekshiriladi). O‘yin Telegram ichida o‘ynaladi; Mini App hisoblagich va panel uchun ishlatiladi. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
+`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/now` — server vaqti, `/app` — statistika paneli (Mini App, faqat ega va `/grant` olganlar), `/api/app` — shu panelning ma’lumotlari (imzo tekshiriladi). O‘yin Telegram ichida o‘ynaladi; hisoblagich xabarning o‘zida yuradi, Mini App faqat statistika paneli uchun. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
 
 **Eng oddiy usul — repo’ni Vercel’ga qo‘shish kifoya:** Vercel dashboard → *Add New → Project* → shu reponi tanlang → *Deploy*. `vercel.json`, `.python-version` va `requirements.txt` tayyor, build buyrug‘i kerak emas. Keyingi `push` lar avtomatik deploy bo‘ladi.
 
@@ -93,13 +93,58 @@ QOLGAN VAQT  00:45
 
 Hisoblagich **bir marta yozib qo‘yilgan son emas**: sekundlar `00:45` ko‘rinishida, ustun har sakrashda qisqarib boradi, tasma **o‘zi yangilanib turadi** (har `ZAKOVAT_TICK_SECONDS` sekundda) va vaqt tugaganda savolni o‘zi yopadi. Ostidagi tugmalar:
 
-- **Jonli soat** — Mini App oynasini ochadi (`/api/timer`). Bu **haqiqiy soatcha**: doira bo‘ylab qisqarib boradigan yoy, teskari aylanadigan mil, yirik `00:45` raqamlari va `▰▱` ustun. Sahifa telefoningizda `requestAnimationFrame` bilan har kadrda chiziladi, shuning uchun **tarmoq sekin bo‘lsa ham soniya to‘xtab qolmaydi** — serverga har sekund so‘rov ketmaydi. Ochilganda bir marta `/api/now` dan server vaqtini olib, qurilma soati noto‘g‘ri bo‘lsa ham hisobni tekislaydi;
 - **00:45 · Vaqtni yangilash** — tugmaning o‘zi ham jonli: yorlig‘idagi soat har sakrashda yangilanadi, bosilganda qolgan vaqtni darhol ko‘rsatadi; vaqt tugagan bo‘lsa javobni ochib, ochko Qarshi tarafga yozadi;
 - **O‘tkazish** — faqat admin;
 - **Hisob**;
 - **To‘xtatish**.
 
 Javob berilgach tasma o‘chiriladi (botda xabar o‘chirish ruxsati bo‘lmasa, bir qatorli «Savol 3 / 30 — yakunlandi» ga yig‘iladi), chat toza qoladi. Polling rejimida (`python3 run_bot.py`) tasma job queue orqali yangilanadi.
+
+## Guruh turniri
+
+Oddiy o‘yindan farqi: **jamoalar**, **yakuniy javob** va **jadval**. Admin `/turnir 959` yozadi (paket raqami ixtiyoriy — ko‘rsatilmasa tasodifiy paket olinadi) va guruhda **pinlangan karta** paydo bo‘ladi. Karta turnirning butun holatini o‘z ichida saqlaydi (ko‘rinmas belgilar bilan), shuning uchun Vercel funksiyasi har so‘rovda qayta ishga tushsa ham hech narsa yo‘qolmaydi: jamoalar, ochkolar, tanlangan savollar va navbatdagi savol kartaning ichida yuradi.
+
+**Qoidalar**
+
+- kamida **3 jamoa**, har birida **3–7 kishi**; har jamoadan kamida **2 kishi** «Men tayyorman» tugmasini bosadi;
+- har savolga har jamoa **bitta yakuniy javob** beradi: tasmaga reply qilib `/yakuniy <matn>`. Vaqt tugaguncha o‘zgartirish mumkin — oxirgisi hisoblanadi;
+- to‘g‘ri javob — jamoaga **+1**; bir savolda bir nechta jamoa ochko olishi mumkin, javob bermagan jamoa ochko yo‘qotmaydi;
+- javoblar guruhda ko‘rinmaydi: bot xabarni o‘chiradi (o‘chirish ruxsati bo‘lsa) va natijani faqat o‘z jamoasiga shaxsiy xabar bilan ko‘rsatadi;
+- `/pichoq @user matn` yoki `/pichoq jamoa matn` — jamoa ichidagi maxfiy gap, guruhda ko‘rinmaydi.
+
+**Buyruqlar**
+
+| Buyruq | Kim | Nima qiladi |
+| --- | --- | --- |
+| `/turnir [paket]` | admin/kurator | yangi turnir va pinlangan karta |
+| `/turnir qoidalar` | har kim | qoidalar |
+| `/jamoa Nom` | har kim | yangi jamoa (yozgan odam — kapitan) |
+| `/qoshil Nom` · `/chiqish` | har kim | jamoaga qo‘shilish · chiqish (kapitan chiqsa, o‘rni keyingi a’zoga o‘tadi) |
+| `/tayyor` | a’zo | «Men tayyorman» |
+| `/azolar` | har kim | jamoalar va ularning a’zolari |
+| `/yakuniy <matn>` · `/bekor` | a’zo | jamoaning yakuniy javobi · uni bekor qilish |
+| `/jadval` | har kim | ochkolar va o‘rinlar |
+| `/tanlov [so‘z]` · `/olish <id…>` · `/chiqarish <id…>` | kurator | aniq savollarni olish yoki chiqarish |
+| `/kurator <id> [olib]` | admin | kurator tayinlash · tayinlovni olish |
+| `/savol <id>` | kurator | bitta savolni ko‘rish |
+| `/turnirstop` | kurator | turnirni to‘xtatish va yakuniy jadval |
+
+**Kurator** — bot egasi, kartani ochgan admin yoki `/kurator` bilan tayinlangan a’zo. «Sozlamalar» panelida raund, savol soni va vaqt tanlanadi; «Savol tanlash» ro‘yxatida savol ustiga bosib uni OLISH yoki CHIQARISH mumkin. So‘ralgan savollar to‘plamdagi savollardan ko‘p bo‘lsa, panel ogohlantiradi: **bir savol ikki marta berilmaydi** — shuncha savol o‘ynaladi.
+
+Savol yopilgach guruhda shu ko‘rinish chiqadi:
+
+```
+SAVOL 3 / 30 YAKUNI
+• Ochko oldi: Bilimdonlar, Zakovat
+• To‘g‘ri javob: Parnas
+• Izoh: Parnas — Yunonistondagi tog‘ tizmasi…
+
+YAKUNIY JAVOBLAR
+• Bilimdonlar: Parnas — to‘g‘ri
+• Intellekt: — — javob bermadi
+
+HISOB: Bilimdonlar 7 · Zakovat 5 · Intellekt 2
+```
 
 **Statistika (faqat bot egasi).** `ZAKOVAT_OWNER_ID` (standart `8004724563`) dagi foydalanuvchi `/stats` yozsa, boshqa hech kim ko‘rmaydigan panel ochiladi:
 
@@ -214,9 +259,10 @@ Hech qanday LLM, token yoki tashqi xizmat chaqirilmaydi.
 | `bot/archive.py` | manifest va shardlardan paket/savol olish, qidiruv, sahifalab ro‘yxat |
 | `bot/quiz.py` | sof o‘yin logikasi: raundlar, playlist, hisob, javobsizlik seriyasi (Telegramga bog‘liq emas) |
 | `bot/settings.py` | raund/savol/vaqt sozlamalari va inline tugma ma’lumotlari (64 bayt ichida) |
-| `bot/messages.py` | barcha matnlar (emojisiz): tanishtiruv, yordam, qoidalar, hisoblagich, avto-to‘xtatish, statistika paneli |
+| `bot/messages.py` | barcha matnlar (emojisiz): tanishtiruv, yordam, qoidalar, hisoblagich, turnir, maxfiy xabar, statistika paneli |
 | `bot/stats.py` | statistika: hisoblagichlar, tashqi JSON saqlash, arxiv bo‘limlari |
-| `bot/clock.py` | Mini App soat sahifasi: yoy, mil, raqamlar — qurilmada chiziladi |
+| `bot/tournament.py` | guruh turniri: jamoalar, ro‘yxatdan o‘tish, yakuniy javob, jadval (Telegramga bog‘liq emas) |
+| `bot/hidden.py` | ko‘rinmas holat kodlaygichi: v2 (1 bit/belgi) va v3 (2 bit/belgi + zlib), buzilishni tekshirish |
 | `bot/webapp.py` | Mini App paneli: `initData` imzosini tekshirish, ruxsat darvozasi, panel ma’lumotlari |
 | `bot/dashboard.py` | Mini App sahifasining o‘zi (bitta HTML: Telegram ko‘rinishi, yorug‘/qora mavzu) |
 | `bot/answers.py` | javob normalizatsiyasi, moslik va o‘rganish |

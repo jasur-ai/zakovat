@@ -118,9 +118,9 @@ class WebhookLogicTests(unittest.TestCase):
     def test_question_carries_round_and_timer(self):
         question_text = self._start()
         strip_text = self.bot.sent[-2]["text"]
-        self.assertIn("QOLGAN VAQT  01:00", strip_text)
+        self.assertIn("<b>01:00</b> · QOLGAN VAQT", strip_text)
         self.assertIn("Savol 1 / 10", strip_text)
-        self.assertEqual(visible(strip_text).splitlines()[-1], "▰" * 10)
+        self.assertEqual(visible(strip_text).splitlines()[-1], "▰" * 20)
         self.assertIn("Vaqt: 60 sekund", question_text)
         state = webhook.unpack_state(question_text)
         self.assertEqual(int(state["r"]), 1)
@@ -581,13 +581,15 @@ class StatsAccessTests(unittest.TestCase):
 
 
 @unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
-class ClockFaceTests(unittest.TestCase):
-    """The strip offers a Mini App clock that counts down on the device."""
+class StripClockTests(unittest.TestCase):
+    """The clock is part of the question strip; the Mini App clock is gone.
+
+    A separate window inside Telegram meant the question itself was not on
+    screen while the clock ran, so there is no clock button, no clock page and
+    no /api/timer route any more — the countdown lives in the message.
+    """
 
     def setUp(self):
-        from bot import clock as clock_page
-
-        self.clock_page = clock_page
         self.archive = Archive("data/all")
         playlist = webhook.build_playlist(self.archive.questions(959), 1, 5, 7)
         self.session = webhook.Session(
@@ -596,69 +598,60 @@ class ClockFaceTests(unittest.TestCase):
         )
         self.session.begin()
 
-    def test_the_button_carries_the_deadline(self):
+    def test_no_clock_module_and_no_timer_route_are_left(self):
+        import importlib
+
+        with self.assertRaises(ImportError):
+            importlib.import_module("bot.clock")
+        routes = {getattr(route, "path", "") for route in webhook.app.routes}
+        self.assertNotIn("/api/timer", routes)
+        self.assertIn("/app", routes)                # the statistics Mini App stays
+
+    def test_clock_url_is_empty_whatever_the_public_address_is(self):
+        self.assertEqual(webhook.clock_url(self.session, int(time.time()) + 60, 45), "")
+        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
+            self.assertEqual(webhook.clock_url(self.session, int(time.time()) + 60, 45), "")
+
+    def test_the_keyboard_has_no_web_app_button(self):
+        keyboard = st.game_keyboard(clock=msg.clock(45),
+                                    clock_url="https://zakovat.example/api/timer")
+        self.assertFalse(_has_webapp(keyboard))
+        self.assertEqual(keyboard.inline_keyboard[0][0].text, "00:45 · Vaqtni yangilash")
+
+    def test_the_strip_carries_the_clock_itself(self):
+        deadline = int(time.time()) + 47
+        text = webhook.strip_text(self.session, 47, deadline)
+        shown = visible(text)
+        self.assertIn("<b>00:47</b>", shown)              # digits, repainted every hop
+        self.assertIn("QOLGAN VAQT", shown)
+        track = shown.splitlines()[-1]
+        self.assertEqual(track.count("▰") + track.count("▱"), 20)
+        self.assertIsNotNone(webhook.unpack_state(text))   # and the state stays invisible
+
+    def test_the_clock_moves_while_the_question_runs(self):
         deadline = int(time.time()) + 60
-        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
-            url = webhook.clock_url(self.session, deadline, 45)
-        self.assertTrue(url.startswith("https://zakovat.example/api/timer?"))
-        self.assertIn(f"d={deadline}", url)
-        self.assertIn("tm=60", url)
-        self.assertIn("n=1", url)
-        self.assertIn("t=5", url)
+        first = visible(webhook.strip_text(self.session, 60, deadline))
+        later = visible(webhook.strip_text(self.session, 55, deadline))
+        last = visible(webhook.strip_text(self.session, 0, deadline))
+        self.assertIn("<b>01:00</b>", first)
+        self.assertIn("<b>00:55</b>", later)
+        self.assertGreater(first.count("▰"), later.count("▰"))
+        self.assertIn("<b>VAQT TUGADI</b>", last)
+        self.assertEqual(later.count("▰"), 18)             # one segment is three seconds
 
-    def test_the_keyboard_puts_the_clock_first(self):
-        deadline = int(time.time()) + 45
-        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
-            keyboard = st.game_keyboard(clock=msg.clock(45),
-                                        clock_url=webhook.clock_url(self.session, deadline, 45))
-        first = keyboard.inline_keyboard[0][0]
-        self.assertEqual(first.text, "Jonli soat")
-        self.assertTrue(first.web_app.url.startswith("https://zakovat.example/api/timer?"))
-        self.assertEqual(keyboard.inline_keyboard[1][0].text, "00:45 · Vaqtni yangilash")
+    def test_repainting_sends_no_web_app_button(self):
+        class Picky(FakeBot):
+            async def edit_message_text(self, **kwargs):
+                if _has_webapp(kwargs.get("reply_markup")):
+                    raise AssertionError("the clock button came back")
+                return await super().edit_message_text(**kwargs)
 
-    def test_without_a_public_address_the_clock_button_is_left_out(self):
-        with mock.patch.object(webhook, "public_base_url", lambda: ""):
-            self.assertEqual(webhook.clock_url(self.session, int(time.time()) + 30, 30), "")
-        keyboard = st.game_keyboard(clock="00:30")
-        self.assertEqual(len(keyboard.inline_keyboard), 1)
-        self.assertIsNone(keyboard.inline_keyboard[0][0].web_app)
-
-    def test_the_page_counts_down_in_the_browser(self):
-        deadline = int(time.time()) + 37
-        page = self.clock_page.render({
-            "d": str(deadline), "l": "37", "tm": "60", "n": "3", "t": "30", "r": "1",
-            "p": "959 <paket>",
-        })
-        self.assertIn(f'"d": {deadline}', page)          # absolute deadline, not a fixed text
-        self.assertIn("requestAnimationFrame", page)     # redrawn on the device
-        self.assertIn('"/api/now"', page)                # device clock is corrected once
-        self.assertIn("SAVOL 3 / 30 · 1-RAUND", page)
-        self.assertIn("959 &lt;paket&gt;", page)         # the title is escaped
-        self.assertNotIn("959 <paket>", page)
-
-    def test_the_demo_page_loops_and_is_not_counted(self):
-        page = self.clock_page.render({"demo": "1", "tm": "45"})
-        self.assertIn('"d": 0', page)
-        self.assertIn('"demo": true', page)
-        self.assertNotIn("/api/now", page)
-
-    def test_opening_the_clock_is_counted_once(self):
-        from bot import stats
-        from fastapi.testclient import TestClient
-
-        stats.reset()
-        saved, stats.STORE_URL = stats.STORE_URL, ""
-        try:
-            client = TestClient(webhook.app)
-            self.assertEqual(client.get("/api/timer?d=1795749465&tm=60").status_code, 200)
-            self.assertEqual(client.get("/api/now").status_code, 200)
-            client.get("/api/timer?demo=1&tm=45")        # the web page demo is not a game
-            data = asyncio.run(stats.snapshot())
-        finally:
-            stats.STORE_URL = saved
-            stats.reset()
-        self.assertEqual(data["counters"]["clock_opened"], 1)
-        self.assertAlmostEqual(client.get("/api/now").json()["now"], time.time(), delta=10)
+        bot = Picky()
+        self.session.control_message_id = 77
+        deadline = int(time.time()) + 30
+        asyncio.run(webhook.paint_strip(bot, -100, self.session, 30, deadline))
+        self.assertEqual(len(bot.edits), 1)
+        self.assertIn("<b>00:30</b>", visible(bot.edits[0]["text"]))
 
 
 @unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
@@ -735,7 +728,7 @@ class WebAppFallbackTests(unittest.TestCase):
         self.session.begin()
         self.session.control_message_id = 77
 
-    def test_repainting_without_the_clock_button(self):
+    def test_repainting_never_offers_a_web_app_button(self):
         class Picky(FakeBot):
             def __init__(self):
                 super().__init__()
@@ -749,12 +742,11 @@ class WebAppFallbackTests(unittest.TestCase):
 
         bot = Picky()
         deadline = int(time.time()) + 30
-        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
-            asyncio.run(webhook.paint_strip(bot, -100, self.session, 30, deadline))
-        self.assertEqual(bot.refused, 1)
+        asyncio.run(webhook.paint_strip(bot, -100, self.session, 30, deadline))
+        self.assertEqual(bot.refused, 0)          # there is nothing left to refuse
         self.assertEqual(len(bot.edits), 1)
         self.assertFalse(_has_webapp(bot.edits[0]["reply_markup"]))
-        self.assertIn("QOLGAN VAQT  00:30", bot.edits[0]["text"])
+        self.assertIn("<b>00:30</b>", visible(bot.edits[0]["text"]))
 
     def test_sending_the_strip_without_the_clock_button(self):
         class PickySend(FakeBot):
@@ -765,8 +757,7 @@ class WebAppFallbackTests(unittest.TestCase):
 
         bot = PickySend()
         deadline = int(time.time()) + 60
-        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
-            asyncio.run(webhook.send_control(bot, -100, self.session, deadline))
+        asyncio.run(webhook.send_control(bot, -100, self.session, deadline))
         self.assertEqual(len(bot.sent), 1)
         self.assertFalse(_has_webapp(bot.sent[0]["reply_markup"]))
         self.assertEqual(self.session.control_message_id, 1)   # the strip still got its id

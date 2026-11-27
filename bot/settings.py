@@ -33,6 +33,29 @@ STATS_REFRESH = "zs|r"
 STATS_SECTIONS = "zs|b"
 STATS_EVENTS = "zs|e"
 
+# --- turnir -----------------------------------------------------------------
+# Callback data stays under 64 bytes: the tournament itself rides invisibly
+# inside the message the buttons hang on, so a button only has to say *what to
+# do* (and to which team), never *what the state is*.
+PREFIX_TOUR = "zr"          # kurator: paket, raund, savol tanlovi
+PREFIX_TEAM = "zy"          # jamoalar: qo‘shilish, tayyorlik, boshlash
+
+TOUR_ROUNDS = (1, 2, 3, 5, 10)
+TOUR_PER_ROUND = (5, 10, 15, 25, 0)
+TOUR_TIMERS = (30, 45, 60, 90, 120)
+
+TEAM_JOIN = "j"             # jamoaga qo‘shilish
+TEAM_READY = "r"            # «Men tayyorman»
+TEAM_NEW = "n"              # yangi jamoa yaratish
+TEAM_START = "go"           # turnirni boshlash
+TEAM_LEAVE = "q"            # jamoadan chiqish
+TEAM_REFRESH = "f"          # ro‘yxatni yangilash
+TEAM_PICK = "p"             # kurator: savol tanlash oynasi
+TEAM_STOP = "x"             # turnirni to‘xtatish
+TEAM_TABLE = "t"            # jadvalni ko‘rsatish
+TEAM_REVEAL = "rv"          # yakuniy javoblar holati (kurator)
+TEAM_SKIP = "s"             # savolni yopish (kurator)
+
 
 def _default(name: str, fallback: int) -> int:
     try:
@@ -155,9 +178,13 @@ def game_keyboard(admin: bool = True, clock: str = "", clock_url: str = ""):
 
     With a clock the refresh button carries the live countdown, so the timer is
     a control that changes on every tick and answers the moment it is tapped.
-    With a clock_url the strip also offers the Mini App clock face.
+
+    ``clock_url`` is accepted and ignored: the Mini App clock button is gone.
+    It opened a second window inside Telegram, and while that window was open
+    nobody could see the question — so the countdown now lives in the strip
+    itself, in digits and a twenty-segment bar, repainted on every tick.
     """
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
     label = f"{clock} · Vaqtni yangilash" if clock else "Vaqtni yangilash"
     row = [InlineKeyboardButton(label, callback_data=GAME_REFRESH)]
@@ -165,13 +192,170 @@ def game_keyboard(admin: bool = True, clock: str = "", clock_url: str = ""):
         row.append(InlineKeyboardButton("O‘tkazish", callback_data=GAME_SKIP))
     row.append(InlineKeyboardButton("Hisob", callback_data=GAME_SCORE))
     row.append(InlineKeyboardButton("To‘xtatish", callback_data=GAME_STOP))
-    rows = []
-    if clock_url:
-        # A Mini App counts down in the user's own browser: smooth, and it keeps
-        # running even when the network to the bot is slow.
-        rows.append([InlineKeyboardButton("Jonli soat", web_app=WebAppInfo(url=clock_url))])
-    rows.append(row)
+    return InlineKeyboardMarkup([row])
+
+
+
+
+def tour_data(action: str, value: str | int = "") -> str:
+    """Callback data of a team/registration button."""
+    return f"{PREFIX_TEAM}|{action}" + (f"|{value}" if value != "" else "")
+
+
+def curator_data(action: str, value: str | int = "") -> str:
+    """Callback data of a curator button (package, rounds, selection…)."""
+    return f"{PREFIX_TOUR}|{action}" + (f"|{value}" if value != "" else "")
+
+
+def tour_keyboard(teams: list, phase: str = "register", can_start: bool = False,
+                  curator: bool = False, sizes: dict | None = None) -> "object":
+    """Buttons of the registration card.
+
+    One button per team: pressing it joins that team, pressing it again says
+    "Men tayyorman". The label carries both numbers, so the card itself shows
+    who is still missing — nobody has to ask the bot.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    sizes = sizes or {}
+    min_members = int(sizes.get("min_members", 3))
+    min_ready = int(sizes.get("min_ready", 2))
+    rows: list[list] = []
+    for index, team in enumerate(teams):
+        people = list(team.get("members") or [])
+        ready = sum(1 for person in people if person.get("ready"))
+        mark = "OK" if (len(people) >= min_members and ready >= min_ready) else "..."
+        rows.append([InlineKeyboardButton(
+            f"{index + 1}. {team.get('name', 'Jamoa')} — {len(people)}/{ready} [{mark}]",
+            callback_data=tour_data(TEAM_JOIN, index))])
+    if phase == "register":
+        rows.append([
+            InlineKeyboardButton("Men tayyorman", callback_data=tour_data(TEAM_READY)),
+            InlineKeyboardButton("Yangi jamoa", callback_data=tour_data(TEAM_NEW)),
+        ])
+        rows.append([
+            InlineKeyboardButton("Chiqish", callback_data=tour_data(TEAM_LEAVE)),
+            InlineKeyboardButton("Yangilash", callback_data=tour_data(TEAM_REFRESH)),
+        ])
+        start = "Boshlash" if can_start else "Boshlash (shartlar bajarilmagan)"
+        rows.append([InlineKeyboardButton(start, callback_data=tour_data(TEAM_START))])
+    if curator:
+        rows.append([
+            InlineKeyboardButton("Savol tanlash", callback_data=tour_data(TEAM_PICK)),
+            InlineKeyboardButton("Sozlamalar", callback_data=curator_data("c")),
+            InlineKeyboardButton("To‘xtatish", callback_data=tour_data(TEAM_STOP)),
+        ])
+    else:
+        rows.append([InlineKeyboardButton("Jadval", callback_data=tour_data(TEAM_TABLE))])
     return InlineKeyboardMarkup(rows)
+
+
+def selection_keyboard(page: int, pages: int, rows: list, chosen: set, dropped: set,
+                       query: str = "") -> "object":
+    """The curator's question picker: include or exclude exact questions.
+
+    Every line is one question of the package, marked with what the curator has
+    already decided, so the selection is a document rather than a guess.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    keyboard: list[list] = []
+    for row in rows:
+        question_id = int(row["id"])
+        if question_id in chosen:
+            mark, action = "OLINDI", "u"          # u = olib tashlash (include)
+        elif question_id in dropped:
+            mark, action = "CHIQARILDI", "e"      # e = qaytarish (exclude)
+        else:
+            mark, action = "—", "i"
+        text = (row.get("text") or "").replace("\n", " ")[:38]
+        keyboard.append([InlineKeyboardButton(
+            f"{mark} · {question_id} · {text}", callback_data=curator_data(action, question_id))])
+    nav: list = []
+    if page > 1:
+        nav.append(InlineKeyboardButton("‹ Orqaga", callback_data=curator_data("pg", page - 1)))
+    nav.append(InlineKeyboardButton(f"{page} / {max(1, pages)}", callback_data=curator_data("c")))
+    if page < pages:
+        nav.append(InlineKeyboardButton("Oldinga ›", callback_data=curator_data("pg", page + 1)))
+    keyboard.append(nav)
+    keyboard.append([
+        InlineKeyboardButton("Hammasini olish", callback_data=curator_data("ai")),
+        InlineKeyboardButton("Hammasini chiqarish", callback_data=curator_data("ae")),
+        InlineKeyboardButton("Tanlovni tozalash", callback_data=curator_data("ac")),
+    ])
+    keyboard.append([
+        InlineKeyboardButton("Qidirish", callback_data=curator_data("qs")),
+        InlineKeyboardButton("Orqaga", callback_data=tour_data(TEAM_REFRESH)),
+    ])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def curator_keyboard(rounds: int, per_round: int, timer: int, package_id: int,
+                     seed: int, bank: int, total: int) -> "object":
+    """The curator's panel: how many rounds, how many questions, how long each."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    def line(action: str, options: tuple, current: int, label) -> list:
+        return [InlineKeyboardButton(("● " if option == current else "○ ") + label(option),
+                                     callback_data=curator_data(action, option))
+                for option in options]
+
+    rows = [
+        line("r", TOUR_ROUNDS, rounds, lambda value: f"{value} raund"),
+        line("q", TOUR_PER_ROUND, per_round,
+             lambda value: "hammasi" if value == 0 else f"{value} savol"),
+        line("t", TOUR_TIMERS, timer, lambda value: f"{value} s"),
+        [
+            InlineKeyboardButton(f"Paket {package_id}" + (f" · {bank} savol" if bank else ""),
+                                 callback_data=curator_data("pk")),
+            InlineKeyboardButton("Aralashtirish", callback_data=curator_data("s", seed + 1)),
+        ],
+        [
+            InlineKeyboardButton("Savol tanlash", callback_data=tour_data(TEAM_PICK)),
+            InlineKeyboardButton(f"Jami: {total} savol", callback_data=curator_data("c")),
+        ],
+        [InlineKeyboardButton("Yopish", callback_data=tour_data(TEAM_REFRESH))],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+
+def question_strip_keyboard(admin: bool = True, clock: str = "") -> "object":
+    """Buttons under a tournament question strip.
+
+    The clock is not a Mini App button any more: it is the strip text itself,
+    repainted while the question runs. These buttons only control the game, and
+    they carry tournament callbacks (``zy|…``) — an ordinary game button would
+    look for a state this strip does not have.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    rows = [[InlineKeyboardButton(f"{clock} · Vaqtni yangilash" if clock else "Vaqtni yangilash",
+                                  callback_data=tour_data(TEAM_REFRESH))]]
+    if admin:
+        rows.append([
+            InlineKeyboardButton("Javoblar holati", callback_data=tour_data(TEAM_REVEAL)),
+            InlineKeyboardButton("O‘tkazish", callback_data=tour_data(TEAM_SKIP)),
+            InlineKeyboardButton("Jadval", callback_data=tour_data(TEAM_TABLE)),
+            InlineKeyboardButton("To‘xtatish", callback_data=tour_data(TEAM_STOP)),
+        ])
+    else:
+        rows.append([InlineKeyboardButton("Jadval", callback_data=tour_data(TEAM_TABLE))])
+    return InlineKeyboardMarkup(rows)
+
+
+def tour_play_keyboard(curator: bool = False, clock: str = "") -> "object":
+    """Buttons of the pinned tournament card while questions are running."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    rows = [[InlineKeyboardButton(f"{clock} · Jadval" if clock else "Jadval",
+                                  callback_data=tour_data(TEAM_TABLE))]]
+    if curator:
+        rows.append([
+            InlineKeyboardButton("Javoblar holati", callback_data=tour_data(TEAM_REVEAL)),
+            InlineKeyboardButton("To‘xtatish", callback_data=tour_data(TEAM_STOP)),
+        ])
+    return InlineKeyboardMarkup(rows)
+
 
 
 def page_keyboard(page: int, pages: int, query: str = ""):
