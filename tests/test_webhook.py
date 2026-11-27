@@ -9,9 +9,16 @@ from unittest import mock
 
 try:
     import bot.webhook as webhook
+    from bot import messages as msg
+    from bot import settings as st
     from bot.archive import Archive
 except ImportError:  # fastapi / python-telegram-bot not installed yet
     webhook = None
+
+
+def visible(text: str) -> str:
+    """What a reader actually sees: the invisible state run removed."""
+    return "".join(ch for ch in str(text or "") if ch not in webhook.INVISIBLE)
 
 
 class FakeBot:
@@ -109,8 +116,9 @@ class WebhookLogicTests(unittest.TestCase):
     def test_question_carries_round_and_timer(self):
         question_text = self._start()
         strip_text = self.bot.sent[-2]["text"]
-        self.assertIn("Qolgan vaqt: 60 s", strip_text)
+        self.assertIn("QOLGAN VAQT  01:00", strip_text)
         self.assertIn("Savol 1 / 10", strip_text)
+        self.assertEqual(visible(strip_text).splitlines()[-1], "▰" * 10)
         self.assertIn("Vaqt: 60 sekund", question_text)
         state = webhook.unpack_state(question_text)
         self.assertEqual(int(state["r"]), 1)
@@ -144,7 +152,7 @@ class FakeApplication:
 
 @unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
 class MarkerTests(unittest.TestCase):
-    """The state marker is compact and hidden, but still machine readable."""
+    """The game state rides inside the message without ever being readable."""
 
     def setUp(self):
         self.archive = Archive("data/all")
@@ -159,25 +167,57 @@ class MarkerTests(unittest.TestCase):
     def test_marker_is_compact(self):
         marker = webhook.pack_state(self.session, int(time.time()) + 60)
         self.assertLess(len(marker), 160)
-        self.assertTrue(marker.strip().startswith("#ZS2 "))
+        self.assertTrue(marker.startswith("s|959|"))
 
-    def test_marker_travels_inside_a_spoiler(self):
-        marker = webhook.pack_state(self.session, 1700000000)
-        hidden = webhook.hide_state(marker)
-        self.assertIn('<span class="tg-spoiler">#ZS2 ', hidden)
-        text = f"Savol matni\n{hidden}"
+    def test_state_is_invisible_and_not_a_spoiler(self):
+        text = webhook.with_state("Savol matni", webhook.pack_state(self.session, 1700000000))
+        # A spoiler could still be tapped open; this leaves nothing on screen.
+        self.assertEqual(visible(text).strip(), "Savol matni")
+        self.assertNotIn("#ZS", text)
+        self.assertNotIn("tg-spoiler", text)
         state = webhook.unpack_state(text)
         self.assertEqual(int(state["p"]), 959)
         self.assertEqual(int(state["k"]), 4242)
+
+    def test_state_survives_new_text_around_it(self):
+        run = webhook.hide_state(webhook.pack_state(self.session, 1700000000))
+        state = webhook.unpack_state("Boshqa sarlavha\n" + run)
+        self.assertEqual(int(state["p"]), 959)
+
+    def test_the_state_sits_inside_the_message_not_at_its_tail(self):
+        text = webhook.with_state("Savol 1 / 10\nQOLGAN VAQT  00:47\n" + "▰" * 7 + "▱" * 3,
+                                  webhook.pack_state(self.session, 1700000000))
+        self.assertTrue(text.endswith("▰▰▰▰▰▰▰▱▱▱"))       # the tail stays visible text
+        self.assertEqual(int(webhook.unpack_state(text)["p"]), 959)
+        # only the first line survives a client that trims the end of a message
+        self.assertEqual(int(webhook.unpack_state(text.split("\n")[0])["p"]), 959)
+
+    def test_a_damaged_state_is_ignored(self):
+        run = webhook.hide_state(webhook.pack_state(self.session, 1700000000))
+        self.assertIsNone(webhook.unpack_state("matn\n" + webhook.ZW0 + run[1:]))
+        self.assertIsNone(webhook.unpack_state("matn"))
 
     def test_marker_carries_idle_state(self):
         self.session.idle_streak = 2
         self.session.attempts = 1
         self.session.can_delete = False
-        state = webhook.unpack_state(webhook.pack_state(self.session, 1700000000))
+        text = webhook.with_state("matn", webhook.pack_state(self.session, 1700000000))
+        state = webhook.unpack_state(text)
         self.assertEqual(state["z"], 2)
         self.assertEqual(state["y"], 1)
         self.assertFalse(state["x"])
+
+    def test_state_never_pushes_a_message_over_the_limit(self):
+        text = webhook.with_state("x" * 5000, webhook.pack_state(self.session, 1700000000))
+        self.assertLessEqual(webhook.utf16_length(text), 4096)
+        self.assertEqual(int(webhook.unpack_state(text)["p"]), 959)
+
+    def test_the_old_spoiler_look_can_be_switched_back_on(self):
+        with mock.patch.object(webhook, "HIDDEN_MODE", "spoiler"):
+            hidden = webhook.hide_state(webhook.pack_state(self.session, 1700000000))
+        self.assertIn('<span class="tg-spoiler">', hidden)
+        self.assertIn("#ZS2 s|959|", hidden)
+        self.assertEqual(int(webhook.unpack_state("matn\n" + hidden)["k"]), 4242)
 
     def test_legacy_base64_marker_still_parses(self):
         payload = {"m": "solo", "p": 959, "i": 2, "c": 1, "w": 1, "o": 7, "q": 23297,
@@ -272,9 +312,39 @@ class LiveCountdownTests(unittest.TestCase):
         self.assertEqual(result["remaining"], 37)
         self.assertTrue(self.bot.edits)
         text = self.bot.edits[-1]["text"]
-        self.assertIn("Qolgan vaqt: 3", text)
+        self.assertIn(msg.countdown(result["remaining"], 60), text)
         self.assertIn("▰▰▰▰▰▰", text)
-        self.assertIn('<span class="tg-spoiler">#ZS2 ', text)   # state stays hidden
+        self.assertNotIn("#ZS", visible(text))                  # nothing readable is left
+        self.assertIsNotNone(webhook.unpack_state(text))        # yet the state is still there
+        label = self.bot.edits[-1]["reply_markup"].inline_keyboard[0][0].text
+        self.assertTrue(label.startswith(msg.clock(result["remaining"])))
+
+    def test_the_countdown_moves_from_tick_to_tick(self):
+        self._tick(int(time.time()) + 40)
+        self._tick(int(time.time()) + 12)
+        self.assertEqual(len(self.bot.edits), 2)
+        lines = [visible(edit["text"]).splitlines()[1] for edit in self.bot.edits]
+        self.assertNotEqual(lines[0], lines[1])                 # the clock really moves
+        self.assertIn("00:1", lines[1])
+
+    def test_bg_mode_answers_at_once_and_paints_afterwards(self):
+        marker = webhook.pack_state(self.session, int(time.time()) + 30)
+        bucket: list = []
+        token = webhook._bg_tasks.set(bucket)
+        try:
+            response = asyncio.run(
+                webhook.handle_tick({"tick": marker, "chat": -100, "wait": 0, "mode": "bg"}))
+        finally:
+            webhook._bg_tasks.reset(token)
+        payload = json.loads(response.body)
+        self.assertEqual(payload["mode"], "bg")
+        self.assertEqual(len(bucket), 1)
+        self.assertFalse(self.bot.edits)                        # Telegram is not kept waiting
+        self.assertIsNotNone(response.background)
+        with mock.patch.object(webhook, "get_application", lambda: self.application), \
+             mock.patch.object(webhook, "TICKS_ENABLED", False):
+            asyncio.run(response.background())
+        self.assertTrue(self.bot.edits)                         # the hop ran after the answer
 
     def test_tick_resolves_when_time_is_up(self):
         result = self._tick(int(time.time()) - 1)
@@ -288,16 +358,47 @@ class LiveCountdownTests(unittest.TestCase):
         self.assertEqual(marker["z"], 1)
         self.assertIn("Yana 2 savol javobsiz qolsa", texts)
 
-    def test_tick_stops_when_the_strip_is_gone(self):
-        marker = webhook.pack_state(self.session, int(time.time()) + 30).strip()
-        state = webhook.unpack_state(marker)
-        state["q"] = 999999999                        # unknown question id
-        broken = dict(state)
+    def test_a_tick_without_a_state_is_refused(self):
         with mock.patch.object(webhook, "get_application", lambda: self.application):
             result = json.loads(asyncio.run(webhook.handle_tick(
-                {"tick": "#ZS2 x", "chat": -100, "wait": 0})).body)
+                {"tick": "#ZS2 x", "chat": -100, "wait": 0, "mode": "sleep"})).body)
         self.assertFalse(result["ok"])
-        self.assertEqual(broken["q"], 999999999)
+        self.assertEqual(result["reason"], "no state")
+        self.assertFalse(self.bot.edits)
+
+    def test_a_tick_for_an_unknown_question_is_refused(self):
+        marker = webhook.pack_state(self.session, int(time.time()) + 30)
+        with mock.patch.object(webhook, "ARCHIVE", Archive("data/all")), \
+             mock.patch.object(webhook, "get_application", lambda: self.application), \
+             mock.patch.object(webhook, "MAX_TICK_HORIZON", 10 ** 9):
+            payload = {"tick": marker.replace("|23", "|99999923", 1), "chat": -100,
+                       "wait": 0, "mode": "sleep"}
+            result = json.loads(asyncio.run(webhook.handle_tick(payload)).body)
+        self.assertFalse(result["ok"])
+        self.assertFalse(self.bot.edits)
+
+    def test_a_deadline_too_far_ahead_is_refused(self):
+        marker = webhook.pack_state(self.session, int(time.time()) + webhook.MAX_TICK_HORIZON + 60)
+        with mock.patch.object(webhook, "get_application", lambda: self.application):
+            result = json.loads(asyncio.run(webhook.handle_tick(
+                {"tick": marker, "chat": -100, "wait": 0, "mode": "sleep"})).body)
+        self.assertEqual(result["reason"], "deadline too far ahead")
+
+
+class StripKeyboardTests(unittest.TestCase):
+    """The countdown is a control: the clock sits on the button and answers a tap."""
+
+    def setUp(self):
+        if not webhook:
+            self.skipTest("install requirements.txt to test the webhook")
+
+    def test_refresh_button_carries_the_live_clock(self):
+        keyboard = st.game_keyboard(clock=msg.clock(47))
+        self.assertEqual(keyboard.inline_keyboard[0][0].text, "00:47 · Vaqtni yangilash")
+
+    def test_without_a_clock_the_label_stays_plain(self):
+        keyboard = st.game_keyboard()
+        self.assertEqual(keyboard.inline_keyboard[0][0].text, "Vaqtni yangilash")
 
 
 class PublicUrlTests(unittest.TestCase):

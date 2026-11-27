@@ -25,6 +25,21 @@ class MessageTests(unittest.TestCase):
         self.assertIn("30 s", msg.timer_line(30, 60))
         self.assertIn("tugadi", msg.timer_line(0, 60))
 
+    def test_clock_reads_like_a_timer(self):
+        self.assertEqual(msg.clock(60), "01:00")
+        self.assertEqual(msg.clock(47), "00:47")
+        self.assertEqual(msg.clock(3), "00:03")
+        self.assertEqual(msg.clock(-5), "00:00")
+
+    def test_countdown_shows_digits_and_a_shrinking_bar(self):
+        head, _, track = msg.countdown(45, 60).partition("\n")
+        self.assertEqual(head, "QOLGAN VAQT  00:45")
+        self.assertEqual(track, "▰" * 8 + "▱" * 2)
+        shorter = msg.countdown(12, 60)
+        self.assertIn("00:12", shorter)
+        self.assertLess(shorter.count("▰"), track.count("▰"))
+        self.assertIn("VAQT TUGADI", msg.countdown(0, 60))
+
     def test_settings_panel_shows_every_parameter(self):
         text = msg.settings_panel(959, "Zakovat 959", 54, 3, 10, 45, "solo", 30)
         for piece in ("959", "3", "10", "45", "30", "Yakka"):

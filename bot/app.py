@@ -36,7 +36,7 @@ ALIAS_FILE = os.getenv("ZAKOVAT_ALIAS_FILE", "data/answer_aliases.json")
 DEFAULT_TIMER = int(os.getenv("ZAKOVAT_TIMER_SECONDS", "60"))
 PER_PAGE = int(os.getenv("ZAKOVAT_PACKAGES_PER_PAGE", "12"))
 IMAGES = ROOT / "data" / "images"
-TICK_SECONDS = max(2, int(os.getenv("ZAKOVAT_TICK_SECONDS", "6")))
+TICK_SECONDS = max(1, int(os.getenv("ZAKOVAT_TICK_SECONDS", "3")))
 IDLE_LIMIT = max(0, int(os.getenv("ZAKOVAT_IDLE_LIMIT", "3")))
 
 BOT_COMMANDS = [
@@ -340,7 +340,7 @@ def _strip_text(session: Session, remaining: int) -> str:
     head = f"Savol {session.number} / {session.total}"
     if session.rounds > 1:
         head += f" · {session.current_round}-raund"
-    return f"{head}\n{msg.timer_line(remaining, session.timer_seconds)}"
+    return f"{head}\n{msg.countdown(remaining, session.timer_seconds)}"
 
 
 def _percent(session: Session) -> int:
@@ -383,7 +383,8 @@ async def _send_question(chat_id: int, context: ContextTypes.DEFAULT_TYPE, sessi
     timer = session.timer_seconds
     strip = await context.bot.send_message(
         chat_id=chat_id, text=_strip_text(session, timer), parse_mode=ParseMode.HTML,
-        reply_markup=st.game_keyboard(), disable_web_page_preview=True,
+        reply_markup=st.game_keyboard(clock=msg.clock(timer)),
+        disable_web_page_preview=True,
     )
     session.control_message_id = strip.message_id
 
@@ -432,7 +433,7 @@ async def _on_tick(context: ContextTypes.DEFAULT_TYPE) -> None:
         await context.bot.edit_message_text(
             chat_id=session.chat_id, message_id=session.control_message_id,
             text=_strip_text(session, remaining), parse_mode=ParseMode.HTML,
-            reply_markup=st.game_keyboard(),
+            reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
         )
     except TelegramError:
         pass
@@ -578,7 +579,7 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if action == "f":
         remaining = max(0, int(session.deadline) - int(time.time())) if session.deadline else session.timer_seconds
-        await query.answer(f"Qolgan vaqt: {remaining} s")
+        await query.answer(f"Qolgan vaqt: {msg.clock(remaining)}")
         if remaining <= 0 and not session.answered and session.resolve_unanswered():
             await _advance(chat_id, context, session, "Vaqt tugadi. Ochko Qarshi tarafga.")
         return
