@@ -577,6 +577,16 @@ class TelegramStoreTests(unittest.TestCase):
         self.assertLessEqual(len(text), stats.MESSAGE_LIMIT)
         self.assertEqual(trimmed["c"]["games_started"], 1)      # counters survive
 
+    def test_ordinary_counters_ask_for_a_flush_too(self):
+        """A game start is written at once, but so is a clock opening in time."""
+        with mock.patch.object(stats, "FLUSH_SECONDS", 0):
+            self.assertTrue(stats.record("clock_opened", log=False))
+            self.assertTrue(stats.record("question", package_id=959, questions_asked=1,
+                                         log=False))
+        with mock.patch.object(stats, "BOT_TOKEN", ""), mock.patch.object(stats, "STORE_URL", ""):
+            self.assertEqual(stats.backend(), "lokal")
+            self.assertFalse(stats.record("clock_opened", log=False))
+
     def test_a_dead_telegram_does_not_break_the_game(self):
         def handler(request):
             raise httpx.ConnectError("no route")

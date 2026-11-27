@@ -191,8 +191,9 @@ def record(kind: str, *, user_id: int | None = None, chat_id: int | None = None,
         if len(_pending[field]) > MAP_LIMIT:
             _pending[field] = Counter(dict(_pending[field].most_common(MAP_LIMIT)))
     # Only report that a flush is due; `sync` owns the timestamp, so a whole
-    # burst of events queues a single write.
-    return bool(STORE_URL) and time.time() - _last_flush >= FLUSH_SECONDS
+    # burst of events queues a single write. Any backend counts, not only an
+    # address that was configured by hand.
+    return backend() != "lokal" and time.time() - _last_flush >= FLUSH_SECONDS
 
 
 def archive_sections(archive) -> list[dict]:
