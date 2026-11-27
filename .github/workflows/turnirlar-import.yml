@@ -25,6 +25,12 @@ on:
       pages:
         description: "Ro‘yxatdan necha sahifa o‘qilsin (0 = hammasi)"
         default: "0"
+      start_page:
+        description: "Ro‘yxatni nechinchi sahifadan boshlash"
+        default: "1"
+      polite:
+        description: "So‘rovlar orasidagi sekund (workerlarga bo‘linadi)"
+        default: "0.4"
       source:
         description: "Manba filtri"
         type: choice
@@ -71,7 +77,7 @@ jobs:
         id: opts
         env:
           PAYLOAD: ${{ toJSON(github.event.client_payload) }}
-          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
+          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};start_page=${{ inputs.start_page }};polite=${{ inputs.polite }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
         run: |
           python3 - <<'PY' | tee -a "$GITHUB_OUTPUT"
           import json, os, pathlib
@@ -107,8 +113,8 @@ jobs:
               merged.update({key: value for key, value in source.items()
                              if value not in (None, "")})
 
-          for key, default in (("max_packages", 0), ("pages", 0), ("workers", 8),
-                               ("source", "all")):
+          for key, default in (("max_packages", 0), ("pages", 0), ("start_page", 1),
+                               ("polite", 0.4), ("workers", 8), ("source", "all")):
               print(f"{key}={merged.get(key, default)}")
           for key, default in (("commit", "true"), ("release", "true")):
               value = str(merged.get(key, default)).lower()
@@ -130,11 +136,13 @@ jobs:
       - name: Import
         run: |
           set -o pipefail
-          echo "options: max_packages=${{ steps.opts.outputs.max_packages }} pages=${{ steps.opts.outputs.pages }} workers=${{ steps.opts.outputs.workers }} source=${{ steps.opts.outputs.source }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
+          echo "options: source=${{ steps.opts.outputs.source }} start_page=${{ steps.opts.outputs.start_page }} pages=${{ steps.opts.outputs.pages }} max_packages=${{ steps.opts.outputs.max_packages }} workers=${{ steps.opts.outputs.workers }} polite=${{ steps.opts.outputs.polite }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
           python3 scripts/export_turnirlar.py --mode import \
             --out-dir data/turnirlar \
             --max-packages "${{ steps.opts.outputs.max_packages }}" \
             --pages "${{ steps.opts.outputs.pages }}" \
+            --start-page "${{ steps.opts.outputs.start_page }}" \
+            --polite "${{ steps.opts.outputs.polite }}" \
             --source "${{ steps.opts.outputs.source }}" \
             --workers "${{ steps.opts.outputs.workers }}" \
             --sample data/turnirlar/sample.json 2>&1 | tee data/turnirlar/run-log.txt
