@@ -1,0 +1,167 @@
+name: Export turnirlar.uz question base
+
+# turnirlar.uz has no API, so the pages are read here — in CI, which has a route
+# to the site. Two jobs:
+#
+#   probe   runs on every push that touches the exporter and uploads the raw
+#           pages as an artifact, so the parser can be written against the real
+#           HTML instead of guesswork;
+#   import  is started by hand (Actions → Export turnirlar.uz → Run workflow),
+#           walks the whole base, dedupes it against data/all and commits the
+#           shards. It is resumable: packages already stored are skipped.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe — sahifa tuzilishini ko‘rsatish; import — bazani yig‘ish"
+        type: choice
+        default: "import"
+        options: [probe, import]
+      max_packages:
+        description: "Nechta to‘plam (0 = hammasi)"
+        default: "0"
+      pages:
+        description: "Ro‘yxatdan necha sahifa o‘qilsin (0 = hammasi)"
+        default: "0"
+      workers:
+        description: "Parallel so‘rovlar soni"
+        default: "8"
+      commit:
+        description: "Natijani main ga commit qilish"
+        type: boolean
+        default: true
+      release:
+        description: "To‘liq bazani GitHub Release ga ham yuklash"
+        type: boolean
+        default: false
+  push:
+    branches: ['**']
+    paths:
+      - scripts/export_turnirlar.py
+      - .github/workflows/export-turnirlar.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: turnirlar-export
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Sahifa tuzilishini tekshirish
+    if: github.event_name == 'push' || inputs.mode == 'probe'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Probe the site
+        run: |
+          python3 scripts/export_turnirlar.py --mode probe \
+            --probe-dir /tmp/turnirlar-probe \
+            --probe-package 7800 --probe-page 1
+
+      - name: Try the list parser
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts")
+          import export_turnirlar as ex
+          rows = ex.list_all_packages(2, 1, 4, 40)
+          print(f"parsed {len(rows)} packages from two pages")
+          for row in rows[:8]:
+              print(" ", row)
+          PY
+
+      - name: Try the package parser
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts")
+          import export_turnirlar as ex
+          package = {"id": ex.ID_OFFSET + 7800, "source_id": 7800,
+                     "title": "Özbekiston çempionati 2025 savollari"}
+          status, markup = ex.fetch(f"{ex.SITE}/paket/7800")
+          rows = ex.parse_package(markup, package)
+          print(f"HTTP {status} · parsed {len(rows)} questions")
+          for row in rows[:3]:
+              print("---")
+              for key in ("id", "round", "text", "answer", "accepted", "comment", "author"):
+                  print(f"{key}: {str(row.get(key))[:220]}")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: turnirlar-probe
+          path: /tmp/turnirlar-probe
+          retention-days: 14
+
+  import:
+    name: Bazani yig‘ish
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'import'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore what is already stored
+        run: |
+          mkdir -p data/turnirlar
+          if gh release download savollar-bazasi --pattern 'turnirlar-*.json.gz' --dir data/turnirlar/shards --clobber 2>/dev/null; then
+            echo "downloaded the previous shards"
+          else
+            echo "no previous release, starting from scratch"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Import
+        run: |
+          python3 scripts/export_turnirlar.py --mode import \
+            --out-dir data/turnirlar \
+            --max-packages "${{ inputs.max_packages }}" \
+            --pages "${{ inputs.pages }}" \
+            --workers "${{ inputs.workers }}"
+
+      - name: Show the result
+        run: |
+          du -sh data/turnirlar
+          ls -la data/turnirlar/shards | head
+          python3 -c "import json;m=json.load(open('data/turnirlar/manifest.json'));print('packages',m['package_count'],'questions',m['question_count'],'shards',len(m['shards']))"
+
+      - name: Commit and push
+        if: inputs.commit
+        run: |
+          git config user.name "Zakovat Archive Bot"
+          git config user.email "archive@users.noreply.github.com"
+          git add data/turnirlar
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "turnirlar.uz savollar bazasi yangilandi"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Upload the full base to a release
+        if: inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd data/turnirlar/shards
+          for file in *.json.gz; do
+            gh release upload savollar-bazasi "$file" --clobber \
+              || gh release create savollar-bazasi "$file" \
+                   --title "Zakovat savollar bazasi (turnirlar.uz)" \
+                   --notes "To‘liq baza: shardlar va manifest. Bot kerakli shardni shu yerdan oladi."
+          done

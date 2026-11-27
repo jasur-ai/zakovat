@@ -1,0 +1,4 @@
+# The turnirlar.uz base is ~500 MB of questions: it lives in the repository
+# and in a GitHub Release, and the function fetches the shard it needs at
+# runtime (see bot/archive.py). Deploying it would blow the 250 MB bundle.
+data/turnirlar/shards
