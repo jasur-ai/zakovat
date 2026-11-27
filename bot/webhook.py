@@ -433,6 +433,8 @@ _application: Application | None = None
 _webhook_ready = False
 _setup_error = ""
 _setup_attempted = False
+_updates_seen = 0
+_updates_rejected = 0
 
 
 def get_application() -> Application:
@@ -459,7 +461,7 @@ def public_base_url() -> str:
     return ""
 
 
-async def ensure_webhook(application: Application, force: bool = False) -> None:
+async def ensure_webhook(application: Application, force: bool = False, drop_pending: bool = False) -> None:
     """Register the webhook on Vercel's public production domain."""
     global _webhook_ready, _setup_error, _setup_attempted
     if (_webhook_ready or _setup_attempted) and not force:
@@ -477,6 +479,7 @@ async def ensure_webhook(application: Application, force: bool = False) -> None:
             url=base + "/api/index",
             secret_token=SECRET or None,
             allowed_updates=["message", "my_chat_member"],
+            drop_pending_updates=drop_pending,
         )
         _webhook_ready = True
         _setup_error = ""
@@ -527,23 +530,31 @@ def archive_lines() -> list[str]:
 
 
 @app.get("/api/setup")
-async def setup():
-    """Idempotent manual bootstrap: open once after deploying."""
+async def setup(request: Request):
+    """Idempotent manual bootstrap: open once after deploying.
+
+    Add ?drop=1 to also discard updates Telegram still holds in its queue — a
+    stuck update is delivered in order and can block every newer message.
+    """
+    drop = request.query_params.get("drop") == "1"
     try:
         application = get_application()
         await application.initialize()
         try:
-            await ensure_webhook(application, force=True)
+            await ensure_webhook(application, force=True, drop_pending=drop)
             info = await application.bot.get_webhook_info()
         finally:
             await application.shutdown()
         if _setup_error:
             return status_page("Xatolik", [_setup_error], 500)
-        return status_page("Webhook", [
+        lines = [
             f"Webhook o‘rnatildi: {info.url}",
             f"{info.pending_update_count} kutilayotgan xabar",
             f"Oxirgi xatolik: {info.last_error_message or 'yo‘q'}",
-        ])
+        ]
+        if drop:
+            lines.append("Telegram navbati tozalandi — endi yangi xabar yuboring.")
+        return status_page("Webhook", lines)
     except Exception as exc:
         return status_page("Xatolik", [str(exc)], 500)
 
@@ -571,6 +582,9 @@ async def status():
                 await application.shutdown()
             lines.append(f"Telegram webhook: {info.url or '(o‘rnatilmagan)'}")
             lines.append(f"Kutilayotgan xabarlar: {info.pending_update_count}")
+            lines.append(
+                f"Shu nusxada qabul qilingan update: {_updates_seen} · rad etilgan (403): {_updates_rejected}"
+            )
             if info.last_error_message:
                 lines.append(f"Telegram oxirgi xatoligi: {info.last_error_message}")
         except Exception as exc:
@@ -586,7 +600,7 @@ async def index(request: Request):
     """Vercel exposes api/index.py at this path; it doubles as a diagnostics page."""
     mode = request.query_params.get("test") or request.query_params.get("setup")
     if request.query_params.get("setup") == "1" or mode == "setup":
-        return await setup()
+        return await setup(request)
     if mode == "1":
         return status_page("O‘z-o‘zini sinash", await self_test())
     return await status()
@@ -618,12 +632,19 @@ async def health():
 @app.post("/api/webhook")
 @app.post("/api/index")
 async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None = Header(default=None)):
+    global _updates_seen, _updates_rejected
     if SECRET and not secrets.compare_digest(x_telegram_bot_api_secret_token or "", SECRET):
+        _updates_rejected += 1
+        note = f"{time.strftime('%H:%M:%S')} 403: webhook secret mos kelmadi"
+        if note not in _recent_errors:
+            _recent_errors.insert(0, note)
+            _recent_errors[:] = _recent_errors[:5]
         return Response(status_code=403)
     data = await request.json()
     update = Update.de_json(data, get_application().bot)
     if not update:
         return Response(status_code=400)
+    _updates_seen += 1
     application = get_application()
     await application.initialize()
     try:
