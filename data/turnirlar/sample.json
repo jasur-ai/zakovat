@@ -1,507 +1,462 @@
 {
- "generated_at": "2026-11-27T19:28:40+00:00",
+ "generated_at": "2026-11-27T19:33:00+00:00",
  "listed_packages": [
   {
-   "source_id": 6547,
-   "title": "Brest chempionati",
-   "questions": 90,
-   "rounds": 6,
-   "date": "13.04.2003",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6546,
-   "title": "Belovejskaya zima – Intellektual gibrid",
-   "questions": 10,
-   "rounds": 1,
-   "date": "27.11.2005",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6536,
-   "title": "Kobrin maktab chempionati",
+   "source_id": 7797,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari",
    "questions": 36,
    "rounds": 1,
-   "date": "24.02.2013",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "31.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6520,
-   "title": "Maktab o‘quvchilarining Olimpiya o‘yinlari (Baranka kubogi №0)",
-   "questions": 46,
-   "rounds": 4,
-   "date": "08.04.2012",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6481,
-   "title": "«Belovejskaya zima» – «Elitarno-Kolomenskoye ozareniye»",
-   "questions": 10,
-   "rounds": 1,
-   "date": "27.11.2005",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6478,
-   "title": "Brest olimpiya kubogi",
-   "questions": 26,
-   "rounds": 4,
-   "date": "19.05.2007",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6476,
-   "title": "Brest chempionati",
-   "questions": 30,
-   "rounds": 2,
-   "date": "07.02.2013",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6474,
-   "title": "Kobrin maktab chempionati",
+   "source_id": 7796,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari",
    "questions": 37,
    "rounds": 1,
-   "date": "24.02.2012",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "24.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6469,
-   "title": "Kobrin chempionati – 1-bosqich",
-   "questions": 40,
+   "source_id": 7795,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari",
+   "questions": 38,
    "rounds": 1,
-   "date": "25.10.2007",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "17.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6452,
-   "title": "Kobrin PTUZlari jamoalari o‘rtasidagi chempionat",
+   "source_id": 7794,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari",
    "questions": 36,
    "rounds": 1,
-   "date": "17.02.2005",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "14.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6450,
-   "title": "Kobrin yuvenal chempionati – 2-bosqich",
-   "questions": 30,
+   "source_id": 7793,
+   "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari",
+   "questions": 27,
    "rounds": 1,
-   "date": "19.11.2011",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "14.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6438,
-   "title": "Kobrin tumani chempionati",
-   "questions": 39,
+   "source_id": 7792,
+   "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari",
+   "questions": 24,
    "rounds": 1,
-   "date": "06.10.2009",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "07.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6436,
-   "title": "Brest chempionati – 2-tur",
-   "questions": 10,
+   "source_id": 7791,
+   "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari",
+   "questions": 24,
    "rounds": 1,
-   "date": "28.11.2003",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "31.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6429,
-   "title": "Kobrin chempionati – 2-bosqich",
-   "questions": 40,
+   "source_id": 7790,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari",
+   "questions": 36,
    "rounds": 1,
-   "date": "06.12.2007",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "07.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6425,
-   "title": "Maktab o‘quvchilarining Olimpiya o‘yinlari (Baranka kubogi №0) – Xet-trik",
-   "questions": 40,
-   "rounds": 8,
-   "date": "08.04.2012",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6420,
-   "title": "Brest chempionati",
-   "questions": 99,
-   "rounds": 10,
-   "date": "28.05.2006",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6418,
-   "title": "Kobrin chempionati – 3-bosqich",
-   "questions": 40,
+   "source_id": 7789,
+   "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari",
+   "questions": 24,
    "rounds": 1,
-   "date": "13.03.2008",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "24.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6415,
-   "title": "Kobrin yuvenal chempionati – 1-bosqich",
-   "questions": 26,
+   "source_id": 7788,
+   "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari",
+   "questions": 24,
    "rounds": 1,
-   "date": "17.09.2011",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "17.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
   },
   {
-   "source_id": 6411,
-   "title": "Brest chempionati",
-   "questions": 194,
-   "rounds": 13,
-   "date": "14.05.2007",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6408,
-   "title": "Brest chempionati – 1-tur",
-   "questions": 12,
+   "source_id": 7787,
+   "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari",
+   "questions": 24,
    "rounds": 1,
-   "date": "28.11.2004",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
+   "date": "10.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7786,
+   "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "03.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7785,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "10.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7784,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "03.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7783,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "26.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7782,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari",
+   "questions": 37,
+   "rounds": 1,
+   "date": "19.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7781,
+   "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "26.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7780,
+   "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari",
+   "questions": 25,
+   "rounds": 1,
+   "date": "19.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7779,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "12.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7778,
+   "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "12.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
   }
  ],
  "questions": [
   {
-   "id": 900486938,
-   "question_id": 486938,
-   "package_id": 904683,
-   "index": 1,
+   "id": 900022240,
+   "question_id": 22240,
+   "package_id": 907443,
+   "index": 6,
    "round": 1,
-   "text": "Xyu Molliganning hajviy hikoyasida UNING tarjimai holining noan’anaviy versiyasi keltiriladi. Emishki, U aslida muvaffaqiyatsiz operatsiyani amalga oshirib, xususiy amaliyot bilan shug‘ullanish huquqidan mahrum qilingan. Rivyerada bekorchi bo‘lib yurganida, U o‘yin avtomatlari dastasini tortib, yelkasini chiqarib oladi. U tez orada Angliya kasalxonasida uchratgan insonni nomlang.",
-   "answer": "Xolms / Sherlok Xolms",
-   "comment": "Hikoyada professor Moriartining evarasi doktor Vatsonning «haqiqiy» tarixini so‘zlab beradi va Sherlok Xolms doktorning o‘tmishi haqida mutlaqo noto‘g‘ri xulosalar chiqarganini ta’kidlaydi.",
-   "accepted": [
-    "Sherlok Xolms"
-   ],
+   "text": "Yamadzaki Sokananing \"qurbaqa\" nomli xokkusini eshiting:\nQo‘llari yerda,\nEhtirom ila aytmoqda qo‘shiq,\nQurbaqalar.\nShoir bu xokkusi orqali shunday odamlar ustidan kinoyali tarzda kulmoqchi bo‘lgan. Vikipediya maqolasiga ko‘ra, shunday so‘zi o‘rnidagi so‘zning yasalishida uy ro‘zg‘or buyumi ham eslab o‘tilgan.\nSavol. Shunday so‘zi o‘rnidagi so‘zni yozib bering",
+   "answer": "Laganbardor",
    "sources": [
-    "Хью А. Моллиген. Разоблачение великого детектива. // Вокруг света, N 6/1982. — С. 63.",
-    "https://db.chgk.info/question/949804",
-    "https://gotquestions.online/packs/4823/1"
+    "https://www.zakovatklubi.uz/open-question/view/23292"
    ],
-   "authors": [
-    "Dmitriy Gevel"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1209254400
+   "created_at": 1734134400
   },
   {
-   "id": 900435459,
-   "question_id": 435459,
-   "package_id": 904485,
-   "index": 1,
+   "id": 900019569,
+   "question_id": 19569,
+   "package_id": 907315,
+   "index": 4,
    "round": 1,
-   "text": "Demak, boshladik! Bernar Verberning romanidagi chumolilar izohli lug‘atida ushbu so‘z bilan «juda yosh chumoli» atalgan. Ushbu so‘zni nomlang.",
-   "answer": "Tuxum / Œuf",
-   "comment": "Mana shunday «ab ovo»!:-)",
-   "accepted": [
-    "Œuf"
-   ],
+   "text": ". Twitter foydalanuvchilari Tesla logotipi va U aks etgan suratlarni joylashtirishadi. Keyinchalik Ilon Maskka murojaat qilib kompaniyaning logotipi Undan ilhomlanib yaratilganligi rostmi deya so‘rashadi. Ilon Mask bunga qisqa qilib ha deya javob beradi. Ko‘pchilik buni jiddiy qabul qilgan bo‘lsada, aslida bu 1-aprel hazili edi.\nSavol: Uni 2 so‘zda aniq ayting",
+   "answer": "Mushuk burni",
+   "comment": "Albatta Tesla kompaniyasi logotipi va mushuk burni o‘xshashligi bu hazil qilinishiga sabab bo‘lgan",
    "sources": [
-    "Б. Вербер. Муравьи ( http://www.aboutwerber.com/read/ants/page36.htm ).",
-    "https://db.chgk.info/question/1059172",
-    "https://gotquestions.online/packs/4511/1",
-    "http://www.aboutwerber.com/read/ants/page36.htm"
+    "https://www.zakovatklubi.uz/open-question/view/20326"
    ],
-   "authors": [
-    "Artyom Matuxno"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1239408000
+   "created_at": 1722643200
   },
   {
-   "id": 900236925,
-   "question_id": 236925,
-   "package_id": 904603,
+   "id": 900023342,
+   "question_id": 23342,
+   "package_id": 907487,
    "index": 1,
    "round": 1,
-   "text": "Zaliznyakning 2003-yilgi Grammatik lug‘atiga kiritilgan eng uzun undov so‘z yozilishiga qarab 14 yoki 15 ta harfdan iborat. Bu qaysi so‘z?",
-   "answer": "Fizkult-privet / Fizkultprivet",
-   "comment": "Savol rus tili grammatik lug‘atidagi aniq ruscha so‘z «Физкульт-привет» hajidagidir.",
+   "text": "Savol matnida almashtirish bor.\nBenito Mussolinining fashistik partiya tarafdorlari bilan Rimga yurishi haqida yozilgan bir asarda 1922-yil 27-oktyabrda Mussolini - kemalarni yoqdi jumlasi ishlatilgan.\nSavol: Savol matidagi almashtirilganni 2 yoki bir nechta so‘z bilan yozib bering.",
+   "answer": "Rubikonni kesib o‘tish. / Rubikondan o‘tish",
+   "comment": "Fashistik Italiya o‘zini Rim imperiyasining vorisi deb hisoblagan va shuning uchun, albatta, targ‘ibot Yuliy Tsezar bilan parallel bo‘lgan. Rubikonni kesib o‘tish, xuddi kemalarni yoqish kabi orqaga yo‘l yo‘qligini anglatuvchi mashhur idioma.",
    "accepted": [
-    "Fizkultprivet"
+    "Rubikondan o‘tish"
    ],
    "sources": [
-    "http://ru.wikipedia.org/wiki/Самое_длинное_слово_русского_языка",
-    "https://db.chgk.info/question/780642",
-    "https://gotquestions.online/packs/4779/1"
-   ],
-   "authors": [
-    "Aleksandr Ponomaryov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1194739200
+    "https://brill.com/view/journals/fasc/12/2/article-p165_4.xml?language=en",
+    "https://surl.li/uhvymq",
+    "https://www.zakovatklubi.uz/open-question/view/24369"
+   ]
   },
   {
-   "id": 900199518,
-   "question_id": 199518,
-   "package_id": 904484,
+   "id": 900022801,
+   "question_id": 22801,
+   "package_id": 907532,
+   "index": 9,
+   "round": 1,
+   "text": "Linkedin platformasidagi bir postda \"Deep Seek\"ning 6mln dollargina mablag‘ evaziga \"Open AI\" ni dog‘da qoldirgani haqidagi postda 2024-yilgi olimpiya o‘yinlaridagi 2 sportchi tasvirlangan.\nSavol, siz bizga \"Deep Seek\" o‘rnida tasvirlangan sportchi ismini ayting",
+   "answer": "Yusuf Dikech",
+   "comment": "ChatGPTga qaraganda juda ham kam mablag‘da yaratilgan Deepseek AI Parij 2024 yozgi olimpiya o‘yinlarida hech qanday yordachi moslamalarsiz kumush medalni qo‘lga kiritgan Yusuf Dikechga o‘xshatiladi.",
+   "sources": [
+    "https://www.zakovatklubi.uz/open-question/view/23837"
+   ],
+   "created_at": 1739577600
+  },
+  {
+   "id": 900023312,
+   "question_id": 23312,
+   "package_id": 907545,
+   "index": 4,
+   "round": 1,
+   "text": "Oyina.uz saytining \"Yaponiya sotuvga qo‘yiladi\" nomli maqola chiqariladi. Bu maqolada Sakyo Kamasuning \"Yaponiya sotuvga qo‘yiladi\" nomli asari eslab o‘tilib, unda mayda firibgar butunboshli mamlakatni sotib yuboradi.\nSavol: muallif maqolada 2023-yili aprelda sodir bo‘lgan qaysi voqeani eslab o‘tganligini toponim qatnashtirib yozib bering.",
+   "answer": "Toshkentning sotuvga qo‘yilishi / Toshkent va sotuvga qo‘yilish so‘zlari bilan",
+   "comment": "2023-yili 7-aprel kuni 15-yoshli maktab o‘quvchisi Toshkent shahrini onlayn savdo platformasida sotuvga qo‘yadi. Maqola muallifi esa Sakyo Kamasuning vatan sotqini haqidagi asarini eslay o‘tirib Toshkentning sotuvga qo‘yilishini eslab o‘tadi",
+   "accepted": [
+    "Toshkent va sotuvga qo‘yilish so‘zlari bilan"
+   ],
+   "sources": [
+    "https://oyina.uz/uz/article/2623 https://www.qalampir.uz/uz/news/15-yeshli-uk-uvchi-toshkent-shaҳrini-so…",
+    "https://www.zakovatklubi.uz/open-question/view/24340",
+    "https://oyina.uz/uz/article/2623",
+    "https://www.qalampir.uz/uz/news/15-yeshli-uk-uvchi-toshkent-shaҳrini-sotuvga-k-uydi-video-81629"
+   ]
+  },
+  {
+   "id": 900027074,
+   "question_id": 27074,
+   "package_id": 907723,
+   "index": 6,
+   "round": 1,
+   "text": "Diqqat, savol matnida bir so‘z boshqa bir so‘z bilan almashtirilgan.\n“Onam” nomli musiqada reper onasiga nisbatan e’tiborsiz, o‘ylamasdan ahmoqona munosabatda bo‘lganini ta’kidlaydi. Reper shu paytlar xuddi Detroytda SHARIF bo‘lganini aytadi. Boshqa bir SHARIF esa Tinchlik bo‘yicha Nobel sovrindori.\nSavol: Almashtirilgan so‘zni toping.",
+   "answer": "Marshall",
+   "comment": "Asli ismi Marshall Bryuse Mathers bo‘lgan Eminemni onasi bilan bog‘liq munosabatlaridagi muammolarini qo‘shiqlari orqali bizga tanish. Almashtirish Konsta taxallusi ostida ijod qiladigan Sharif Abdullayevning asli ismini berdik, ya’ni bir reperni asli ismini boshqasiga almashtirdik. Ikkinchi qismda Marshall rejasi muallifi Jorj Marshall haqida so‘z bordi.",
+   "sources": [
+    "https://youtu.be/VcbX6Q-KGK0?si=nu3JVMuZOHHxfj32",
+    "https://en.wikipedia.org/wiki/Eminem",
+    "https://en.wikipedia.org/wiki/Sharif_(disambiguation)#:~:text=Sharif (also spelled Sherif) is an Arabic,the family of the Islamic prophet Muhammad.",
+    "https://www.zakovatklubi.uz/open-question/view/28051"
+   ],
+   "authors": [
+    "Shahzod Jabborov Valijon o‘g‘li"
+   ],
+   "created_at": 1762560000
+  },
+  {
+   "id": 900022812,
+   "question_id": 22812,
+   "package_id": 907543,
    "index": 1,
    "round": 1,
-   "text": "Davlat rejalashtirish qo‘mitasining 1925-yildagi rezolyutsiyalaridan birida shunday ta’kidlangan edi: «Yettisuv, Semipalatinsk viloyatlari hamda Uzak Sharqda hozircha yagona daromadli qishloq xo‘jaligi ekin turi bu... piyozdir». Savol matnida qaysi so‘z «piyoz» so‘zi bilan almashtirilgan?",
-   "answer": "Ko‘knori / Mak",
-   "comment": "Piyoz kabi ko‘knori ham qishloq xo‘jaligida yetishtirilgan. Gap ko‘knori haqida ketgan edi.",
-   "accepted": [
-    "Mak"
+   "text": "Savolni 1983-yil Andijonga kelin bo‘lgan qiz beradi.\nSavol. Yulduzchalar o‘rnidagi so‘zni xohlang defis bilan, xohlang defissiz yozib bering.",
+   "answer": "As-Salom",
+   "comment": "Q.zlar guruhi tomonidan chiqarilgan Intro taronasida olov, balo va palov so‘zlariga assalom so‘zi qofiya sifatida ishlatilgan. 1983-yilda shoir Muhammad Yusuf shoira Nazira as Salomga uylanganligi haqida bilsangiz kerak. Savolni ham qizlar va Nazira assalomga tegishli qismini Nazira ismli inson o‘qishi bejiz emas edi. Barchaga assalomu aleykum \"Silk-Road\" jamoasi o‘z navbatchiligini boshlaydi.\nManba. Q.zlar guruhi- Intro taronasi",
+   "attachments": [
+    "https://turnirlar.uz/savollar/api/media/pub/archive/zakovatklubi/2dd71bad_BKVqhuAzzTBASoJ4J8jtihR5TOwH2h.webp"
    ],
    "sources": [
-    "http://ru.zib.com.ua/article/1150978828422/",
-    "https://db.chgk.info/question/755030",
-    "https://gotquestions.online/packs/4490/1"
-   ],
-   "authors": [
-    "Aleksandr Kudryavtsev"
+    "https://uz.m.wikipedia.org/wiki/Portal_munozarasi:Adabiyot",
+    "https://www.zakovatklubi.uz/open-question/view/23846"
    ],
    "badges": [
-    "AI tarjima"
+    "Rasmli"
    ],
-   "created_at": 1164412800
+   "created_at": 1739577600
   },
   {
-   "id": 900190483,
-   "question_id": 190483,
-   "package_id": 904684,
+   "id": 900027548,
+   "question_id": 27548,
+   "package_id": 907724,
+   "index": 8,
+   "round": 1,
+   "text": "Elektronikada uzatgich va analog karta qabul qilgichi o‘rtasidagi uzilishda elektron signal qiymati eng quyi chegaraga tushishi mumkin, lekin shu holatda ham elektron uzatgichlar faol ish rejimida bo‘ladi. Bu holat U deb ataladi. “Beeline” aloqa operatorining hisobingizda mablag‘ qolmaganda ham oldindan to‘lov evaziga qo‘ng‘iroqlarni faol qabul qilish xizmati ham U deb nomlangan.\n\nSavol: Uni 2 so‘zda yozib bering.",
+   "answer": "Jonli nol.",
+   "sources": [
+    "https://share.google/yt1Ps8cyQse56eZr9",
+    "https://share.google/pZF3egdHpF9ORdklH",
+    "https://www.zakovatklubi.uz/open-question/view/28523"
+   ],
+   "created_at": 1771632000
+  },
+  {
+   "id": 900024849,
+   "question_id": 24849,
+   "package_id": 907568,
    "index": 1,
    "round": 1,
-   "text": "Dastlab bu rolga Oleg Strijenov taklif qilingan edi, lekin u «boshli qahramonlarni o‘ynashga o‘rganganman» deb rad etgan. Natijada bu rolni Oleg Vidov o‘ynagan. Ushbu qahramonni nomlang.",
-   "answer": "Moris Jerald / Moris Jerald («Boshsiz chavandoz» filmi); Boshsiz chavandoz",
-   "comment": "Gap Mayn Rid romani asosida suratga olingan «Boshsiz chavandoz» filmi haqida bormoqda. Strijenov hazillashib rad etgan, natijada Moris Jerald rolini Oleg Vidov ijro etgan.",
-   "accepted": [
-    "Moris Jerald («Boshsiz chavandoz» filmi); Boshsiz chavandoz"
-   ],
+   "text": "jirasaurus\nTarqatma materialda mezazoy davrida yashagan dinozavr turining lotincha nomi. Biz tarqatma materialdan ikki harf tushirib qoldirdik.\nSavol: Tushib qolgan ikki harfni to‘g‘ri ketma-ketlikda yozib bering.",
+   "answer": "Go.",
+   "comment": "Dinozavr qoldiqlarini topgan paleontolog Kennet Karpenter bo‘lib, paleontolog tur nomini fantastik yirtqich Godzilla sharafiga ya’ni yaponcha “Gojira” deya nomlagan. Biz bu savol orqali paketimizni boshlaymiz va sizga ham Go deymiz.",
    "sources": [
-    "\"TV-Парк\", N 39/2002. — С. 6.",
-    "https://db.chgk.info/question/875311",
-    "https://gotquestions.online/packs/4723/1"
+    "https://ru.m.wikipedia.org/wiki/Годжиразавр 2. https://en.m.wikipedia.org/wiki/Godzilla",
+    "https://www.zakovatklubi.uz/open-question/view/25850",
+    "https://ru.m.wikipedia.org/wiki/Годжиразавр",
+    "https://en.m.wikipedia.org/wiki/Godzilla"
    ],
-   "authors": [
-    "Aleksandra Indritsan"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1160179200
+   "created_at": 1743811200
   },
   {
-   "id": 900553708,
-   "question_id": 553708,
-   "package_id": 904778,
-   "index": 1,
+   "id": 900023274,
+   "question_id": 23274,
+   "package_id": 907538,
+   "index": 7,
    "round": 1,
-   "text": "M. Bulgakovning «Oq gvardiya» romanidan kichik parchani tinglang: «Shaharning I, Yo‘lovchilar stansiyasida poyezd turibdi — xuddi boshsiz [tushirib qoldirilgan so‘z] kabi hali parovozsiz». Tushirib qoldirilgan so‘z go‘zal metamorfozga uchrashi mumkin. Ushbu metamorfozni tasvirlab bering.",
-   "answer": "Qurt kapalakka aylanadi / Qurtning kapalakka aylanishi; Kapalakka aylanish",
-   "comment": "Tushirib qoldirilgan so‘z — «qurt» (гусеница). Qurt metamorfoz natijasida kapalakka aylanadi.",
-   "accepted": [
-    "Qurtning kapalakka aylanishi; Kapalakka aylanish"
-   ],
+   "text": "Cho‘lponning shogirdlaridan biri bo‘lgan bu insonning onasi Habibaxon aya ham iste’dodli shoira bo‘lgan. U payg‘ambar Muhammad (s.a.v.) avlodidan bo‘lganligi bois, uni Ulviy deb ham chaqirishgan.\n\nSavol: 1931-yil 8-yanvar kuni og‘ir betoblikldan vafot etgan bu inson kim?",
+   "answer": "Abdulla Alaviy",
+   "comment": "Alaviy - payg‘ambarimiz Muhammad (s.a.v.)ning amakivachchasi Ali tomonidan avlod degani.",
    "sources": [
-    "М. Булгаков \"Белая гвардия\"",
-    "https://gotquestions.online/packs/4713/1"
-   ],
-   "authors": [
-    "Vaan Kalayjyan"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1191110400
+    "https://t.me/nota_bene1/2947",
+    "https://www.zakovatklubi.uz/open-question/view/24301"
+   ]
   },
   {
-   "id": 900085722,
-   "question_id": 85722,
-   "package_id": 904514,
-   "index": 1,
+   "id": 900025523,
+   "question_id": 25523,
+   "package_id": 907587,
+   "index": 15,
    "round": 1,
-   "text": "Chak Palanikning qisqa hikoyasida qahramon basseyn tubida qolib ketadi va suv betiga arang yetib oladi. Hikoyachi tinglovchilardan hikoyani boshlashdan oldin BU ISHNI QILIShni so‘raydi. Bu nima ish ekanligini nomlang.",
-   "answer": "Nafas olish / Nafas rostlash; Chuqur nafas olish; Nafasni ushlab turish",
-   "comment": "Hikoyachi tinglovchilardan nafas olib, uni oxirigacha chiqarib yubormaslikni so‘raydi.",
-   "accepted": [
-    "Nafas rostlash; Chuqur nafas olish; Nafasni ushlab turish"
-   ],
+   "text": "Mashhur sovet fotografi Yevgeniy Xaldey bolaligida o‘zining birinchi fotoapparatini yaratishda buvisiga tegishli Undan foydalanadi. Mashhur manbada boshqa bir buviga tegishli U antagonist tomonidan o‘zlashtiriladi.\nSavol: Shu antagonistni toping.",
+   "answer": "Bo‘ri",
+   "comment": "fotoapparat yaratilishida Jenya buvisining ko‘zoynagidan foydalangan. Qizil qalpoqchaning buvisining ko‘zoynagi esa bo‘ri tomonidan o‘zlashtiriladi",
    "sources": [
-    "Паланик Ч. Призраки. — М.: АСТ: АСТ МОСКВА: ХРАНИТЕЛЬ, 2006. — С. 19.",
-    "https://db.chgk.info/question/1138212",
-    "https://gotquestions.online/packs/4673/1"
+    "https://photar.ru/evgenij-xaldej-velikij-fotograf-minuvshej-epoxi/",
+    "https://www.zakovatklubi.uz/open-question/view/26514"
    ],
-   "authors": [
-    "Boris Monosov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1174694400
+   "created_at": 1754697600
   },
   {
-   "id": 900425800,
-   "question_id": 425800,
-   "package_id": 904492,
-   "index": 1,
-   "round": 0,
-   "text": "«Absurdopediya» maqolalaridan birida ta’kidlanishicha, uning tanasi mutlaq qora, u ideal gazdan nafas oladi, harakat trayektoriyasi esa sikloidani tashkil etadi. Uni nomlang.",
-   "answer": "Vakuumdagi sferik ot / vakuumdagi sferik ot...",
-   "comment": "Fizikadagi mavhum va hayotiy bo‘lmagan modellarga nisbatan qo‘llaniladigan mashhur «vakuumdagi sferik ot» iborasiga Absurdopediyada berilgan parodiyaviy ta’rif.",
-   "accepted": [
-    "vakuumdagi sferik ot..."
-   ],
-   "sources": [
-    "http://absurdopedia.wikia.com/wiki/Сферический_конь_в_вакууме",
-    "https://db.chgk.info/question/696341",
-    "https://gotquestions.online/packs/4640/1"
-   ],
-   "authors": [
-    "Mixail Podgorbunskix"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1176508800
-  },
-  {
-   "id": 900367692,
-   "question_id": 367692,
-   "package_id": 904640,
-   "index": 1,
+   "id": 900017520,
+   "question_id": 17520,
+   "package_id": 907348,
+   "index": 2,
    "round": 1,
-   "text": "«Ofis-samurayi yo‘li» qo‘llanmasiga ko‘ra, U ham qo‘lingdagi qilich, ham butun dunyoga kamtarona topshiradigan ipingdir (bo‘ynig‘ingdir). Shuningdek, UNI stol ustiga qo‘yish odabsizlik ekani ta’kidlanadi, chunki kalbi mutlaq soflik va tin tiniqlikka erishgan odamlar bunday qo‘pol namoyishga muhtoj emaslar. U nima?",
-   "answer": "Mobil telefon / Mobil telefon",
-   "comment": "O‘yin davomida mobil telefonlarni o‘chirib qo‘yish kerakligini yana bir bor eslatib o‘tamiz.",
-   "accepted": [
-    "Mobil telefon"
-   ],
+   "text": "“Kichkina shahzoda” asari birinchi marta 1943-yilda Nyu-Yorkda nashr etilgan. Asarning muallif vatanida 1945-yilga kelibgina nashr etilishi sababi – ish rejimi tufayli asarning ta’qiqqa tushgani edi.\nSavol: Savol matnidagi so‘zlardan birida tushib qolgan 2 harfni yozib bering.",
+   "answer": "V I",
+   "comment": ": 1940-45-yillarda Fransiyada rasman betaraf bo‘lsa-da, aslida natsistlar manfaatini ko‘zlab faoliyat yurituvchi Vishi rejimi amalda bo‘lgan. Ushbu rejim tomonidan erksevar adib Antuan de Sent Ekzyuperi ta’qiqqa tushirilgan. Shu sababli asar 1945-yilga kelibgina nashrdan chiqqan.",
    "sources": [
-    "http://www.getnew.biz/2006/04/13/dzaybattsu-do-put-ofis-samuraya/",
-    "https://db.chgk.info/question/950650",
-    "https://gotquestions.online/packs/4844/1"
+    "https://ru.wikipedia.org/wiki/Маленький_принц",
+    "https://www.zakovatklubi.uz/open-question/view/18348"
    ],
    "authors": [
-    "Aleksandr Smerdov"
+    "Bohodir Anorov Qobiljon o‘g‘li"
    ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1203465600
-  },
-  {
-   "id": 900146393,
-   "question_id": 146393,
-   "package_id": 904773,
-   "index": 1,
-   "round": 1,
-   "text": "«Sobinbank»ning har qanday mijozi ish kuni davomida atigi 500 rubl evaziga BU ISHNI QILISHI mumkin. Bi-bi-si yangiliklar saytiga ko‘ra, «Portsmut» tarbiyalanuvchisi Mark Barrous BU ISHNI bor-yo‘g‘i 2 soniyada amalga oshirib, eng tezkoriga aylangan. BU ISHNI QILISH nima ekanligini aytsangiz, siz BU ISHNI QILGAN bo‘lasiz.",
-   "answer": "Hisobni ochish / Hisob ochish",
-   "comment": "«Sobinbank»da hisob-kitob varag‘i (hisob) ochish mumkin, futbolchi Mark Barrous esa 2-soniyada hisobni ochib, eng tezkor gol muallifiga aylangan. Savolga to‘g‘ri javob bersangiz, siz ham o‘yinda hisobni ochasiz.",
-   "accepted": [
-    "Hisob ochish"
-   ],
-   "sources": [
-    "http://news.bbc.co.uk/hi/russian/sport/newsid_3608000/3608419.stm",
-    "https://db.chgk.info/question/917151",
-    "https://gotquestions.online/packs/4855/1"
-   ],
-   "authors": [
-    "Olga Neumivakina , Yevgeniy Yarkov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1197072000
-  },
-  {
-   "id": 900038803,
-   "question_id": 38803,
-   "package_id": 904515,
-   "index": 1,
-   "round": 1,
-   "text": "Birinchi savolni tinglang.\n1859-yilda mashhur amerikalik jurnalist va siyosatchi Xoras Grili \"Brigam Yang bilan ikki soat\" sarlavhali maqolasini chop etadi. Endi esa ayting-chi: mashhur bo‘lib ketgan ushbu maqola nima deb hisoblanadi?",
-   "answer": "birinchi intervyu / birinchi chop etilgan intervyu",
-   "comment": "Ushbu maqola jurnalistika tarixiga birinchi intervyu sifatida kirgan.",
-   "accepted": [
-    "birinchi chop etilgan intervyu"
-   ],
-   "sources": [
-    "S. Kvale, \"Dominance Through Interviews and Dialogues,\" Qualitative Inquiry, 2006, 12(3), p. 480-500.",
-    "http://encarta.msn.com/sidebar_762504227/two_hours_with_brigham_young.h…",
-    "https://db.chgk.info/question/877816",
-    "https://gotquestions.online/packs/4607/1"
-   ],
-   "authors": [
-    "Yevgeniy Finkel"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1228608000
-  },
-  {
-   "id": 900144443,
-   "question_id": 144443,
-   "package_id": 904779,
-   "index": 1,
-   "round": 1,
-   "text": "1999-yildan 2008-yilgacha AQSH zarbxonasi o‘z shtatlarining diqqatga sazovor joylariga bag‘ishlangan 25 sentlik tangalar seriyasini zarb etdi. Ushbu seriyadagi birinchi tanga Delaver shtatining «chertvertak»i edi. Siz esa ushbu tanganing reversidagi yozuvni tiklashingiz kerak.",
-   "answer": "«Birinchi shtat» / Birinchi shtat; First State",
-   "accepted": [
-    "Birinchi shtat; First State"
-   ],
-   "sources": [
-    "http://ru.wikipedia.org/wiki/Двадцатипятицентовики_пятидесяти_штатов",
-    "https://db.chgk.info/question/679281",
-    "https://gotquestions.online/packs/4726/1"
-   ],
-   "authors": [
-    "Georgiy Jarkov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1210464000
+   "created_at": 1714780800
   }
  ],
  "fields": [
@@ -520,5 +475,5 @@
   "sources",
   "text"
  ],
- "average_bytes": 885
+ "average_bytes": 860
 }

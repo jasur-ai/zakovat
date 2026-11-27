@@ -1,35 +1,18 @@
-[list] page 111: 30 cards · 219 pages · 6560 packages announced
-[list] 25/108 pages · 780 packages
-[list] 50/108 pages · 1530 packages
-[list] 75/108 pages · 2280 packages
-[list] 100/108 pages · 3030 packages
-[list] 108/108 pages · 3260 packages
-[import] 3260 packages listed · 3300 already stored · 3260 to fetch
+[import] package 7732: no questions parsed (site says 0)
+[import] package 7733: no questions parsed (site says 0)
+[list] page 1: 30 cards · 42 pages · 1238 packages announced
+[list] 25/41 pages · 780 packages
+[list] 41/41 pages · 1238 packages
+[import] 1238 packages listed · 6560 already stored · 1238 to fetch
 [import] dedupe against 30378 known questions
-[import] 150 packages · 9476 questions · 23 shards · 1 duplicates skipped
-[import] 300 packages · 18145 questions · 24 shards · 1 duplicates skipped
-[import] 450 packages · 26479 questions · 25 shards · 2 duplicates skipped
-[import] 600 packages · 36462 questions · 26 shards · 2 duplicates skipped
-[import] 750 packages · 47149 questions · 27 shards · 4 duplicates skipped
-[import] 900 packages · 58140 questions · 28 shards · 4 duplicates skipped
-[import] 1050 packages · 69306 questions · 29 shards · 4 duplicates skipped
-[import] 1200 packages · 80207 questions · 30 shards · 4 duplicates skipped
-[import] 1350 packages · 90076 questions · 31 shards · 4 duplicates skipped
-[import] 1500 packages · 101132 questions · 32 shards · 4 duplicates skipped
-[import] 1650 packages · 112455 questions · 33 shards · 5 duplicates skipped
-[import] 1800 packages · 123677 questions · 34 shards · 7 duplicates skipped
-[import] 1950 packages · 133123 questions · 35 shards · 7 duplicates skipped
-[import] 2100 packages · 141385 questions · 36 shards · 7 duplicates skipped
-[import] 2250 packages · 151873 questions · 37 shards · 8 duplicates skipped
-[import] 2400 packages · 161672 questions · 38 shards · 10 duplicates skipped
-[import] 2550 packages · 173397 questions · 39 shards · 11 duplicates skipped
-[import] 2700 packages · 183252 questions · 40 shards · 12 duplicates skipped
-[import] 2850 packages · 197964 questions · 41 shards · 12 duplicates skipped
-[import] 3000 packages · 209054 questions · 42 shards · 18 duplicates skipped
-[import] 3150 packages · 217019 questions · 43 shards · 24 duplicates skipped
-[import] done: {'packages': 3260, 'questions': 226754, 'duplicates': 29, 'failed': 0, 'empty': 0, 'images': 5935, 'missing': 0}
-[import] sample → data/turnirlar/sample.json (15848 bytes)
-packages 6560 questions 381473 shards 44 bytes 110415537
+[import] 150 packages · 820 questions · 45 shards · 6231 duplicates skipped
+[import] 300 packages · 1946 questions · 46 shards · 11222 duplicates skipped
+[import] 450 packages · 2896 questions · 47 shards · 14155 duplicates skipped
+[import] 600 packages · 4034 questions · 48 shards · 16811 duplicates skipped
+[import] 750 packages · 5915 questions · 49 shards · 19949 duplicates skipped
+[import] done: {'packages': 844, 'questions': 6915, 'duplicates': 21546, 'failed': 0, 'empty': 392, 'images': 794, 'missing': 2}
+[import] sample → data/turnirlar/sample.json (17689 bytes)
+packages 7404 questions 388388 shards 50 bytes 112397517
   {"id": 906457, "source_id": 6457, "title": "Draje-3", "questions": 36, "rounds": 3, "date": "16.04.2024", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6457", "images": 1, "shard":
   {"id": 906146, "source_id": 6146, "title": "Sibir ligasi. IV tur", "questions": 36, "rounds": 1, "date": "23.02.2025", "section": "", "origin": "IQGA", "url": "https://turnirlar.uz/savollar/paket/6146", "images": 1, "sha
   {"id": 906529, "source_id": 6529, "title": "OVSCH. 3-bosqich", "questions": 36, "rounds": 3, "date": "17.02.2026", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6529", "images": 4,
