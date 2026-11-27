@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-27T17:28:23+00:00",
+ "generated_at": "2026-11-27T17:30:34+00:00",
  "listed_packages": [
   {
    "source_id": 7794,
@@ -261,206 +261,185 @@
  ],
  "questions": [
   {
-   "id": 900559880,
-   "question_id": 559880,
-   "package_id": 907800,
+   "id": 900029178,
+   "question_id": 29178,
+   "package_id": 907742,
    "index": 1,
    "round": 1,
-   "text": "Mexanik turk bilan shaxmat o‘ynamoqchi bo‘lganlarga Volfgang fon Kempelen ikkita shart qo‘ygan. Mexanik turk oq figuralarda o‘ynaydi va BU ISHNI QILADI.\nSavol: Bu ishni qilish bilan almashtirilgan so‘zlarni yozib bering.",
-   "answer": "Birinchi yurishni amalga oshiradi.",
-   "comment": "Mexanik turk 1770-yilda yaratilgan. Bu vaqtda ham shaxmatni oqlar boshlab bergan, ammo aynan oq figuralar birinchi yurishni amalga oshirishi haqidagi qoida mustahkamlab qo‘yilmagan edi. Ushbu qoida 19-asr oxirida kiritilgan.",
-   "accepted": [
-    "Ma’nodosh javoblar."
-   ],
+   "text": "Marvel’ning «What If…?» multserialida Yerda ko‘ngilxushlik qilib yurgan Tor onasi Yerga kelayotganini eshitib, shosha-pisha o‘zi va do‘stlari keltirib chiqargan tartibsizliklarni bartaraf eta boshlaydi. Shu jarayonda u uni ham to‘g‘rilab qo‘yadi. Uning og‘irligi taxminan 16 ming tonna.\n\nSavol: Uni ikki so‘zda yozib bering.",
+   "answer": "Piza minorasi",
    "sources": [
-    "https://en.wikipedia.org/wiki/Mechanical_Turk",
-    "https://aif.ru/sport/other/pochemu_belye_figury_hodyat_pervymi"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://en.wikipedia.org/wiki/What_If..._Thor_Were_an_Only_Child%3F",
+    "https://www.zakovatklubi.uz/open-question/view/30127"
    ]
   },
   {
-   "id": 900559881,
-   "question_id": 559881,
-   "package_id": 907800,
+   "id": 900029179,
+   "question_id": 29179,
+   "package_id": 907742,
    "index": 2,
    "round": 1,
-   "text": "Diqqat, savolda almashtirish bor.\nAbduqodir Husanov uzoq vaqt Ravshan Haydarov boshqaruvi ostida o‘ynagan. Husanov haqida ijobiy fikrlarni aytar ekan, Haydarov hozirga kelib Abduqodirning X Factori qandayligini eslay olmasligini aytadi.\nSavol: Savolda almashtirilganni unli harflari bir xil so‘z bilan yozib bering.",
-   "answer": "Ovoz.",
-   "comment": "Murabbiy Husanovning odobli, kamgapligini ta’kidlar ekan, u bilan haftalab yig‘inlarda ishtirok etgan bo‘lsa-da, hozirga kelib Abduqodirning ovozi qandayligini eslay olmasligini aytadi. Savolda O‘zbekistondagi bir musiqiy loyiha nomi boshqasi bilan almashtirilgandi.",
+   "text": "Hazil videoda kassir xaridor sifatida kelgan Undan 18 yoshga to‘lganini tasdiqlovchi hujjat so‘raydi. U hujjat o‘rniga arrani olib bir ish qiladi. Video so‘nggida U alkogol bilan do‘konni tark etadi.\n\nSavol: Aytingchi uning ismi nima?",
+   "answer": "Buratino",
+   "comment": "Buratino bir qismini arralab kassirga beradi. Daraxt tanasidagi yillik halqalarni sanash daraxtning yoshini aniqlashga yordam beradi. Savol formasida chaqiriq sizga yordam berdi deb umid qilamiz.",
    "sources": [
-    "https://youtu.be/VHYWXTtYEFs?t=1503"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://www.instagram.com/reel/Dba2YgcNXa3/?igsh=eWdjNWpodzRpZGpj",
+    "https://www.zakovatklubi.uz/open-question/view/30128"
    ]
   },
   {
-   "id": 900559882,
-   "question_id": 559882,
-   "package_id": 907800,
+   "id": 900029180,
+   "question_id": 29180,
+   "package_id": 907742,
    "index": 3,
    "round": 1,
-   "text": "Chingiz Aytmatovning so‘zlariga ko‘ra, bir qirg‘iz fuqarosi mamlakat konstitutsiyasiga «oltin» to‘g‘risida qo‘shimcha kiritishni taklif qilgan. Taklifga ko‘ra xalq g‘amini o‘ylagan rahbarlarga beriladigan faxriy unvon nomida «oltin» so‘zi bo‘lishi kerak edi.\nSavol: Savol matnida ikki o‘rinda almashtirilgan so‘zni yozib bering.",
-   "answer": "Duo.",
-   "comment": "Qirg‘izistonlikning taklifiga ko‘ra, o‘z xalqi uchun mehnati singgan, og‘ir damlarda xalqni yolg‘izlatib qo‘ymagan rahbarlar duo qilinadi. Unday rahbarlar o‘sha daqiqadan boshlab «Duo olgan inson» degan faxriy unvonga sazovor bo‘ladi. O‘zbek maqolida «oltin olma, duo ol» deyiladi.",
+   "text": "\"3 tana muammosi\" serialida qahramon Unga sovg‘a qilingan oltin baliqqa IKS ismini beradi. “Qizil”dagi 17 tadan biri - IKS.\n\nSavol: IKSni toping.",
+   "answer": "Pushkin",
+   "comment": "Qahramon Pushkinning \"Oltin baliq\" ertagini eslaydi. Chilonzor metro liniyasi ko‘pgina metro haritasida qizil rangda tasvirlanadi.",
    "sources": [
-    "Ch. Aytmatov, M. Shoxonov, «Cho‘qqida qolgan ovchining ohi zori». «Zabarjad Media», 2023-yil. 276-bet."
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://three-body-problem.fandom.com/wiki/The_Stars_Our_Destination",
+    "https://uz.wikipedia.org/wiki/Toshkent_metropoliteni",
+    "https://www.zakovatklubi.uz/open-question/view/30129"
    ]
   },
   {
-   "id": 900559883,
-   "question_id": 559883,
-   "package_id": 907800,
+   "id": 900029181,
+   "question_id": 29181,
+   "package_id": 907742,
    "index": 4,
    "round": 1,
-   "text": "Chernobil fojiasi — SSSR intihosi sabablaridan biri hisoblanadi. Chernobil AESdagi fojiaga bag‘ishlangan hujjatli film boshida televizor orqali U namoyish etilayotgani ko‘rsatiladi.\nSavol: Uni yozib bering.",
-   "answer": "«Oqqush ko‘li» baleti.",
-   "comment": "SSSRda televizor orqali «Oqqush ko‘li» baleti namoyish etilishi mamlakatda jiddiy siyosiy o‘zgarishlar bo‘layotgani belgisi hisoblangan. Brejnev, Andropov va Chernenko vafot etganida, shuningdek, SSSR parchalanishiga olib kelgan 1991-yildagi Avgust voqealari paytida ham televideniye orqali «Oqqush ko‘li» namoyish etilgan.",
+   "text": "Bu savol ba’zi jamolar uchun BO‘SHLIQ bo‘lmaydi deb umid qilamiz.\n\nFaoliyatini 1967-yil boshlagan Al Pachino 1993-yil Oskarni qo‘lga kiritadi. U nutqi boshida xazillashib akademiyani qandaydir ma’noda Bo‘shliq deb ataydi.\n\nSavol: BO‘SHLIQni ikki so‘zda yozib bering.",
+   "answer": "Strayk buzuvchi",
+   "comment": "Al Pachino 6 ta nominatsiyadan so‘ng “Ayol ifori” filmidagi roli uchun Oskarni qo‘lga kiritadi va shu tariqa o‘ziga xos straykini buzgani uchun akademiyaga raxmat aytadi. Ba’zi jamoalar bu savol o‘qilmasidan oldin strayk qilib kelishayotgan bo‘lishi mumkin edi. Bu zanjirni buzmadik deb umid qilamiz.",
    "sources": [
-    "https://ru.wikipedia.org/wiki/Лебединое_озеро",
-    "Chernobyl: The Lost Tapes"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://aaspeechesdb.oscars.org/link/065-1",
+    "https://www.zakovatklubi.uz/open-question/view/30130"
    ]
   },
   {
-   "id": 900559884,
-   "question_id": 559884,
-   "package_id": 907800,
+   "id": 900029182,
+   "question_id": 29182,
+   "package_id": 907742,
    "index": 5,
    "round": 1,
-   "text": "Abdulla Qahhor «Uning hikoyalarida Minorayi Kalon ham kulib turganga o‘xshaydi» degan. Abdulla Qahhorga U bilan ko‘rishish nasib etmagan.\nSavol: U kim?",
-   "answer": "Ne’mat Aminov.",
-   "comment": "O‘zbek hajviy adabiyoti namoyondasi Ne’mat Aminov Buxoroda tug‘ilgan. Abdulla Qahhor Ne’mat Aminovning asarlariga yuksak baho bergan, ammo o‘zi bilan ko‘rishish nasib etmagan.",
+   "text": "Bir gruzin filmida ovulga kelgan otda kelgan sayyoh yigitga murojaat qiladi.\n\nSayyohning iltimosiga salbiy javob berarkan yigit kinoya bilan otingni tokka bog‘lab qo‘y deydi.\n\nSavol: Sayyoh nima so‘ragan?",
+   "answer": "Vino",
+   "comment": "Chanqagan sayyoh vino so‘raydi. Kambag‘al uyda yashovchi aqlli yigit otni mavjud bo‘lmagan tokka bo‘g‘la deb vino yo‘qligiga ishora qiladi.",
    "sources": [
-    "Said Ahmad, «Yo‘qotganlarim va topganlarim», «Sharq» nashriyot-matbaa konserni. 2000-yil. 111-bet va 126-bet."
+    "https://www.kinopoisk.ru/film/317149/?socialAlias=MTc1ODY1ODUx",
+    "https://www.zakovatklubi.uz/open-question/view/30131"
    ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+   "badges": [
+    "Duplet · 1/2"
    ]
   },
   {
-   "id": 900559885,
-   "question_id": 559885,
-   "package_id": 907800,
+   "id": 900029184,
+   "question_id": 29184,
+   "package_id": 907742,
    "index": 6,
    "round": 1,
-   "text": "Bir roman qahramoni it sotib olishga boradi. Sotuvchi itni juda maqtaydi va itning shajarasi Ungacha borishini ta’kidlaydi.\nSavol: Uni ikki so‘zda yozib bering.",
-   "answer": "Nuh kemasi.",
-   "comment": "Sotuvchi itni maqtar ekan, shajarasi Nuh kemasigacha borishini aytadi.",
+   "text": "Nitshe Zardushti 30 yoshga to‘lgach ilm izlab tog‘ yon bag‘irlariga tarki dunyo qiladi. 10 yil o‘tgach o‘zini ALFA ga qiyoslab ortga qaytadi. 2015-yil Ruan Lyanmin 63.7 kilogramlik ALFAli mantiyani “kiyib” rekord o‘rnatadi.\nSavol: ALFA ni toping.",
+   "answer": "Asalari",
+   "comment": "Zardusht 10 yildan so‘ng donoligi oshib ketadi. U qaytib donoligini odamlar bilan bo‘lishishni istaydi. Bu holatni asal yig‘ish uchun chiqqan asalariga o‘xshatadi. Qaysadir ma’noda, asalga to‘lgan asalari uyiga qaytadi.",
    "sources": [
-    "Erix Mariya Remark, «Uch og‘ayni»."
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "Фридрих Ницше, «Так говорил Заратустра». Издательство «АСТ Москва», 2015. Страница 66.",
+    "https://www.zakovatklubi.uz/open-question/view/30132"
    ]
   },
   {
-   "id": 900559886,
-   "question_id": 559886,
-   "package_id": 907800,
+   "id": 900029185,
+   "question_id": 29185,
+   "package_id": 907742,
    "index": 7,
    "round": 1,
-   "text": "Donald Tramp administratsiyasi 100 dan ortiq davlatlar uchun savdo bojlari joriy etdi. Bu mavzudagi karikaturada Trampga chizilgan mo‘ylov U ko‘rinishida tasvirlangan. Videoo‘yinlarning eng buyuk personajlari ro‘yxatida 47-o‘rinda joylashgan qahramonda U ko‘rinishidagi tatuirovka bor.\nSavol: U nima?",
-   "answer": "Shtrixkod.",
-   "comment": "Shtrixkodga qarab tovarlarning qaysi mamlakatdan ekanligini bilish mumkin. Hitman o‘yinlar seriyasi qahramoni Agent 47 Gamesradar tomonidan tuzilgan videoo‘yinlarning eng buyuk personajlari ro‘yxatida 47-o‘ringa joylashtirilgan. Agent 47 ning boshida shtrixkod tatuirovkasi bor.",
+   "text": "Savolda advokat va YTH - almashtirishlar.\n\nEmili Uilson Nolanning Odisseyasini tanqid qilar ekan, Kalipso tekin advokatga aylanib, Troya urushidan keyin Odisseyga YTH bilan kurashishda yordam beradi, deydi.\n\nSavol: Almashtirilgan so‘zlarni originalida yozib bering.",
+   "answer": "psixoterapevt va PTSB",
+   "comment": "Filmda Kalipso Odisseyga Troya urushidan so‘ng urush asoratarini yengish uchun yordam bergani ko‘rsatilgan. Post travmatik stress buzilishi - odatda urushdan qaytgan harbiylarda uchraydigan sindrom.",
    "sources": [
-    "https://www.cartoonmovement.com/cartoon/barcode-mustache",
-    "https://ru.wikipedia.org/wiki/Агент_47"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://www.lrb.co.uk/the-paper/v48/n14/emily-wilson/an-uncomplicated-m…",
+    "https://www.zakovatklubi.uz/open-question/view/30133",
+    "https://www.lrb.co.uk/the-paper/v48/n14/emily-wilson/an-uncomplicated-man"
    ]
   },
   {
-   "id": 900559887,
-   "question_id": 559887,
-   "package_id": 907800,
+   "id": 900029186,
+   "question_id": 29186,
+   "package_id": 907742,
    "index": 8,
    "round": 1,
-   "text": "Savolda ALFA almashtirish hisoblanadi.\nSaid Ahmad qamalib chiqqanidan so‘ng ALFAsini eshitganda har safar qo‘rqib ketgan. G‘arbiy yevropalik rassom Lyuve ko‘rgazmalar oldidan suratlarini hech kim sotib olmasligidan xavotirlanadi.\nSavol: Lyuvening ALFAsini yozib bering.",
-   "answer": "Van Gog.",
-   "comment": "Lyuve mashhur rassom Vinsent van Gogning ukasi Teoning avlodi hisoblanadi. Ko‘rgazmalar oldidan Lyuve «Suratlarimni hech kim sotib olmasachi? Axir men Van Gogman-ku…» deb xavotirlanadi. Ammo xavotirlariga qaramay, uning ishlari yaxshi ketmoqda. Vinsent van Gog hayoti davomida bironta ham suratini sota olmagani aytiladi.",
+   "text": "Шесть Элче\nSavolda bir so‘z ikki joyda almashgan.\n\nFutbol mavzusida faoliyat yuritadigan bir Telegram kanali tarixida 2019-yil 2-iyunda rebrending sodir bo‘lgan.\n\nSavol: Savol muallifi fikricha, kanal egalari mantiqiga ko‘ra, keyingi shunday rebrending qachon bo‘lishi mumkinligini aniq yozib bering",
+   "answer": "“Liverpul” Chempionlar Ligasidagi yettinchi kubogini qo‘lga kiritganidan keyin.",
+   "comment": "Savolda rebrending reneyming so‘zi o‘rnida kelgan.\n2019-yil 2-iyunda “Liverpul” oltinchi marta Chempionlar Ligasida g‘olib bo‘lgan. Ruscha “ЛЧ” — “Лига чемпионов” qisqartmasi. “Шесть ЛЧ” talaffuzda “Шесть Элче”ga yaqin eshitiladi. Shuning uchun keyingi reneyming “Liverpul”ning yettinchi Chempionlar Ligasi kubogi bilan bog‘liq bo‘lishi mumkin.",
    "sources": [
-    "Shodmon Otabek, «Do‘rmon hangomalari».",
-    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zd…",
-    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zdes-ya-kak-naslednik-velikogo-hudojnika-sozdaet-iskusstvo-pod-tehno-i-soul/"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "Шесть Элче telegram kanali va muallif fikrlari.",
+    "https://www.zakovatklubi.uz/open-question/view/30134"
    ]
   },
   {
-   "id": 900559888,
-   "question_id": 559888,
-   "package_id": 907800,
+   "id": 900029187,
+   "question_id": 29187,
+   "package_id": 907742,
    "index": 9,
    "round": 1,
-   "text": "Lyuve van Gog pitbul zotli iti bilan ko‘chalarni sayr qilishi haqida gapirar ekan, o‘zini Qadimiy Misrda tug‘ilgan Unga qiyoslaydi.\nSavol: Uning ismini yozib bering.",
-   "answer": "Muso.",
-   "comment": "Lyuve iti bilan gavjum ko‘chada sayr qilganda, odamlar unga va itiga yo‘l ochgani uchun Lyuve o‘zini Musoga qiyoslagan. Muso payg‘ambar Qizil dengizdan o‘tayotganida dengiz ikkiga ajralib, unga yo‘l ochilgan.",
-   "sources": [
-    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zd…",
-    "https://ru.wikipedia.org/wiki/Моисей",
-    "https://www.mentoday.ru/heroes/ordinary-heroes/nastoyashchii-van-gog-zdes-ya-kak-naslednik-velikogo-hudojnika-sozdaet-iskusstvo-pod-tehno-i-soul/"
+   "text": "Janamen - bu og‘irligi juda katta insonlarni ozdirishga yordam beradigan loyiha. Unda har oyning birinchi kuni ishtirokchilar oldindan belgilangan normalarda ozganligi yoki ozmaganligini tekshiriladi. Aytilishicha, barcha ishtirokchilarning yakuniy orzusi X ni ko‘rish. X ham X.\nSavol: Xni 3 ta so‘z ishtirokida yozib bering.",
+   "answer": "Ikki xonali son / Tarozdagi ikki xonali son",
+   "comment": "Loyihada asosan 200kg, 300 kg ga yaqin vaznli ishtirokchilar qatnashadi. Barchaning orzusi 100 kgdan pastga tushish. Rim raqamidagi X ya’ni 10 ham ikki xonali son.",
+   "accepted": [
+    "Tarozdagi ikki xonali son"
    ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+   "sources": [
+    "https://www.youtube.com/watch?v=Amq9h4Tejv4",
+    "https://www.zakovatklubi.uz/open-question/view/30135"
    ]
   },
   {
-   "id": 900559889,
-   "question_id": 559889,
-   "package_id": 907800,
+   "id": 900029188,
+   "question_id": 29188,
+   "package_id": 907742,
    "index": 10,
    "round": 1,
-   "text": "O‘zbek filmida qishloqdan shaharga kelgan qahramonning xotini yo‘qolib qoladi. Xotinini topib kelgan kishini qahramon duo qilar ekan, «Sochilib yotgan IKSlaringiz birlashib, katta IKSga aylansin» deydi.\nSavol: IKSni yozib bering.",
-   "answer": "Yulduz.",
-   "comment": "«Aka Sharif Toshkentda» filmi qahramoni yulduz deganda militsionerning pogonidagi yulduzlarni nazarda tutgandi. Aka Sharif kapitan unvoniga ega militsionerning martabasi yuqori bo‘lishini so‘rab duo qiladi.",
+   "text": "Bir detektiv serialida qotillik qurboni katakombadan topiladi. Ma’lum bo‘lishicha, jasad tepadan o‘pirilib tushgan yer qatlami bilan birga pastga qulagan. Qaxramon qotillik sodir bo‘lgan nuqtani aniqlash uchun avval arxivga yo‘l oladi. Aniqlik uchun IKSni bir xil tanlash kerakligini qo‘shimcha qiladi.\n\nSavol: IKS ni kelib chiqishi nemischa bo‘lgan so‘zda yozib bering.",
+   "answer": "masshtab",
+   "comment": "Qotillik joyi shaharning karyer tomi o‘pirilgan nuqtasiga to‘g‘ri keladi. Uni aniqlash uchun karyer rejasi va shahar xaritasini solishtirish kerak edi. Bunday solishtirish aniq bo‘lishi uchun xaritalar bir xil masshtabda bo‘lishi lozim.",
    "sources": [
-    "«Aka Sharif Toshkentda» filmi (1995-yil). 42-minut"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://www.themoviedb.org/tv/88384-astrid-et-raphaelle/season/1/episod…",
+    "https://www.zakovatklubi.uz/open-question/view/30136",
+    "https://www.themoviedb.org/tv/88384-astrid-et-raphaelle/season/1/episode/5"
    ]
   },
   {
-   "id": 900559890,
-   "question_id": 559890,
-   "package_id": 907800,
+   "id": 900029189,
+   "question_id": 29189,
+   "package_id": 907742,
    "index": 11,
    "round": 1,
-   "text": "Savolda bir so‘zdan harflar tushirib qoldirilgan.\n«Doctor Who» serialida o‘z-o‘zini modernizatsiya qilgan vaqt mashinasida U paydo bo‘ladi. Shundan keyin qahramonlardan biri Doktorga «21-asrga yetib kelding» deydi. Qahramonning so‘ziga qaramay, Ular Qadimiy Yunonistonda, misol uchun, Asklepiy ibodatxonalarida ham bo‘lgan.\nSavol: Harflari tushirib qoldirilgan o‘zlashgan so‘zni asl holida yozib bering.",
-   "answer": "Pandus.",
-   "comment": "«Doctor Who» serialining 2023-yildagi qismlaridan birida vaqt mashinasi hisoblangan TARDISga chiqishda pandus paydo bo‘ldi. Tibbiyot ma’budi Asklepiy ibodatxonasiga bemorlar kelishi tabiiy. Ularga qulaylik yaratish uchun panduslar o‘sha paytdayoq qurilgan.",
+   "text": "Savolda bir so‘z biroz o‘zgartirilgan.\n\nTinkov sarmoya kiritgan, 2023-yilda Meksikada tashkil etilgan fintex startapning nomi “Palata” deb ataladi. Kompaniyaning asosiy mahsuloti — cashback dasturiga ega kredit kartalar.\n\nSavol: O‘zgartirilgan so‘zni yozib bering.",
+   "answer": "Plata",
+   "comment": "Meksikada ispan tili keng tarqalgan. Ispan tilida plata “kumush” degan ma’noni anglatadi, so‘zlashuv tilida esa “pul” ma’nosida ham ishlatiladi. Shu sababli pul bilan bog‘liq kompaniya uchun Plata nomi mantiqan mos keladi.",
    "sources": [
-    "Doctor Who, The Giggle. 54-daqiqa",
-    "https://knife.media/ancient-greece-ramps/"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+    "https://ru.wikipedia.org/wiki/Plata",
+    "https://www.zakovatklubi.uz/open-question/view/30137"
    ]
   },
   {
-   "id": 900559891,
-   "question_id": 559891,
-   "package_id": 907800,
+   "id": 900029190,
+   "question_id": 29190,
+   "package_id": 907742,
    "index": 12,
    "round": 1,
-   "text": "Qozog‘istonlik polvon Hojimuqonning bo‘yi deyarli 2 metr, og‘irligi 150 kg atrofida bo‘lgan. Shoir Muxtor Shoxonov bir tomoshadan so‘ng Hojimuqon ularning uyida mehmon bo‘lganini eslar ekan, Hojimuqonning IKSi IGREKday kelishini aytadi.\nSavol: IKS va IGREKni dastlabki to‘rt harfi bir xil bo‘lgan ikki so‘zda yozib bering.",
-   "answer": "Dastro‘mol, dasturxon.",
-   "comment": "Muxtor Shoxonovning eslashicha, uy to‘rida o‘tirgan Hojimuqonning yuzidan tinimsiz ter oqar, polvon dasturxonday keladigan dastro‘moli bilan terlarini artgan.",
-   "sources": [
-    "Ch.Aytmatov, M.Shoxonov, «Cho‘qqida qolgan ovchining ohi zori». «Zabarjad Media», 2023-yil. 116-bet."
+   "text": "1907-yilda ommalashgan ushbu jumboqda 9 ta nuqtani qalamni uzmasdan atigi 4 ta to‘g‘ri chiziq yordamida birlashtirish talab etiladi. Jumboq ilk bor ommaga tarqatilganida, uning noodatiy yechimi ko‘pchilikni o‘yga soldirgan bo‘lsa ajab emas. Uning eng mashhur yechimi esa BO‘SHLIQ iborasining muomalaga kirishiga sabab bo‘lgan, deb ishoniladi.\nSavol: BO‘SHLIQni aniq yozib bering.",
+   "answer": "Thinking outside the box",
+   "comment": "Ekranda jumboqning eng ommabop yechimini ko‘rib turibsiz. Ushbu yechimga erishish uchun nuqtalar hosil qilgan xayoliy chegaradan biroz tashqariga chiqish kerak bo‘ladi.",
+   "attachments": [
+    "https://turnirlar.uz/savollar/api/media/pub/archive/zakovatklubi/x0d6a74f3fc20d553c6321097f7df7f9e1b6713ac23d7829c537f6bde66cd2035.webp"
    ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
+   "sources": [
+    "https://en.wikipedia.org/wiki/Nine_dots_puzzle",
+    "https://www.zakovatklubi.uz/open-question/view/30138"
+   ],
+   "badges": [
+    "Rasmli"
    ]
   }
  ],
@@ -479,5 +458,5 @@
   "sources",
   "text"
  ],
- "average_bytes": 845
+ "average_bytes": 836
 }

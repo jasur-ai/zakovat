@@ -39,6 +39,61 @@ Saidakrom Rasulev Farxadovich
 
 Jamoalarga eslatma. Boshlovchi savol tartib raqamini e‘lon qilganidan so‘ng aytilgan yoki aytilmagan barcha jumlalar bevosita savolga aloqador. Boshlovc
 [probe]   --- end ---
+[probe] package-7742.html: HTTP 200 · 189217 chars → https://turnirlar.uz/savollar/paket/7742
+[probe]   rendered markup: 85337 chars · markers: {'Javob': 44, 'Qabul': 1, 'Izoh': 12, 'Manba': 13, 'Muallif': 1, 'Muharrir': 4, '-tur': 5}
+[probe]   question links: 13 · package links: 1
+[probe]   articles: 13 · tours: 1 · details: 13 · images: 2
+[probe]   badges: ['Duplet · 1/2', 'Duplet · 2/2', 'Rasmli']
+[probe]   answer labels: {'Javob:': 13, 'Manbalar:': 12, 'Izoh:': 12, 'Manba:': 1, 'Qabul:': 1}
+[probe]   non-ascii letters: ş×281, ö×122, ç×107, ğ×23, Ş×18, е×10, а×9, т×9, Ç×8, Ö×8, и×7, с×7, р×6, о×6
+[probe]   visible text: 10222 chars
+[probe]   --- first 500 chars of visible text ---
+Savollar To‘plamlar Tasodifiy to‘plam Mualliflar Taymer
+Izlash
+
+Kirish
+
+To‘plamlar
+Intellektual Marafon 5-tur Renessans Universiteti jamoasi navbatchiligi
+
+To‘plamdan qidirish
+To‘plamdan qidirish
+
+0
+
+To‘plam haqida
+To‘plam haqida :
+12 savol · 23.08.2026 · Dilshod Sharipov Shaxidjonovich
+Batafsil
+
+Savollar soni
+12
+
+Sana
+23.08.2026
+
+Muharrir
+Dilshod Sharipov Shaxidjonovich
+
+Toifa
+Professional
+
+Mashq rejimi
+Mashq
+Barcha javoblarni ochish
+Javoblar
+
+Taymer
+Saqlash
+
+Yoqdi
+0
+
+Chop etish
+Chop etish
+
+Qan
+[probe]   --- end ---
 [probe] list-1.html: HTTP 200 · 97806 chars → https://turnirlar.uz/savollar/paketlar?page=1
 [probe]   rendered markup: 33721 chars · markers: {'Javob': 0, 'Qabul': 0, 'Izoh': 0, 'Manba': 1, 'Muallif': 1, 'Muharrir': 1, '-tur': 30}
 [probe]   question links: 0 · package links: 30
@@ -165,9 +220,14 @@ Intellektual Marafon 3-tur Espero jamoasi navbatchili
 [check]   {"source_id": 7739, "title": "Intellektual Marafon 2-tur Zero jamoasi navbatchiligi", "questions": 12, "rounds": 1, "date": "23.08.2026", "section": "Professional", "authors": ["Dilshod Sharipov Shaxidjonovich"], "origin": "Zakovat klubi"}
 [check]   {"source_id": 7757, "title": "Professional va Birinchi liga yozgi mavsumi 10-tur Benom jamoasi savollari", "questions": 36, "rounds": 1, "date": "22.08.2026", "section": "Professional", "authors": ["Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"]
 [check] 60 cards listed · 0 repeated ids
+[check] package-7742.html: parsed 12 of 12 questions · meta {"title": "Intellektual Marafon 5-tur Renessans Universiteti jamoasi navbatchiligi", "Savollar soni": "12", "Sana": "23.08.2026", "Muharrir": "Dilshod Sharipov Shaxidjonovich", "Toifa": "Professional"}
+[check]   fields: {'id': 12, 'question_id': 12, 'package_id': 12, 'index': 12, 'round': 12, 'text': 12, 'answer': 12, 'sources': 12, 'comment': 11, 'badges': 2, 'accepted': 1, 'attachments': 1}
+[check]   size: 9614 bytes raw · 4010 bytes gzipped · 801 bytes per question
+[check]   {"id": 900029178, "question_id": 29178, "package_id": 907742, "index": 1, "round": 1, "text": "Marvel’ning «What If…?» multserialida Yerda ko‘ngilxushlik qilib yurgan Tor onasi Yerga kelayotganini eshitib, shosha-pisha o‘zi va do‘stlari keltirib chiqargan tartibsizliklarni bartaraf eta boshlaydi. Shu jarayonda u uni ham to‘g‘rilab qo‘yadi. Uning og‘irligi taxminan 16 ming tonna.\n\nSavol: Uni ikki so‘zda yozib bering.", "answer": "Piza minorasi", "sources": ["https://en.wikipedia.org/wiki/What_If..._Thor_Were_an_Only_Child%3F", "https://www.zakovatklubi.uz/open-question/view/30127"]}
+[check]   {"id": 900029179, "question_id": 29179, "package_id": 907742, "index": 2, "round": 1, "text": "Hazil videoda kassir xaridor sifatida kelgan Undan 18 yoshga to‘lganini tasdiqlovchi hujjat so‘raydi. U hujjat o‘rniga arrani olib bir ish qiladi. Video so‘nggida U alkogol bilan do‘konni tark etadi.\n\nSavol: Aytingchi uning ismi nima?", "answer": "Buratino", "comment": "Buratino bir qismini arralab kassirga beradi. Daraxt tanasidagi yillik halqalarni sanash daraxtning yoshini aniqlashga yordam beradi. Savol formasida chaqiriq sizga yordam berdi deb umid qilamiz.", "sources": ["https://www.instagram.com/reel/Dba2YgcNXa3/?igsh=eWdjNWpodzRpZGpj", "https://www.zakovatklubi.uz/open-question/view/30128
 [check] package-7800.html: parsed 60 of 60 questions · meta {"title": "O‘zbekiston chempionati 2025 savollari", "Savollar soni": "60", "Turlar": "4", "Sana": "16.11.2025", "Muharrir": "Saidakrom Rasulev Farxadovich", "tours": [{"title": "1-tur", "count": "15 savol"}, {"title": "2-tur", "count": "15 savol"}, {"title": "3-tur", "count": "15 savol"}, {"title": 
 [check]   fields: {'id': 60, 'question_id': 60, 'package_id': 60, 'index': 60, 'round': 60, 'text': 60, 'answer': 60, 'sources': 60, 'authors': 60, 'comment': 52, 'accepted': 10, 'badges': 7, 'attachments': 6}
 [check]   size: 51485 bytes raw · 17909 bytes gzipped · 858 bytes per question
 [check]   {"id": 900559880, "question_id": 559880, "package_id": 907800, "index": 1, "round": 1, "text": "Mexanik turk bilan shaxmat o‘ynamoqchi bo‘lganlarga Volfgang fon Kempelen ikkita shart qo‘ygan. Mexanik turk oq figuralarda o‘ynaydi va BU ISHNI QILADI.\nSavol: Bu ishni qilish bilan almashtirilgan so‘zlarni yozib bering.", "answer": "Birinchi yurishni amalga oshiradi.", "comment": "Mexanik turk 1770-yilda yaratilgan. Bu vaqtda ham shaxmatni oqlar boshlab bergan, ammo aynan oq figuralar birinchi yurishni amalga oshirishi haqidagi qoida mustahkamlab qo‘yilmagan edi. Ushbu qoida 19-asr oxirida kiritilgan.", "accepted": ["Ma’nodosh javoblar."], "sources": ["https://en.wikipedia.org/wiki/Mechanical_Tu
 [check]   {"id": 900559881, "question_id": 559881, "package_id": 907800, "index": 2, "round": 1, "text": "Diqqat, savolda almashtirish bor.\nAbduqodir Husanov uzoq vaqt Ravshan Haydarov boshqaruvi ostida o‘ynagan. Husanov haqida ijobiy fikrlarni aytar ekan, Haydarov hozirga kelib Abduqodirning X Factori qandayligini eslay olmasligini aytadi.\nSavol: Savolda almashtirilganni unli harflari bir xil so‘z bilan yozib bering.", "answer": "Ovoz.", "comment": "Murabbiy Husanovning odobli, kamgapligini ta’kidlar ekan, u bilan haftalab yig‘inlarda ishtirok etgan bo‘lsa-da, hozirga kelib Abduqodirning ovozi qandayligini eslay olmasligini aytadi. Savolda O‘zbekistondagi bir musiqiy loyiha nomi boshqasi bilan alma
-[import] sample → data/turnirlar/probe/sample.json (17353 bytes)
+[import] sample → data/turnirlar/probe/sample.json (17140 bytes)
