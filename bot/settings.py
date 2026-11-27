@@ -28,6 +28,10 @@ GAME_REFRESH = "zt|f"
 GAME_SKIP = "zt|k"
 GAME_SCORE = "zt|c"
 GAME_STOP = "zt|x"
+PREFIX_STATS = "zs"
+STATS_REFRESH = "zs|r"
+STATS_SECTIONS = "zs|b"
+STATS_EVENTS = "zs|e"
 
 
 def _default(name: str, fallback: int) -> int:
@@ -146,13 +150,14 @@ def settings_keyboard(config: GameConfig):
     return InlineKeyboardMarkup(rows)
 
 
-def game_keyboard(admin: bool = True, clock: str = ""):
+def game_keyboard(admin: bool = True, clock: str = "", clock_url: str = ""):
     """Buttons under every question message.
 
     With a clock the refresh button carries the live countdown, so the timer is
     a control that changes on every tick and answers the moment it is tapped.
+    With a clock_url the strip also offers the Mini App clock face.
     """
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
     label = f"{clock} · Vaqtni yangilash" if clock else "Vaqtni yangilash"
     row = [InlineKeyboardButton(label, callback_data=GAME_REFRESH)]
@@ -160,7 +165,13 @@ def game_keyboard(admin: bool = True, clock: str = ""):
         row.append(InlineKeyboardButton("O‘tkazish", callback_data=GAME_SKIP))
     row.append(InlineKeyboardButton("Hisob", callback_data=GAME_SCORE))
     row.append(InlineKeyboardButton("To‘xtatish", callback_data=GAME_STOP))
-    return InlineKeyboardMarkup([row])
+    rows = []
+    if clock_url:
+        # A Mini App counts down in the user's own browser: smooth, and it keeps
+        # running even when the network to the bot is slow.
+        rows.append([InlineKeyboardButton("Jonli soat", web_app=WebAppInfo(url=clock_url))])
+    rows.append(row)
+    return InlineKeyboardMarkup(rows)
 
 
 def page_keyboard(page: int, pages: int, query: str = ""):
@@ -175,4 +186,17 @@ def page_keyboard(page: int, pages: int, query: str = ""):
     if page < pages:
         row.append(InlineKeyboardButton("Oldinga ›", callback_data=page_data(page + 1, query)))
         row.append(InlineKeyboardButton("Oxiri ›|", callback_data=page_data(pages, query)))
+    return InlineKeyboardMarkup([row])
+
+
+def stats_keyboard(view: str = "main"):
+    """Buttons of the owner's statistics panel."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    row = [InlineKeyboardButton("Yangilash", callback_data=STATS_REFRESH)]
+    if view == "main":
+        row.append(InlineKeyboardButton("Bo‘limlar", callback_data=STATS_SECTIONS))
+        row.append(InlineKeyboardButton("O‘yinlar", callback_data=STATS_EVENTS))
+    else:
+        row.append(InlineKeyboardButton("Orqaga", callback_data=STATS_REFRESH))
     return InlineKeyboardMarkup([row])

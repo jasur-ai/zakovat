@@ -54,10 +54,12 @@ class FakeMessage:
         self.caption = None
         self.reply_to_message = SimpleNamespace(text=reply, caption=None) if reply else None
         self.replies = []
+        self.reply_records = []
         self.from_user = SimpleNamespace(id=1, first_name="Aziz")
 
     async def reply_text(self, text, **kwargs):
         self.replies.append(text)
+        self.reply_records.append({"text": text, **kwargs})
 
 
 def update(message):
@@ -470,7 +472,313 @@ class CommandFallbackTests(unittest.TestCase):
         self.assertIn("javob", joined)                          # to‘g‘ri javob tekshirildi
         self.assertIn("O‘tkazish 1 → ", joined)                 # admin skip
         self.assertIn("O‘YIN AVTOMATIK TO‘XTATILDI", joined)    # 3 savol javobsiz qoldi
+        self.assertIn("/stats → 1 xabar", joined)               # statistika paneli chiqdi
+        self.assertIn("STATISTIKA", joined)
         self.assertNotIn("Sinov xatoligi", joined)
+        self.assertNotIn("tugma topilmadi", joined)
+
+    def test_the_dry_run_finds_its_buttons_next_to_the_clock(self):
+        """With a public address the strip grows a Mini App row — the run must cope."""
+        async def run():
+            with mock.patch.dict(os.environ, {"WEBHOOK_URL": "https://zakovat.example"}):
+                return await webhook.self_test()
+
+        joined = "\n".join(asyncio.run(run()))
+        self.assertIn("O‘YIN AVTOMATIK TO‘XTATILDI", joined)
+        self.assertIn("STATISTIKA", joined)
+        self.assertNotIn("tugma topilmadi", joined)
+        self.assertNotIn("#ZS", joined)                         # no state leaks into the run
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class StatsAccessTests(unittest.TestCase):
+    """The statistics panel exists for one Telegram id only."""
+
+    def setUp(self):
+        from bot import stats
+
+        self.stats = stats
+        self.bot = FakeBot()
+        self.archive = Archive("data/all")
+        self.context = SimpleNamespace(
+            application=SimpleNamespace(bot_data={"archive": self.archive}),
+            bot=self.bot, args=[],
+        )
+        stats.reset()
+        self._url = stats.STORE_URL
+        stats.STORE_URL = ""            # keep the tests offline
+
+    def tearDown(self):
+        self.stats.STORE_URL = self._url
+        self.stats.reset()
+
+    def test_the_owner_id_is_the_requested_one(self):
+        self.assertEqual(self.stats.OWNER_ID, int(os.getenv("ZAKOVAT_OWNER_ID", "8004724563")))
+        self.assertEqual(self.stats.OWNER_ID, 8004724563)
+
+    def test_a_stranger_never_sees_the_numbers(self):
+        message = FakeMessage("/stats")
+        asyncio.run(webhook.cmd_stats(update(message), self.context))
+        text = message.replies[-1]
+        self.assertIn("faqat bot egasi", text)
+        self.assertNotIn("STATISTIKA", text)
+        self.assertNotIn("ARXIV", text)
+
+    def test_the_owner_gets_the_whole_dashboard(self):
+        message = FakeMessage("/stats")
+        with mock.patch.object(self.stats, "OWNER_ID", 1):
+            asyncio.run(webhook.cmd_stats(update(message), self.context))
+        record = message.reply_records[-1]
+        self.assertIn("STATISTIKA", record["text"])
+        self.assertIn("ARXIV", record["text"])
+        self.assertIn("Turkumlar (paketlar): 1266", record["text"])
+        labels = [button.text for button in record["reply_markup"].inline_keyboard[0]]
+        self.assertEqual(labels, ["Yangilash", "Bo‘limlar", "O‘yinlar"])
+
+    def test_the_sections_view_can_be_opened(self):
+        message = FakeMessage("/stats bolimlar")
+        with mock.patch.object(self.stats, "OWNER_ID", 1):
+            self.context.args = ["bolimlar"]
+            asyncio.run(webhook.cmd_stats(update(message), self.context))
+        text = message.replies[-1]
+        self.assertIn("BO‘LIMLAR", text)
+        self.assertIn("Talabalar ligasi", text)
+
+    def test_a_played_game_lands_in_the_counters(self):
+        from bot.quiz import build_playlist
+
+        playlist = build_playlist(self.archive.questions(959), rounds=1, per_round=3, seed=7)
+        session = webhook.Session(
+            chat_id=-100, mode="solo", package_id=959, package_title="959", questions=playlist,
+            owner_id=1, timer_seconds=60, rounds=1, per_round=3, seed=7,
+        )
+        session.begin()
+        with mock.patch.object(webhook, "TICKS_ENABLED", False):
+            asyncio.run(webhook.send_question(self.bot, -100, session))
+            question = self.bot.sent[-1]["text"]
+            answer = self.archive.question(webhook.unpack_state(question)["q"])["answer"]
+            asyncio.run(webhook.on_text(update(FakeMessage(answer, question)), self.context))
+        data = asyncio.run(self.stats.snapshot())
+        self.assertGreaterEqual(data["counters"]["questions_asked"], 2)
+        self.assertEqual(data["counters"]["answers_correct"], 1)
+        self.assertEqual(data["users"], 1)
+        self.assertEqual(data["packages_played"], 1)
+
+    def test_an_unanswered_question_is_counted_once(self):
+        from bot.quiz import build_playlist
+
+        playlist = build_playlist(self.archive.questions(959), rounds=1, per_round=3, seed=7)
+        session = webhook.Session(
+            chat_id=-100, mode="solo", package_id=959, package_title="959", questions=playlist,
+            owner_id=1, timer_seconds=60, rounds=1, per_round=3, seed=7,
+        )
+        session.begin()
+        self.assertTrue(webhook.close_question(session))
+        self.assertFalse(webhook.close_question(session))    # never twice
+        data = asyncio.run(self.stats.snapshot())
+        self.assertEqual(data["counters"]["unanswered"], 1)
+        self.assertEqual(len(data["events"]), 1)
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class ClockFaceTests(unittest.TestCase):
+    """The strip offers a Mini App clock that counts down on the device."""
+
+    def setUp(self):
+        from bot import clock as clock_page
+
+        self.clock_page = clock_page
+        self.archive = Archive("data/all")
+        playlist = webhook.build_playlist(self.archive.questions(959), 1, 5, 7)
+        self.session = webhook.Session(
+            chat_id=-100, mode="solo", package_id=959, package_title="Intellektual <Olimpiada>",
+            questions=playlist, owner_id=1, timer_seconds=60, rounds=1, per_round=5, seed=7,
+        )
+        self.session.begin()
+
+    def test_the_button_carries_the_deadline(self):
+        deadline = int(time.time()) + 60
+        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
+            url = webhook.clock_url(self.session, deadline, 45)
+        self.assertTrue(url.startswith("https://zakovat.example/api/timer?"))
+        self.assertIn(f"d={deadline}", url)
+        self.assertIn("tm=60", url)
+        self.assertIn("n=1", url)
+        self.assertIn("t=5", url)
+
+    def test_the_keyboard_puts_the_clock_first(self):
+        deadline = int(time.time()) + 45
+        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
+            keyboard = st.game_keyboard(clock=msg.clock(45),
+                                        clock_url=webhook.clock_url(self.session, deadline, 45))
+        first = keyboard.inline_keyboard[0][0]
+        self.assertEqual(first.text, "Jonli soat")
+        self.assertTrue(first.web_app.url.startswith("https://zakovat.example/api/timer?"))
+        self.assertEqual(keyboard.inline_keyboard[1][0].text, "00:45 · Vaqtni yangilash")
+
+    def test_without_a_public_address_the_clock_button_is_left_out(self):
+        with mock.patch.object(webhook, "public_base_url", lambda: ""):
+            self.assertEqual(webhook.clock_url(self.session, int(time.time()) + 30, 30), "")
+        keyboard = st.game_keyboard(clock="00:30")
+        self.assertEqual(len(keyboard.inline_keyboard), 1)
+        self.assertIsNone(keyboard.inline_keyboard[0][0].web_app)
+
+    def test_the_page_counts_down_in_the_browser(self):
+        deadline = int(time.time()) + 37
+        page = self.clock_page.render({
+            "d": str(deadline), "l": "37", "tm": "60", "n": "3", "t": "30", "r": "1",
+            "p": "959 <paket>",
+        })
+        self.assertIn(f'"d": {deadline}', page)          # absolute deadline, not a fixed text
+        self.assertIn("requestAnimationFrame", page)     # redrawn on the device
+        self.assertIn('"/api/now"', page)                # device clock is corrected once
+        self.assertIn("SAVOL 3 / 30 · 1-RAUND", page)
+        self.assertIn("959 &lt;paket&gt;", page)         # the title is escaped
+        self.assertNotIn("959 <paket>", page)
+
+    def test_the_demo_page_loops_and_is_not_counted(self):
+        page = self.clock_page.render({"demo": "1", "tm": "45"})
+        self.assertIn('"d": 0', page)
+        self.assertIn('"demo": true', page)
+        self.assertNotIn("/api/now", page)
+
+    def test_opening_the_clock_is_counted_once(self):
+        from bot import stats
+        from fastapi.testclient import TestClient
+
+        stats.reset()
+        saved, stats.STORE_URL = stats.STORE_URL, ""
+        try:
+            client = TestClient(webhook.app)
+            self.assertEqual(client.get("/api/timer?d=1795749465&tm=60").status_code, 200)
+            self.assertEqual(client.get("/api/now").status_code, 200)
+            client.get("/api/timer?demo=1&tm=45")        # the web page demo is not a game
+            data = asyncio.run(stats.snapshot())
+        finally:
+            stats.STORE_URL = saved
+            stats.reset()
+        self.assertEqual(data["counters"]["clock_opened"], 1)
+        self.assertAlmostEqual(client.get("/api/now").json()["now"], time.time(), delta=10)
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class FloodCareTests(unittest.TestCase):
+    """A Telegram flood pause must not drop the countdown chain."""
+
+    def setUp(self):
+        from telegram.error import RetryAfter
+
+        self.RetryAfter = RetryAfter
+        self.bot = FakeBot()
+        self.archive = Archive("data/all")
+        playlist = webhook.build_playlist(self.archive.questions(959), 1, 5, 7)
+        self.session = webhook.Session(
+            chat_id=-100, mode="solo", package_id=959, package_title="959", questions=playlist,
+            owner_id=1, timer_seconds=60, rounds=1, per_round=5, seed=7,
+        )
+        self.session.begin()
+        self.session.control_message_id = 77
+        self.application = FakeApplication(self.bot, self.archive)
+
+    def _tick(self, deadline):
+        marker = webhook.pack_state(self.session, deadline)
+        payload = {"tick": marker, "chat": -100, "wait": 0, "mode": "sleep"}
+        with mock.patch.object(webhook, "get_application", lambda: self.application), \
+             mock.patch.object(webhook, "TICKS_ENABLED", False):
+            return json.loads(asyncio.run(webhook.handle_tick(payload)).body)
+
+    def test_a_throttled_edit_comes_back_later(self):
+        async def throttled(**kwargs):
+            raise self.RetryAfter(7)
+
+        self.bot.edit_message_text = throttled
+        waits = []
+
+        async def fake_schedule(session, deadline, aliases=None, wait=None, mode=None):
+            waits.append(wait)
+
+        with mock.patch.object(webhook, "schedule_tick", fake_schedule), \
+             mock.patch.object(webhook, "TICK_SECONDS", 5):
+            result = self._tick(int(time.time()) + 30)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["throttled"], 17)        # 7 s pause + two tick steps
+        self.assertEqual(waits, [17])
+
+    def test_an_unmodified_message_is_not_a_failure(self):
+        async def unmodified(**kwargs):
+            raise webhook.TelegramError("message is not modified")
+
+        self.bot.edit_message_text = unmodified
+        result = self._tick(int(time.time()) + 30)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["remaining"], 30)
+        self.assertNotIn("stopped", result)
+
+
+def _has_webapp(markup) -> bool:
+    return any(getattr(button, "web_app", None)
+               for row in getattr(markup, "inline_keyboard", None) or []
+               for button in row)
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class WebAppFallbackTests(unittest.TestCase):
+    """A refused Mini App button must never cost the player the countdown."""
+
+    def setUp(self):
+        self.archive = Archive("data/all")
+        playlist = webhook.build_playlist(self.archive.questions(959), 1, 5, 7)
+        self.session = webhook.Session(
+            chat_id=-100, mode="solo", package_id=959, package_title="959", questions=playlist,
+            owner_id=1, timer_seconds=60, rounds=1, per_round=5, seed=7,
+        )
+        self.session.begin()
+        self.session.control_message_id = 77
+
+    def test_repainting_without_the_clock_button(self):
+        class Picky(FakeBot):
+            def __init__(self):
+                super().__init__()
+                self.refused = 0
+
+            async def edit_message_text(self, **kwargs):
+                if _has_webapp(kwargs.get("reply_markup")):
+                    self.refused += 1
+                    raise webhook.TelegramError("Bad Request: WEBAPP_URL_INVALID")
+                return await super().edit_message_text(**kwargs)
+
+        bot = Picky()
+        deadline = int(time.time()) + 30
+        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
+            asyncio.run(webhook.paint_strip(bot, -100, self.session, 30, deadline))
+        self.assertEqual(bot.refused, 1)
+        self.assertEqual(len(bot.edits), 1)
+        self.assertFalse(_has_webapp(bot.edits[0]["reply_markup"]))
+        self.assertIn("QOLGAN VAQT  00:30", bot.edits[0]["text"])
+
+    def test_sending_the_strip_without_the_clock_button(self):
+        class PickySend(FakeBot):
+            async def send_message(self, **kwargs):
+                if _has_webapp(kwargs.get("reply_markup")):
+                    raise webhook.TelegramError("Bad Request: WEBAPP_URL_INVALID")
+                return await super().send_message(**kwargs)
+
+        bot = PickySend()
+        deadline = int(time.time()) + 60
+        with mock.patch.object(webhook, "public_base_url", lambda: "https://zakovat.example"):
+            asyncio.run(webhook.send_control(bot, -100, self.session, deadline))
+        self.assertEqual(len(bot.sent), 1)
+        self.assertFalse(_has_webapp(bot.sent[0]["reply_markup"]))
+        self.assertEqual(self.session.control_message_id, 1)   # the strip still got its id
+
+    def test_other_errors_are_not_swallowed(self):
+        class Broken(FakeBot):
+            async def edit_message_text(self, **kwargs):
+                raise webhook.TelegramError("message is not modified")
+
+        with self.assertRaises(webhook.TelegramError):
+            asyncio.run(webhook.paint_strip(Broken(), -100, self.session, 30,
+                                            int(time.time()) + 30))
 
 
 if __name__ == "__main__":

@@ -148,16 +148,33 @@ def _button(record: dict[str, Any], row: int, column: int) -> str | None:
         return None
 
 
+def _button_by_label(record: dict[str, Any], label: str) -> str | None:
+    """Find a button by its caption, wherever the keyboard put it.
+
+    Positions move when a row is added (the Mini App clock, for one), so the
+    dry run searches by text instead of trusting a fixed row and column.
+    """
+    markup = record.get("reply_markup")
+    for row in getattr(markup, "inline_keyboard", None) or []:
+        for button in row:
+            text = getattr(button, "text", "") or ""
+            if text.strip() == label or label in text:
+                return getattr(button, "callback_data", None)
+    return None
+
+
 async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
     """Walk the whole user journey through the live handlers, offline."""
+    from . import stats
     from . import webhook as wh
     from .webhook import ARCHIVE, unpack_state
 
     bot = RecordingBot(os.getenv("BOT_TOKEN") or FAKE_TOKEN)
     application = build_app(bot)
     await application.initialize()
-    ticks_saved = wh.TICKS_ENABLED
+    ticks_saved, dry_saved = wh.TICKS_ENABLED, stats.DRY_RUN
     wh.TICKS_ENABLED = False          # no self-invocations during a dry run
+    stats.DRY_RUN = True              # a dry run never writes to the real store
     lines: list[str] = []
     step = 0
 
@@ -171,9 +188,10 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
         lines.extend(f"   • {_preview(item['text'])}" for item in fresh)
         return fresh
 
-    async def press(record: dict[str, Any], row: int, column: int, label: str) -> list[dict]:
+    async def press(record: dict[str, Any], row: int, column: int, label: str,
+                    caption: str | None = None) -> list[dict]:
         nonlocal step
-        data = _button(record, row, column)
+        data = _button(record, row, column) if caption is None else _button_by_label(record, caption)
         if not data or not record.get("message"):
             lines.append(f"{label} → tugma topilmadi")
             return []
@@ -194,7 +212,7 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
         panel = await send("/solo 959")
         if not panel:
             return lines
-        started = await press(panel[0], -1, 0, "Boshlash")
+        started = await press(panel[0], -1, 0, "Boshlash", caption="Boshlash")
         if not started:
             return lines
 
@@ -218,11 +236,19 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
             if not fresh_control:
                 lines.append(f"O‘tkazish {number} → panel topilmadi")
                 break
-            fresh = await press(fresh_control, 0, 1, f"O‘tkazish {number}")
+            fresh = await press(fresh_control, 0, 1, f"O‘tkazish {number}", caption="O‘tkazish")
             fresh_control = next((item for item in reversed(fresh) if _is_panel(item)), None)
+
+        owner_saved = stats.OWNER_ID
+        stats.OWNER_ID = 777          # the synthetic user plays the owner here
+        try:
+            await send("/stats")
+        finally:
+            stats.OWNER_ID = owner_saved
 
         await send("/rules", with_entities=False)
     finally:
         wh.TICKS_ENABLED = ticks_saved
+        stats.DRY_RUN = dry_saved
         await application.shutdown()
     return lines

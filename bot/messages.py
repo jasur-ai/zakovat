@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import html
 import re
+import time
 
 BAR_WIDTH = 10
 IDLE_HINT = 3
@@ -284,3 +285,145 @@ def small_talk(text: str) -> str | None:
             "Tanishtiruv: /start     Buyruqlar: /help"
         )
     return None
+
+
+EVENT_LABELS = {
+    "game_start": "o‘yin boshlandi",
+    "game_end": "o‘yin yakunlandi",
+    "auto_stop": "avto-to‘xtatildi",
+    "stopped": "to‘xtatildi",
+    "correct": "to‘g‘ri javob",
+    "wrong": "noto‘g‘ri javob",
+    "unanswered": "javobsiz qoldi",
+    "question": "savol berildi",
+    "skip": "o‘tkazildi",
+    "refresh": "vaqt yangilandi",
+    "clock_opened": "jonli soat ochildi",
+    "command": "buyruq",
+}
+
+
+def stats_denied() -> str:
+    return "Bu bo‘lim faqat bot egasi uchun."
+
+
+def _stamp(seconds: object) -> str:
+    try:
+        return time.strftime("%d.%m %H:%M", time.gmtime(int(seconds or 0)))
+    except (TypeError, ValueError, OSError):
+        return "--.-- --:--"
+
+
+def _storage_line(data: dict) -> str:
+    host = (data.get("storage") or "").split("//")[-1].split("/")[0]
+    if data.get("stored") and data.get("dry_run"):
+        return f"Manba: {esc(host or 'tashqi saqlash')} · sinov rejimi, yozilmadi"
+    if data.get("stored"):
+        state = "yozildi" if data.get("synced") else "o‘qildi, yozish amalga oshmadi"
+        return f"Manba: {esc(host or 'tashqi saqlash')} · {state}"
+    return "Manba: faqat shu nusxa · ZAKOVAT_STATS_URL berilsa, barcha o‘yinlar bir joyda yig‘iladi"
+
+
+def stats_panel(data: dict) -> str:
+    """Owner dashboard: games, questions, archive sections and the last events."""
+    counters = data.get("counters") or {}
+    archive = data.get("archive") or {}
+    instance = data.get("instance") or {}
+    lines = ["<b>STATISTIKA</b> · Zakovat Agent", _storage_line(data), ""]
+
+    lines.append("<b>O‘YINLAR</b>")
+    lines.append(f"• Boshlangan: {counters.get('games_started', 0)} · "
+                 f"Yakunlangan: {counters.get('games_finished', 0)}")
+    lines.append(f"• Avto-to‘xtagan: {counters.get('games_auto_stopped', 0)} · "
+                 f"To‘xtatilgan: {counters.get('games_stopped', 0)}")
+    lines.append(f"• Foydalanuvchilar: {data.get('users', 0)} · Chatlar: {data.get('chats', 0)}")
+    lines.append(f"• O‘ynalgan paketlar: {data.get('packages_played', 0)}")
+    lines.append("")
+
+    lines.append("<b>SAVOLLAR</b>")
+    lines.append(f"• Berilgan: {counters.get('questions_asked', 0)}")
+    lines.append(f"• To‘g‘ri: {counters.get('answers_correct', 0)} · "
+                 f"Noto‘g‘ri: {counters.get('answers_wrong', 0)} · "
+                 f"Javobsiz: {counters.get('unanswered', 0)}")
+    lines.append(f"• Aniqlik: {data.get('accuracy', 0)}%")
+    lines.append(f"• O‘tkazishlar: {counters.get('skips', 0)} · "
+                 f"Yangilash bosishlari: {counters.get('refreshes', 0)}")
+    lines.append(f"• Jonli soat oynasi: {counters.get('clock_opened', 0)} marta")
+    lines.append(f"• Buyruqlar: {counters.get('commands', 0)}")
+    lines.append("")
+
+    if archive:
+        lines.append("<b>ARXIV</b>")
+        lines.append(f"• Turkumlar (paketlar): {archive.get('packages', 0)}")
+        lines.append(f"• Savollar: {archive.get('questions', 0)}")
+        lines.append(f"• Bo‘limlar: {archive.get('section_count', 0)}")
+        lines.append(f"• Rasmi bor savollar: {archive.get('pictures', 0)}")
+        lines.append(f"• O‘rtacha paket: {archive.get('average', 0)} savol")
+        biggest = archive.get("biggest") or {}
+        if biggest.get("title"):
+            lines.append(f"• Eng katta paket: {esc(biggest['title'])} "
+                         f"({biggest.get('questions', 0)} savol)")
+        lines.append(f"• Kirillcha paketlar: {archive.get('cyrillic', 0)}")
+        if archive.get("exported_at"):
+            lines.append(f"• Eksport: {esc(str(archive['exported_at'])[:10])}")
+        lines.append("")
+
+    packages = data.get("top_packages") or []
+    if packages:
+        lines.append("<b>KO‘P O‘YNALGAN PAKETLAR</b>")
+        for package_id, times in packages:
+            lines.append(f"• {esc(package_id)} — {times} marta")
+        lines.append("")
+
+    sections = ((data.get("archive") or {}).get("sections") or [])[:6]
+    if sections:
+        lines.append("<b>BO‘LIMLAR</b>")
+        for entry in sections:
+            lines.append(f"• {esc(entry.get('name'))} — {entry.get('packages', 0)} paket, "
+                         f"{entry.get('questions', 0)} savol")
+        lines.append("")
+
+    events = (data.get("events") or [])[:5]
+    if events:
+        lines.append("<b>OXIRGI HARAKATLAR</b>")
+        for event in events:
+            label = EVENT_LABELS.get(str(event.get("k") or ""), str(event.get("k") or "—"))
+            detail = f" · {esc(event['x'])}" if event.get("x") else ""
+            lines.append(f"• {_stamp(event.get('t'))} — {label}{detail}")
+        lines.append("")
+
+    if instance:
+        counters_now = instance.get("counters") or {}
+        lines.append("<b>SHU NUSXADA</b>")
+        lines.append(f"• Ishga tushgani: {instance.get('uptime', 0)} s · "
+                     f"o‘yinlar: {counters_now.get('games_started', 0)} · "
+                     f"savollar: {counters_now.get('questions_asked', 0)}")
+        lines.append(f"• Foydalanuvchilar: {instance.get('users', 0)} · "
+                     f"chatlar: {instance.get('chats', 0)} · "
+                     f"paketlar: {instance.get('packages', 0)}")
+    return "\n".join(lines)
+
+
+def stats_sections(data: dict) -> str:
+    """All archive sections with their package and question counts."""
+    sections = ((data.get("archive") or {}).get("sections")) or []
+    if not sections:
+        return "<b>BO‘LIMLAR</b>\n• ma’lumot yo‘q"
+    lines = ["<b>BO‘LIMLAR</b> · hammasi"]
+    for entry in sections:
+        lines.append(f"• {esc(entry.get('name'))} — {entry.get('packages', 0)} paket, "
+                     f"{entry.get('questions', 0)} savol")
+    return "\n".join(lines)
+
+
+def stats_events(data: dict, limit: int = 25) -> str:
+    """The most recent recorded events, newest first."""
+    events = (data.get("events") or [])[:limit]
+    if not events:
+        return "<b>OXIRGI HARAKATLAR</b>\n• hozircha yozuv yo‘q"
+    lines = ["<b>OXIRGI HARAKATLAR</b>"]
+    for event in events:
+        label = EVENT_LABELS.get(str(event.get("k") or ""), str(event.get("k") or "—"))
+        detail = f" · {esc(event['x'])}" if event.get("x") else ""
+        lines.append(f"• {_stamp(event.get('t'))} — {label}{detail}")
+    return "\n".join(lines)

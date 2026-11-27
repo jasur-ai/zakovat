@@ -19,6 +19,7 @@ import re
 import secrets
 import time
 from pathlib import Path
+from urllib.parse import urlencode
 
 import httpx
 
@@ -26,16 +27,18 @@ from fastapi import FastAPI, Header, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.background import BackgroundTask
 
-from telegram import BotCommand, ForceReply, InputFile, Update
+from telegram import BotCommand, BotCommandScopeChat, ForceReply, InputFile, Update
 from telegram.constants import ParseMode
-from telegram.error import TelegramError
+from telegram.error import RetryAfter, TelegramError
 from telegram.ext import (
     Application, ApplicationBuilder, CallbackQueryHandler, ChatMemberHandler,
     CommandHandler, ContextTypes, MessageHandler, filters,
 )
 
+from . import clock as clock_page
 from . import messages as msg
 from . import settings as st
+from . import stats
 from .answers import AnswerChecker, normalize
 from .archive import Archive
 from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session, build_playlist
@@ -43,7 +46,7 @@ from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session, build_playlist
 MARKER = "\n\n#ZS2 "
 LEGACY_MARKER = "\n\n#ZS "
 TIMER = int(os.getenv("ZAKOVAT_TIMER_SECONDS", "60"))
-TICK_SECONDS = max(1, int(os.getenv("ZAKOVAT_TICK_SECONDS", "3")))
+TICK_SECONDS = max(2, int(os.getenv("ZAKOVAT_TICK_SECONDS", "5")))
 IDLE_LIMIT = max(0, int(os.getenv("ZAKOVAT_IDLE_LIMIT", "3")))
 TICKS_ENABLED = os.getenv("ZAKOVAT_LIVE_TIMER", "1") not in ("0", "false", "no")
 TICK_MODE = os.getenv("ZAKOVAT_TICK_MODE", "bg")     # "bg" (after response) | "sleep"
@@ -62,6 +65,7 @@ ZW1 = "\u200d"
 INVISIBLE = (ZW0, ZW1)
 SENTINEL = 0xA5
 HIDDEN_MODE = os.getenv("ZAKOVAT_HIDDEN_STATE", "invisible")   # or "spoiler"
+OWNER_ID = stats.OWNER_ID       # the only chat that sees /stats
 PER_PAGE = int(os.getenv("ZAKOVAT_PACKAGES_PER_PAGE", "12"))
 ROOT = Path(__file__).resolve().parent.parent
 ARCHIVE = Archive(
@@ -233,6 +237,52 @@ def unpack_state(text: str | None) -> dict | None:
         except (ValueError, UnicodeDecodeError):
             return None
     return None
+
+
+IMPORTANT_EVENTS = ("game_start", "game_end", "auto_stop", "stopped")
+
+
+def note(kind: str, **fields) -> None:
+    """Count one statistics event; the store write happens after the response.
+
+    A game starting or ending is written out at once, everything else waits for
+    the batch window so a busy chat does not produce a request per event.
+    """
+    try:
+        due = stats.record(kind, **fields)
+        if kind in IMPORTANT_EVENTS:
+            bg_add(lambda: stats.sync(force=True))
+        elif due:
+            bg_add(stats.sync)
+    except Exception:  # statistics must never break a game
+        logging.getLogger(__name__).debug("stats record failed", exc_info=True)
+
+
+def close_question(session: Session, kind: str = "unanswered") -> bool:
+    """Resolve the running question once (timeout or admin skip) and count it."""
+    if not session.resolve_unanswered():
+        return False
+    note(kind, chat_id=session.chat_id, package_id=session.package_id,
+         unanswered=1, skips=1 if kind == "skip" else 0,
+         detail=f"{session.mode} · {session.package_id} · savol {session.number}")
+    return True
+
+
+def clock_url(session: Session, deadline: int, remaining: int) -> str:
+    """Mini App clock for this question; empty when there is no public address."""
+    base = public_base_url()
+    if not base:
+        return ""
+    query = urlencode({
+        "d": int(deadline),
+        "l": max(0, int(remaining)),
+        "tm": session.timer_seconds or TIMER,
+        "n": session.number,
+        "t": session.total,
+        "r": session.current_round if session.rounds > 1 else 0,
+        "p": (session.package_title or "")[:60],
+    })
+    return f"{base}/api/timer?{query}"
 
 
 def checker_for(aliases: list[str]):
@@ -424,6 +474,38 @@ def strip_text(session: Session, remaining: int, deadline: int,
     return with_state(visible, pack_state(session, deadline, aliases=aliases))
 
 
+def is_webapp_error(exc: Exception) -> bool:
+    """True when Telegram refused the Mini App button itself."""
+    text = str(exc).lower()
+    return "webapp" in text or "web app" in text
+
+
+async def paint_strip(bot, chat_id: int, session: Session, remaining: int, deadline: int,
+                      aliases: list[str] | None = None) -> None:
+    """Rewrite the countdown strip, giving up the clock button if Telegram refuses it.
+
+    An old client or a rejected Web App URL must never cost the player the
+    countdown, so the same strip is offered once more without the Mini App row.
+    """
+    text = strip_text(session, remaining, deadline, aliases)
+    plain = st.game_keyboard(clock=msg.clock(remaining))
+    try:
+        await bot.edit_message_text(
+            chat_id=chat_id, message_id=int(session.control_message_id), text=text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=st.game_keyboard(clock=msg.clock(remaining),
+                                          clock_url=clock_url(session, deadline, remaining)),
+        )
+    except TelegramError as exc:
+        if not is_webapp_error(exc):
+            raise
+        logging.getLogger(__name__).warning("Mini App button refused: %s", exc)
+        await bot.edit_message_text(
+            chat_id=chat_id, message_id=int(session.control_message_id), text=text,
+            parse_mode=ParseMode.HTML, reply_markup=plain,
+        )
+
+
 async def detect_can_delete(bot, chat_id: int, chat_type: str) -> bool:
     """Groups only let the bot remove its own countdown strip with delete rights."""
     if chat_type == "private":
@@ -451,6 +533,13 @@ def bg_add(factory) -> bool:
         return False
     bucket.append(factory)
     return True
+
+
+def with_background(response: Response, bucket: list) -> Response:
+    """Attach queued work to a response, unless the handler already did."""
+    if bucket and response.background is None:
+        response.background = BackgroundTask(run_background, bucket)
+    return response
 
 
 async def run_background(bucket: list) -> None:
@@ -528,11 +617,23 @@ async def send_control(bot, chat_id: int, session: Session, deadline: int,
                        aliases: list[str] | None = None) -> None:
     """Countdown strip above every question: live remaining time + buttons."""
     remaining = max(0, deadline - int(time.time()))
-    message = await bot.send_message(
-        chat_id=chat_id, text=strip_text(session, remaining, deadline, aliases),
-        parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
-        disable_web_page_preview=True,
-    )
+    text = strip_text(session, remaining, deadline, aliases)
+    try:
+        message = await bot.send_message(
+            chat_id=chat_id, text=text, parse_mode=ParseMode.HTML,
+            reply_markup=st.game_keyboard(clock=msg.clock(remaining),
+                                          clock_url=clock_url(session, deadline, remaining)),
+            disable_web_page_preview=True,
+        )
+    except TelegramError as exc:
+        if not is_webapp_error(exc):
+            raise
+        logging.getLogger(__name__).warning("Mini App button refused: %s", exc)
+        message = await bot.send_message(
+            chat_id=chat_id, text=text, parse_mode=ParseMode.HTML,
+            reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
+            disable_web_page_preview=True,
+        )
     session.control_message_id = getattr(message, "message_id", None)
 
 
@@ -544,14 +645,16 @@ async def send_question(bot, chat_id: int, session: Session, aliases: list[str] 
     deadline = int(time.time()) + timer
     session.deadline = deadline
     await send_control(bot, chat_id, session, deadline, aliases)
+    note("question", chat_id=chat_id, package_id=session.package_id, questions_asked=1,
+         log=False)
 
     picture = has_picture(question)
     attachments = [a for a in (question.get("attachments") or []) if isinstance(a, str)]
-    note = "" if picture else (attachments[0] if attachments else "")
+    link = "" if picture else (attachments[0] if attachments else "")
     round_label = f"{session.current_round}-raund" if session.rounds > 1 else ""
     text = msg.question(
         session.number, session.total, session.package_title, question.get("text"),
-        timer, session.score_text(), note, round_label,
+        timer, session.score_text(), link, round_label,
     )
     if picture:
         await send_photo_safely(bot, chat_id, question, caption="Savol rasmi")
@@ -595,6 +698,8 @@ async def next_question(bot, chat_id: int, session: Session, headline: str, alia
     session.advance()
 
     if session.question is None:
+        note("game_end", chat_id=chat_id, package_id=session.package_id, games_finished=1,
+             detail=f"{session.package_id} · {session.score_text()}")
         await bot.send_message(
             chat_id=chat_id,
             text=msg.summary(session.package_title, session.total, session.correct, session.wrong,
@@ -606,6 +711,9 @@ async def next_question(bot, chat_id: int, session: Session, headline: str, alia
     if session.idle_limit_reached:
         session.auto_stopped = True
         session.finished = True
+        note("auto_stop", chat_id=chat_id, package_id=session.package_id,
+             games_finished=1, games_auto_stopped=1,
+             detail=f"{session.package_id} · {session.score_text()}")
         await bot.send_message(
             chat_id=chat_id,
             text=msg.auto_stop(session.idle_streak, session.package_title, session.index,
@@ -681,14 +789,18 @@ async def tick_work(body: str, chat_id: int) -> dict:
 
         if remaining > 0:
             try:
-                await bot.edit_message_text(
-                    chat_id=chat_id, message_id=int(session.control_message_id),
-                    text=strip_text(session, remaining, deadline, aliases),
-                    parse_mode=ParseMode.HTML,
-                    reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
-                )
+                await paint_strip(bot, chat_id, session, remaining, deadline, aliases)
             except TelegramError as exc:
-                if "not modified" not in str(exc).lower():
+                text = str(exc).lower()
+                if "not modified" in text:
+                    pass
+                elif isinstance(exc, RetryAfter) or "flood" in text:
+                    # Telegram asks for a pause: come back later instead of
+                    # dropping the whole countdown chain.
+                    pause = int(getattr(exc, "retry_after", 0) or 0) + TICK_SECONDS * 2
+                    await schedule_tick(session, deadline, aliases, wait=min(50, pause))
+                    return {"ok": True, "throttled": pause}
+                else:
                     # The strip is gone: answered, skipped or stopped elsewhere.
                     _ticks_stopped += 1
                     return {"ok": True, "stopped": "strip closed"}
@@ -702,7 +814,7 @@ async def tick_work(body: str, chat_id: int) -> dict:
             _ticks_stopped += 1
             return {"ok": True, "stopped": "already resolved"}
         _ticks_resolved += 1
-        if session.resolve_unanswered():
+        if close_question(session):
             await next_question(bot, chat_id, session, "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
         return {"ok": True, "resolved": True}
     finally:
@@ -794,6 +906,9 @@ async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameC
     chat_type = getattr(chat, "type", "private") or "private"
     session.can_delete = await detect_can_delete(context.bot, chat_id, chat_type)
     label = "Yakka o‘yin" if config.mode == "solo" else "Guruh o‘yini"
+    note("game_start", user_id=user_id, chat_id=chat_id, package_id=config.package_id,
+         games_started=1,
+         detail=f"{label} · {config.package_id} · {session.total} savol · {config.timer} s")
     text = msg.game_start(label, session.package_title, session.total, session.timer_seconds,
                           session.score_text(), session.rounds, session.per_round)
     if chat_type != "private" and not session.can_delete:
@@ -938,13 +1053,15 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
 
     if int(time.time()) > deadline:
-        if await close_strip(context.bot, chat_id, session) and session.resolve_unanswered():
+        if await close_strip(context.bot, chat_id, session) and close_question(session):
             await next_question(context.bot, chat_id, session,
                                 "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
         return
 
     result = session.submit(update.effective_user.id, update.message.text, checker_for(aliases))
     if result == CORRECT:
+        note("correct", user_id=update.effective_user.id, chat_id=chat_id,
+             package_id=session.package_id, answers_correct=1, log=False)
         await next_question(
             context.bot, chat_id, session,
             f"To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.", aliases,
@@ -952,6 +1069,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     elif result == FOREIGN:
         await update.message.reply_text("Bu yakka o‘yin — faqat boshlagan kishi javob yozadi.")
     elif result == WRONG and session.mode == "solo":
+        note("wrong", user_id=update.effective_user.id, chat_id=chat_id,
+             package_id=session.package_id, answers_wrong=1, log=False)
         text = with_state("Noto‘g‘ri. Yana urinib ko‘ring.",
                           pack_state(session, deadline, latest=update.message.text, aliases=aliases))
         await update.message.reply_text(text, parse_mode=ParseMode.HTML,
@@ -976,19 +1095,19 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     remaining = deadline - int(time.time())
 
     if action == "f":
+        note("refresh", user_id=getattr(query.from_user, "id", None), chat_id=chat_id,
+             package_id=session.package_id, refreshes=1, log=False)
         if remaining > 0 and not session.answered:
             await query.answer(f"Qolgan vaqt: {msg.clock(remaining)}")
+            session.control_message_id = query.message.message_id
             try:
-                await query.edit_message_text(
-                    strip_text(session, remaining, deadline, aliases),
-                    parse_mode=ParseMode.HTML,
-                    reply_markup=st.game_keyboard(clock=msg.clock(remaining)))
+                await paint_strip(context.bot, chat_id, session, remaining, deadline, aliases)
             except TelegramError:
                 pass
             await schedule_tick(session, deadline, aliases)
             return
         await query.answer("Vaqt tugadi")
-        if await close_strip(context.bot, chat_id, session) and session.resolve_unanswered():
+        if await close_strip(context.bot, chat_id, session) and close_question(session):
             await next_question(context.bot, chat_id, session,
                                 "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
         return
@@ -998,7 +1117,7 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await query.answer("O‘tkazish faqat admin uchun", show_alert=True)
             return
         await query.answer("O‘tkazildi")
-        if await close_strip(context.bot, chat_id, session) and session.resolve_unanswered():
+        if await close_strip(context.bot, chat_id, session) and close_question(session, "skip"):
             await next_question(context.bot, chat_id, session,
                                 "O‘tkazildi — hech kim javobni topmadi.", aliases)
         else:
@@ -1011,6 +1130,9 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if action == "x":
         await query.answer("O‘yin to‘xtatildi")
+        note("stopped", user_id=getattr(query.from_user, "id", None), chat_id=chat_id,
+             package_id=session.package_id, games_stopped=1, games_finished=1,
+             detail=f"{session.package_id} · {session.score_text()}")
         await delete_control(context.bot, chat_id, session)
         await context.bot.send_message(chat_id, session.summary(), parse_mode=ParseMode.HTML)
         try:
@@ -1041,7 +1163,7 @@ async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text(msg.admin_only("/skip"), parse_mode=ParseMode.HTML)
         return
     claimed = await close_strip(context.bot, update.effective_chat.id, session)
-    if not claimed or not session.resolve_unanswered():
+    if not claimed or not close_question(session, "skip"):
         await update.effective_message.reply_text("Bu savol allaqachon yechilgan.")
         return
     await next_question(context.bot, update.effective_chat.id, session,
@@ -1054,6 +1176,10 @@ async def cmd_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text("To‘xtatish uchun savol xabariga reply qiling.")
         return
     session, _ = restored
+    note("stopped", user_id=getattr(update.effective_user, "id", None),
+         chat_id=update.effective_chat.id, package_id=session.package_id,
+         games_stopped=1, games_finished=1,
+         detail=f"{session.package_id} · {session.score_text()}")
     await delete_control(context.bot, update.effective_chat.id, session)
     await update.effective_message.reply_text(session.summary())
 
@@ -1078,10 +1204,62 @@ async def cmd_accept(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if checker_for(aliases).is_correct(
         int(session.question["id"]), str(session.question.get("answer", "")), latest
     ):
+        note("correct", user_id=getattr(update.effective_user, "id", None),
+             chat_id=update.effective_chat.id, package_id=session.package_id,
+             answers_correct=1, detail=f"{session.package_id} · qabul qilindi")
         await next_question(context.bot, update.effective_chat.id, session,
                             "Javob qabul qilindi va o‘rganildi.", aliases)
     else:
         await update.effective_message.reply_text("Bu javob hali mos kelmadi.")
+
+
+def is_owner(update: Update) -> bool:
+    """Only the owner's Telegram id ever sees the statistics panel."""
+    user = getattr(update, "effective_user", None)
+    return bool(user) and int(getattr(user, "id", 0) or 0) == int(stats.OWNER_ID)
+
+
+async def render_stats(context: ContextTypes.DEFAULT_TYPE, view: str = "main",
+                       message=None, callback=None) -> None:
+    """Build one statistics page and either send it or rewrite the panel."""
+    data = await stats.snapshot(_archive_of(context))
+    render = {"sections": msg.stats_sections, "events": msg.stats_events}.get(view, msg.stats_panel)
+    text = render(data)[:4090]
+    keyboard = st.stats_keyboard("main" if view == "main" else view)
+    if callback is not None:
+        try:
+            await callback.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
+        except TelegramError:
+            pass
+        return
+    if message is not None:
+        await message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard,
+                                 disable_web_page_preview=True)
+
+
+async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_owner(update):
+        await update.effective_message.reply_text(msg.stats_denied())
+        return
+    view = (context.args[0].strip().lower() if context.args else "main")
+    view = {"bo'limlar": "sections", "bolimlar": "sections", "b": "sections",
+            "o'yinlar": "events", "oyinlar": "events", "e": "events"}.get(view, view)
+    if view not in ("main", "sections", "events"):
+        view = "main"
+    await render_stats(context, view, message=update.effective_message)
+
+
+async def on_stats_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    data = query.data or ""
+    if not data.startswith(st.PREFIX_STATS + "|"):
+        return
+    if not is_owner(update):
+        await query.answer(msg.stats_denied(), show_alert=True)
+        return
+    view = {"r": "main", "b": "sections", "e": "events"}.get(data.split("|", 1)[1], "main")
+    await query.answer()
+    await render_stats(context, view, callback=query)
 
 
 _recent_errors: list[str] = []
@@ -1108,6 +1286,7 @@ BOT_COMMANDS = [
     ("accept", "Javobni qabul qilish (admin)"),
     ("stop", "O‘yinni to‘xtatish"),
 ]
+OWNER_COMMANDS = BOT_COMMANDS + [("stats", "Statistika (faqat bot egasi)")]
 
 COMMANDS = {
     "start": cmd_start,
@@ -1121,6 +1300,7 @@ COMMANDS = {
     "skip": cmd_skip,
     "stop": cmd_stop,
     "accept": cmd_accept,
+    "stats": cmd_stats,
 }
 
 
@@ -1144,6 +1324,18 @@ async def on_command_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE
     await callback(update, context)
 
 
+def command_handler(name: str, callback):
+    """CommandHandler that also counts the command in the statistics."""
+
+    async def counted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        note("command", user_id=getattr(getattr(update, "effective_user", None), "id", None),
+             chat_id=getattr(getattr(update, "effective_chat", None), "id", None),
+             commands=1, detail=f"/{name}", log=False)
+        await callback(update, context)
+
+    return CommandHandler(name, counted)
+
+
 def build_app(bot=None) -> Application:
     builder = ApplicationBuilder().updater(None)
     if bot is not None:
@@ -1157,21 +1349,23 @@ def build_app(bot=None) -> Application:
     application.bot_data["archive"] = ARCHIVE
     application.add_error_handler(on_handler_error)
     application.add_handlers([
-        CommandHandler("start", cmd_start),
-        CommandHandler("help", cmd_help),
-        CommandHandler("rules", cmd_rules),
-        CommandHandler("packages", cmd_packages),
-        CommandHandler("solo", cmd_solo),
-        CommandHandler("quiz", cmd_solo),
-        CommandHandler("duel", cmd_duel),
-        CommandHandler("score", cmd_score),
-        CommandHandler("skip", cmd_skip),
-        CommandHandler("stop", cmd_stop),
-        CommandHandler("accept", cmd_accept),
+        command_handler("start", cmd_start),
+        command_handler("help", cmd_help),
+        command_handler("rules", cmd_rules),
+        command_handler("packages", cmd_packages),
+        command_handler("solo", cmd_solo),
+        command_handler("quiz", cmd_solo),
+        command_handler("duel", cmd_duel),
+        command_handler("score", cmd_score),
+        command_handler("skip", cmd_skip),
+        command_handler("stop", cmd_stop),
+        command_handler("accept", cmd_accept),
+        command_handler("stats", cmd_stats),
         ChatMemberHandler(on_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER),
         CallbackQueryHandler(on_settings_button, pattern="^" + st.PREFIX_CONFIG + r"\|"),
         CallbackQueryHandler(on_page_button, pattern="^" + st.PREFIX_PAGE + r"\|"),
         CallbackQueryHandler(on_game_button, pattern="^" + st.PREFIX_GAME + r"\|"),
+        CallbackQueryHandler(on_stats_button, pattern="^" + st.PREFIX_STATS + r"\|"),
         MessageHandler(filters.Regex(r"^/"), on_command_fallback),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_text),
     ])
@@ -1241,6 +1435,14 @@ async def ensure_webhook(application: Application, force: bool = False, drop_pen
             drop_pending_updates=drop_pending,
         )
         await application.bot.set_my_commands([BotCommand(name, title) for name, title in BOT_COMMANDS])
+        try:
+            # /stats is listed only in the owner's own command menu.
+            await application.bot.set_my_commands(
+                [BotCommand(name, title) for name, title in OWNER_COMMANDS],
+                scope=BotCommandScopeChat(chat_id=int(stats.OWNER_ID)),
+            )
+        except Exception as exc:
+            logging.getLogger(__name__).debug("owner command scope failed: %s", exc)
         _webhook_ready = True
         _setup_error = ""
     except Exception as exc:  # telegram API errors must not break the site
@@ -1342,6 +1544,9 @@ async def status():
         f"Jonli taymer: {'yoqilgan' if TICKS_ENABLED else 'o‘chirilgan'} · "
         f"qadam {TICK_SECONDS} s · usul {TICK_MODE} · "
         f"javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
+        f"Statistika: {stats.STORE_URL.split('//')[-1].split('/')[0] if stats.STORE_URL else 'faqat shu nusxa'}"
+        f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1",
+        f"Jonli soat: /api/timer (Mini App) · server vaqti: /api/now",
         f"Yashirin holat: {HIDDEN_MODE} · fon ishi: "
         f"{_bg_probe_log[-1] if _bg_probe_log else 'tekshirilmagan'} · "
         f"diagnostika: ?tickprobe=1 · ?bgprobe=1",
@@ -1479,6 +1684,10 @@ async def index(request: Request):
         return JSONResponse(await tick_probe())
     if request.query_params.get("bgprobe") == "1":
         return await bg_probe()
+    if request.query_params.get("statsprobe") == "1":
+        report = await stats.probe()
+        report["hisoblagichlar"] = dict(stats._pending["c"])
+        return JSONResponse(report)
     if request.query_params.get("bgstep") == "1":
         bucket: list = []
         token = _bg_tasks.set(bucket)
@@ -1509,6 +1718,27 @@ async def home():
     if page.exists():
         return HTMLResponse(page.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>Zakovat Agent</h1><p>Sahifa fayli topilmadi.</p>")
+
+
+@app.get("/api/timer")
+async def timer_page(request: Request):
+    """Mini App clock face: counts down on the user's device, not on the server."""
+    params = dict(request.query_params)
+    bucket: list = []
+    token = _bg_tasks.set(bucket)
+    try:
+        if str(params.get("demo") or "") != "1":
+            note("clock_opened", clock_opened=1, log=False)
+        response: Response = HTMLResponse(clock_page.render(params))
+    finally:
+        _bg_tasks.reset(token)
+    return with_background(response, bucket)
+
+
+@app.get("/api/now")
+async def api_now():
+    """Server clock, so the Mini App can correct a device with a wrong time."""
+    return JSONResponse({"now": time.time()})
 
 
 @app.get("/health")
@@ -1549,6 +1779,4 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None 
             response = JSONResponse({"ok": True})
     finally:
         _bg_tasks.reset(token)
-    if bucket and response.background is None:
-        response.background = BackgroundTask(run_background, bucket)
-    return response
+    return with_background(response, bucket)
