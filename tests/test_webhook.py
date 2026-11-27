@@ -1,6 +1,8 @@
 import asyncio
+import os
 import unittest
 from types import SimpleNamespace
+from unittest import mock
 
 try:
     import bot.webhook as webhook
@@ -76,6 +78,72 @@ class WebhookLogicTests(unittest.TestCase):
         self.bot.sent.clear()
         asyncio.run(webhook.cmd_accept(update(FakeMessage("/accept", wrong.replies[0])), self.context))
         self.assertIn("qabul qilindi", self.bot.sent[0]["text"])
+
+
+class PublicUrlTests(unittest.TestCase):
+    """The webhook must point at a publicly reachable domain, not VERCEL_URL."""
+
+    def _base(self, env):
+        if not webhook:
+            self.skipTest("install requirements.txt to test the webhook")
+        with mock.patch.dict(os.environ, env, clear=True):
+            return webhook.public_base_url()
+
+    def test_explicit_webhook_url_wins(self):
+        self.assertEqual(
+            self._base({"WEBHOOK_URL": "https://zakovat.example", "VERCEL_URL": "zakovat-abc-team.vercel.app"}),
+            "https://zakovat.example",
+        )
+
+    def test_production_url_beats_deployment_url(self):
+        # Vercel's generated deployment URL is protected by Standard Protection.
+        self.assertEqual(
+            self._base({
+                "VERCEL_PROJECT_PRODUCTION_URL": "zakovat-peach.vercel.app",
+                "VERCEL_URL": "zakovat-ih087biqs-team.vercel.app",
+            }),
+            "https://zakovat-peach.vercel.app",
+        )
+
+    def test_vercel_url_is_last_resort(self):
+        self.assertEqual(self._base({"VERCEL_URL": "zakovat-abc-team.vercel.app"}), "https://zakovat-abc-team.vercel.app")
+
+    def test_nothing_set(self):
+        self.assertEqual(self._base({}), "")
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class CommandFallbackTests(unittest.TestCase):
+    """Commands without a bot_command entity must still be answered."""
+
+    def test_entityless_command_is_answered(self):
+        from bot.selftest import RecordingBot, _update
+
+        async def run():
+            bot = RecordingBot()
+            application = webhook.build_app(bot)
+            await application.initialize()
+            try:
+                await application.process_update(_update(1, bot, "/rules", with_entities=False))
+                await application.process_update(_update(2, bot, "/solo 959", with_entities=False))
+            finally:
+                await application.shutdown()
+            return [item["text"] for item in bot._sent]
+
+        sent = asyncio.run(run())
+        self.assertTrue(any("Qoidalar" in text for text in sent))
+        self.assertTrue(any("savol" in text for text in sent))
+
+    def test_self_test_reports_every_step(self):
+        async def run():
+            return await webhook.self_test()
+
+        lines = asyncio.run(run())
+        joined = "\n".join(lines)
+        self.assertIn("/start → 1 xabar", joined)
+        self.assertIn("/rules → 1 xabar", joined)
+        self.assertIn("/solo 959 → 2 xabar", joined)
+        self.assertIn("javob", joined)
 
 
 if __name__ == "__main__":

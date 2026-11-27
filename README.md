@@ -31,12 +31,21 @@ Deploy qilgach Project → Settings → Environment Variables ga kirib, ikkita o
 - `BOT_TOKEN` — BotFather’dan olingan **yangi** token (chatga yuborilgani allaqachon oshkor bo‘lgan);
 - `WEBHOOK_SECRET` — o‘zingiz tanlagan tasodifiy sir (masalan `openssl rand -hex 24`).
 
-Ixtiyoriy: `ZAKOVAT_TIMER_SECONDS` (standart 60), `WEBHOOK_URL` (o‘z domeningiz bo‘lsa), `MINIAPP_URL` (belgilanmasa `VERCEL_URL` ishlatiladi).
+Ixtiyoriy: `ZAKOVAT_TIMER_SECONDS` (standart 60), `WEBHOOK_URL` (o‘z domeningiz bo‘lsa), `MINIAPP_URL`.
 
-**Webhook o‘zi o‘rnatiladi:** funksiyaga birinchi so‘rov kelganda bot `VERCEL_URL` asosida `/api/index` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. Har kuni 03:00 da `/api/index` cron ham uni qayta tasdiqlaydi. Agarda javob kelmasa:
+**Webhook o‘zi o‘rnatiladi:** saytga birinchi marta kiritilganda bot `/api/index` manzilini Telegram’ga ro‘yxatdan o‘tkazadi. Manzil quyidagi tartibda tanlanadi:
 
-- `https://<loyihangiz>.vercel.app/api/index?setup=1` — webhook’ni qo‘lda o‘rnatadi va natijani ko‘rsatadi;
-- `https://<loyihangiz>.vercel.app/api/index` — faqat `BOT_TOKEN` / `WEBHOOK_SECRET` bor-yo‘qligini va Telegram webhook holatini ko‘rsatadi (tokenni o‘zi ko‘rsatmaydi).
+1. `WEBHOOK_URL` (o‘zingiz belgilasangiz);
+2. `VERCEL_PROJECT_PRODUCTION_URL` — Vercel’ning **ochiq** production domeni (masalan `zakovat-peach.vercel.app`);
+3. `VERCEL_URL` — oxirgi zaxira.
+
+`VERCEL_URL` dan foydalanmang: bu Vercel’ning generatsiya qilingan deployment manzili (`zakovat-<hash>-<jamoa>.vercel.app`) va **Standard Deployment Protection** uni login sahifasi bilan himoya qiladi — Telegram u yerga kira olmaydi va bot umuman javob bermaydi. Shu sababli kod production domenini afzal ko‘radi. Har kuni 03:00 da `/api/index` cron webhook’ni qayta tasdiqlaydi.
+
+**Diagnostika (token qiymatlari ko‘rsatilmaydi):**
+
+- `https://<loyihangiz>.vercel.app/api/index` — muhit o‘zgaruvchilari bor-yo‘qligi, tanlangan webhook manzili, arxiv holati, Telegram’ning oxirgi xatoligi va so‘nggi handler xatolari;
+- `.../api/index?setup=1` — webhook’ni qayta o‘rnatadi va natijani ko‘rsatadi;
+- `.../api/index?test=1` — Telegram’ga chiqmasdan `/start`, `/rules`, `/solo 959` va bitta javobni haqiqiy handlerlar orqali o‘tkazib, bot yuboradigan xabarlarni ko‘rsatadi. Deploy muvaffaqiyatli bo‘ldimi — shu sahifa aytib beradi.
 
 `scripts/set_webhook.py` — qo‘lda bajarish uchun yana bir zaxira usul.
 
