@@ -921,7 +921,10 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.effective_message.reply_text(msg.help_text(), parse_mode=ParseMode.HTML)
+    """/help — the whole list in groups; /help turnir — just one group."""
+    section = " ".join(context.args or []).strip()
+    await update.effective_message.reply_text(msg.help_text(section),
+                                              parse_mode=ParseMode.HTML)
 
 
 async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2154,7 +2157,7 @@ async def cmd_final(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not removed:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=msg.whisper_dropped(getattr(update.effective_chat, "title", "") or "guruh"),
+            text=msg.answer_dropped(getattr(update.effective_chat, "title", "") or "guruh"),
             parse_mode=ParseMode.HTML)
 
 
@@ -2192,8 +2195,106 @@ async def cmd_final_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     await tour_persist(context.bot, _archive_of(context), tour, merge_finals=True)
 
 
+def _whisper_match(person, needle: str) -> bool:
+    """Does this member answer to ``needle`` — an id, a @username or a name?"""
+    lowered = str(needle or "").strip().casefold().lstrip("@")
+    if not lowered:
+        return False
+    if lowered.isdigit() and int(lowered) == int(getattr(person, "user_id", 0) or 0):
+        return True
+    username = str(getattr(person, "username", "") or "").casefold().lstrip("@")
+    if username and username == lowered:
+        return True
+    name = str(getattr(person, "name", "") or "").strip().casefold()
+    return bool(name) and name == lowered
+
+
+def tour_whisper_targets(tour: "tn.Tournament | None", user_id: int, args: list,
+                         curator: bool) -> tuple[list, str, str, str]:
+    """Who a whisper may reach, and what they get.
+
+    A whisper never leaves the tournament. The only people who can receive one
+    are the sender's own teammates — plus, for a curator or an admin, any
+    registered team. An id or a username that is not on the roster is refused
+    instead of delivered, so nothing can be pushed to somebody outside the
+    group, and the group itself never learns what was written.
+
+    Returns ``(targets, body, problem, label)``. When the first word is not an
+    address at all — ``/pichoq tez javob bering``, the usual case — the whole
+    message goes to the sender's own team.
+    """
+    words = [str(item) for item in (args or []) if str(item).strip()]
+    if not words:
+        return [], "", "Matn yozilmadi: /pichoq salom", ""
+    first = words[0].strip()
+    rest = " ".join(words[1:]).strip()
+    lowered = first.casefold().lstrip("@")
+    mine = tour.team_of(int(user_id)) if tour is not None else None
+    teams = list(getattr(tour, "teams", []) or [])
+
+    def refuse(reason: str) -> tuple[list, str, str, str]:
+        return [], "", reason, ""
+
+    def whole(team) -> list:
+        return [person for person in team.members if int(person.user_id) != int(user_id)]
+
+    # 1) "jamoa" — the sender's own team, whatever follows is the message
+    if lowered in {"jamoa", "jamoam", "team", "hamma", "biz", "everyone"}:
+        if mine is None:
+            return refuse("Siz biror jamoada emassiz. /jamoa Nom — jamoa yaratish, "
+                          "/qoshil Nom — qo‘shilish." if not curator else
+                          "Siz biror jamoada emassiz. Jamoa nomini yozing: "
+                          "/pichoq JamoaNomi matn")
+        if not rest:
+            return refuse("Matn yozilmadi: /pichoq jamoa salom")
+        return whole(mine), rest, "", mine.name
+
+    # 2) a team by name — any team for a curator, yours for everybody else
+    for team in teams:
+        if str(team.name).strip().casefold() == lowered:
+            if not curator and (mine is None or team.name != mine.name):
+                return refuse("Boshqa jamoaga yoza olmaysiz: maxfiy xabar faqat o‘z "
+                              "jamoangizga ketadi.")
+            if not rest:
+                return refuse(f"Matn yozilmadi: /pichoq {team.name} salom")
+            return whole(team), rest, "", team.name
+
+    # 3) one person — only from the roster, and only from your own team
+    for team in teams:
+        for person in team.members:
+            if not _whisper_match(person, first):
+                continue
+            if int(person.user_id) == int(user_id):
+                return refuse("Bu o‘zingiz. /pichoq matn — jamoangiz ko‘radi.")
+            if not curator and (mine is None or team.name != mine.name):
+                return refuse(f"{person.label()} boshqa jamoada ({team.name}): maxfiy "
+                              "xabar faqat o‘z jamoangiz a’zolariga ketadi.")
+            if not rest:
+                return refuse("Matn yozilmadi: /pichoq " + first + " salom")
+            return [person], rest, "", person.label()
+
+    # 4) the first word was not an address: the whole line goes to the team
+    if not (first.startswith("@") or lowered.isdigit()):
+        if mine is None:
+            return refuse("Siz biror jamoada emassiz. /jamoa Nom — jamoa yaratish, "
+                          "/qoshil Nom — qo‘shilish." if not curator else
+                          "Manzil topilmadi. Jamoa nomini yozing: /pichoq JamoaNomi matn")
+        return whole(mine), " ".join(words).strip(), "", mine.name
+
+    # 5) an address that is not on the roster — refused, never delivered
+    if mine is None and not curator:
+        return refuse("Avval jamoaga qo‘shiling: /jamoa Nom yoki /qoshil Nom")
+    return refuse(f"{first} turnirda qatnashmaydi. /azolar — o‘z jamoangiz a’zolari.")
+
+
 async def cmd_whisper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/pichoq <@username|id|jamoa> <matn> — a message only the target sees."""
+    """/pichoq <matn|@a’zo|jamoa> — a message only the sender's own team sees.
+
+    Two things are guaranteed here: the group never keeps a readable copy, and
+    nobody outside the sender's team ever receives one. That is why the message
+    is removed *before* anything is delivered, and why an address that is not on
+    the roster is refused rather than looked up somewhere else.
+    """
     message = update.effective_message
     user = update.effective_user
     chat = update.effective_chat
@@ -2201,94 +2302,77 @@ async def cmd_whisper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not args:
         await message.reply_text(msg.whisper_usage(), parse_mode=ParseMode.HTML)
         return
-    target = args[0]
-    text = " ".join(args[1:]).strip()
-    if not text:
-        await message.reply_text(msg.whisper_usage(), parse_mode=ParseMode.HTML)
-        return
     tour = await tour_state(update, context)
-    can_delete = bool(tour.can_delete) if tour is not None else \
-        await detect_can_delete(context.bot, chat.id, getattr(chat, "type", "private"))
-    if tour is not None:
-        tour.see(user.id, tour_sender(user), getattr(user, "username", "") or "")
+    if tour is None:
+        await message.reply_text(msg.whisper_no_tournament(), parse_mode=ParseMode.HTML)
+        return
     sender = tour_sender(user)
     title = getattr(chat, "title", "") or "guruh"
+    tour.see(int(user.id), sender, getattr(user, "username", "") or "")
 
-    if target.casefold() in {"jamoa", "jamoam", "team", "hamma"}:
-        team = tour.team_of(user.id) if tour is not None else None
-        if team is None:
-            await message.reply_text(msg.tour_not_registered())
-            return
-        others = [person for person in team.members if int(person.user_id) != int(user.id)]
-        delivered, failed = await tour_private(
-            context.bot, others, msg.tour_private_note(team.name, f"{sender}: {text}"))
-        await tour_delete(context.bot, chat.id, message.message_id, can_delete)
-        if tour is not None:
-            tour.bump()
-            await tour_persist(context.bot, _archive_of(context), tour)
-        await context.bot.send_message(
-            chat_id=user.id,
-            text=msg.whisper_team_sent(team.name, delivered, failed, text),
-            parse_mode=ParseMode.HTML)
-        return
-
-    user_id = tour.find(target) if tour is not None else 0
-    if not user_id:
-        needle = str(target).lstrip("@")
-        if needle.isdigit():
-            user_id = int(needle)
-    if not user_id:
-        await message.reply_text(
-            msg.whisper_failed(f"{target} topilmadi. Id bilan yozing: "
-                               "<code>/pichoq 123456789 matn</code> yoki "
-                               "<code>/azolar</code> ro‘yxatidan oling."),
-            parse_mode=ParseMode.HTML)
-        return
-    delivered, failed = await tour_private(
-        context.bot, [{"id": user_id}],
-        msg.whisper_received(sender, text, title))
-    await tour_delete(context.bot, chat.id, message.message_id, can_delete)
-    if tour is not None:
+    # The group copy goes first: if it cannot be removed, nothing is delivered.
+    removed = await tour_delete(context.bot, chat.id, message.message_id, bool(tour.can_delete))
+    if not removed:
+        if not tour.open_mode:
+            tour.open_mode = True
+            await context.bot.send_message(chat_id=chat.id, text=msg.whisper_dropped(title),
+                                           parse_mode=ParseMode.HTML)
         tour.bump()
         await tour_persist(context.bot, _archive_of(context), tour)
-    if delivered:
-        await context.bot.send_message(chat_id=user.id, text=msg.whisper_sent(target, text),
+        await context.bot.send_message(chat_id=int(user.id),
+                                       text=msg.whisper_not_private(" ".join(args)),
                                        parse_mode=ParseMode.HTML)
-    else:
-        await message.reply_text(
-            msg.whisper_failed("manzil bot bilan shaxsiy chatni boshlamagan (/start)"),
+        return
+
+    curator = bool(await tour_curator(update, context, tour))
+    targets, body, problem, label = tour_whisper_targets(tour, int(user.id), args, curator)
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
+    if not targets:
+        # Refused in private: a reply in the group would quote the message back.
+        await context.bot.send_message(
+            chat_id=int(user.id), text=msg.whisper_outside(problem or "Manzil topilmadi."),
             parse_mode=ParseMode.HTML)
+        return
+
+    note = msg.whisper_received(sender, body, title)
+    delivered, failed = await tour_private(context.bot, targets, note)
+    if delivered:
+        text = (msg.whisper_team_sent(label, delivered, failed, body) if len(targets) > 1
+                else msg.whisper_sent(label, body))
+    else:
+        text = msg.whisper_failed("manzil bot bilan shaxsiy chatni boshlamagan (/start)")
+    await context.bot.send_message(chat_id=int(user.id), text=text, parse_mode=ParseMode.HTML)
 
 
 async def cmd_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/azolar — who the bot can whisper to, with ids and usernames."""
+    """/azolar — your own team with ids; a curator sees every team.
+
+    The list is what makes /pichoq usable, so it shows exactly the people a
+    whisper may reach: a member sees their own teammates, a curator or admin
+    sees the whole tournament plus the rest of the group the bot has seen.
+    """
     chat = update.effective_chat
     message = update.effective_message
+    user = update.effective_user
     tour = await tour_state(update, context)
-    rows: list[dict] = []
-    if tour is not None:
-        rows = tour.directory_rows()
-        for team in tour.teams:
-            for person in team.members:
-                row = {"id": int(person.user_id), "name": person.label(),
-                       "username": person.username}
-                if row not in rows:
-                    rows.append(row)
-    else:
-        try:
-            members = await context.bot.get_chat_administrators(chat.id)
-        except TelegramError:
-            members = []
-        for member in members:
-            person = getattr(member, "user", None)
-            if person is not None:
-                rows.append({"id": int(person.id),
-                             "name": getattr(person, "full_name", "") or "",
-                             "username": getattr(person, "username", "") or ""})
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
+        return
+    title = getattr(chat, "title", "") or "guruh"
+    tour.see(int(user.id), tour_sender(user), getattr(user, "username", "") or "")
+    curator = bool(await tour_curator(update, context, tour))
+    mine = tour.team_of(int(user.id))
+    teams = list(tour.teams) if curator else ([mine] if mine is not None else [])
+    extra: list[dict] = []
+    if curator:
+        known = {int(person.user_id) for team in tour.teams for person in team.members}
+        extra = [row for row in tour.directory_rows()
+                 if int(row.get("id") or 0) not in known]
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
     await message.reply_text(
-        msg.members_list(rows, getattr(chat, "title", "") or "guruh",
-                         int(update.effective_user.id))[:4090],
-        parse_mode=ParseMode.HTML)
+        msg.members_list(teams, title, int(user.id), extra)[:4090], parse_mode=ParseMode.HTML)
 
 
 async def cmd_table(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2973,39 +3057,49 @@ async def on_handler_error(update: object, context: ContextTypes.DEFAULT_TYPE) -
     logging.getLogger(__name__).exception("Handler failed", exc_info=error)
 
 
+# The menu is short on purpose: 15 rows a player really types, in the order they
+# are needed. Curator and owner commands still work, they are just not in
+# everybody's menu — /help lists them in groups.
 BOT_COMMANDS = [
     ("start", "Tanishtiruv"),
-    ("help", "Barcha buyruqlar"),
-    ("rules", "O‘yin qoidalari"),
-    ("packages", "Barcha paketlar (sahifalab)"),
+    ("help", "Buyruqlar ro‘yxati"),
+    ("rules", "Qoidalar"),
     ("solo", "Yakka o‘yin"),
     ("duel", "Guruh o‘yini"),
+    ("packages", "Paketlar (sahifalab)"),
     ("score", "Joriy hisob"),
-    ("skip", "Savolni o‘tkazish (admin)"),
-    ("accept", "Javobni qabul qilish (admin)"),
     ("stop", "O‘yinni to‘xtatish"),
-    ("turnir", "Turnir ochish (admin yoki kurator)"),
+    ("turnir", "Turnir ochish (admin/kurator)"),
     ("jamoa", "Jamoa yaratish: /jamoa nom"),
     ("qoshil", "Jamoaga qo‘shilish: /qoshil nom"),
     ("tayyor", "Men tayyorman"),
-    ("chiqish", "Jamoadan chiqish"),
     ("yakuniy", "Yakuniy javob: /yakuniy javob"),
-    ("bekor", "Yakuniy javobni bekor qilish"),
-    ("pichoq", "Maxfiy xabar: /pichoq @user matn"),
-    ("azolar", "Guruh a’zolari (id va username)"),
+    ("pichoq", "Maxfiy xabar: /pichoq matn"),
     ("jadval", "Ochkolar jadvali"),
+]
+# Everything the bot understands, menu or not: /help is written from these groups.
+ALL_COMMANDS = BOT_COMMANDS + [
+    ("chiqish", "Jamoadan chiqish"),
+    ("bekor", "Yakuniy javobni bekor qilish"),
+    ("azolar", "Jamoangiz a’zolari (id va username)"),
     ("tanlov", "Savol tanlash: /tanlov so‘z"),
     ("olish", "Savolni tanlovga olish: /olish 12345"),
     ("chiqarish", "Savolni tanlovdan chiqarish: /chiqarish 12345"),
     ("savol", "Bitta savolni ko‘rish: /savol 12345"),
     ("kurator", "Kurator tayinlash: /kurator 123456789"),
     ("turnirstop", "Turnirni to‘xtatish va jadval"),
+    ("skip", "Savolni o‘tkazish (admin)"),
+    ("accept", "Javobni qabul qilish (admin)"),
 ]
 OWNER_COMMANDS = BOT_COMMANDS + [
-    ("stats", "Statistika (faqat bot egasi)"),
+    ("stats", "Statistika"),
     ("access", "Mini App ruxsatlari"),
     ("grant", "Ruxsat berish: /grant 123456789 Ism"),
     ("revoke", "Ruxsatni olish: /revoke 123456789"),
+    ("tanlov", "Savol tanlash"),
+    ("kurator", "Kurator tayinlash"),
+    ("turnirstop", "Turnirni to‘xtatish"),
+    ("azolar", "A’zolar ro‘yxati"),
 ]
 
 COMMANDS = {

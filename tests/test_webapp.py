@@ -789,6 +789,23 @@ class AccessCommandTests(unittest.TestCase):
             self.assertIn(name, owner_names, name)
             self.assertNotIn(name, public_names, name)
 
+    def test_the_menu_stays_short_and_everything_is_documented(self):
+        """Thirty commands in everybody's menu is not a menu.
+
+        The menu carries what a player types; /help carries the rest in groups;
+        and every row of both must really be routed, or it is a dead promise.
+        """
+        self.assertLessEqual(len(webhook.BOT_COMMANDS), 16)
+        self.assertLessEqual(len(webhook.OWNER_COMMANDS), 24)
+        listed = [name for name, _ in webhook.ALL_COMMANDS]
+        self.assertEqual(len(set(listed)), len(listed))          # nothing twice
+        text = msg.help_text()
+        for name in listed:
+            self.assertIn("/" + name, text, name)                # documented
+            self.assertIn(name, webhook.COMMANDS, name)          # and routed
+        for name, _ in webhook.BOT_COMMANDS:
+            self.assertIn(name, listed, name)                    # menu ⊂ everything
+
     def test_the_commands_are_wired_into_the_application(self):
         from telegram import Bot
 

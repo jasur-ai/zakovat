@@ -110,9 +110,9 @@ Oddiy o‘yindan farqi: **jamoalar**, **yakuniy javob** va **jadval**. Admin `/t
 - har savolga har jamoa **bitta yakuniy javob** beradi: tasmaga reply qilib `/yakuniy <matn>`. Vaqt tugaguncha o‘zgartirish mumkin — oxirgisi hisoblanadi;
 - to‘g‘ri javob — jamoaga **+1**; bir savolda bir nechta jamoa ochko olishi mumkin, javob bermagan jamoa ochko yo‘qotmaydi;
 - javoblar guruhda ko‘rinmaydi: bot xabarni o‘chiradi (o‘chirish ruxsati bo‘lsa) va natijani faqat o‘z jamoasiga shaxsiy xabar bilan ko‘rsatadi;
-- `/pichoq @user matn` yoki `/pichoq jamoa matn` — jamoa ichidagi maxfiy gap, guruhda ko‘rinmaydi.
+- `/pichoq matn` — o‘z jamoangizga maxfiy gap; `/pichoq @a’zo matn` — bitta a’zoga. **Faqat o‘z jamoangiz** ko‘radi: ro‘yxatda yo‘q odamga yoki boshqa jamoaga yozib bo‘lmaydi (kurator bundan mustasno — u istalgan jamoaga yoza oladi). Bot guruhdagi xabarni **avval** o‘chiradi, keyin yetkazadi: o‘chirish huquqi bo‘lmasa, xabar hech kimga yuborilmaydi va nima uchunligi shaxsiy chatda aytiladi.
 
-**Buyruqlar**
+**Buyruqlar.** Telegram menyusida faqat o‘yinchi yozadigan 15 ta buyruq turadi — qolgani ishlaydi, lekin menyuni to‘ldirmaydi; hammasi `/help` da bo‘limlarga ajratilgan (`/help turnir`, `/help kurator`, `/help o‘yin`, `/help ega` — bittadan bo‘lim).
 
 | Buyruq | Kim | Nima qiladi |
 | --- | --- | --- |
@@ -121,7 +121,8 @@ Oddiy o‘yindan farqi: **jamoalar**, **yakuniy javob** va **jadval**. Admin `/t
 | `/jamoa Nom` | har kim | yangi jamoa (yozgan odam — kapitan) |
 | `/qoshil Nom` · `/chiqish` | har kim | jamoaga qo‘shilish · chiqish (kapitan chiqsa, o‘rni keyingi a’zoga o‘tadi) |
 | `/tayyor` | a’zo | «Men tayyorman» |
-| `/azolar` | har kim | jamoalar va ularning a’zolari |
+| `/azolar` | har kim | o‘z jamoangiz a’zolari va id’lari (kuratorga — barcha jamoalar) |
+| `/help turnir` | har kim | faqat turnir buyruqlari |
 | `/yakuniy <matn>` · `/bekor` | a’zo | jamoaning yakuniy javobi · uni bekor qilish |
 | `/jadval` | har kim | ochkolar va o‘rinlar |
 | `/tanlov [so‘z]` · `/olish <id…>` · `/chiqarish <id…>` | kurator | aniq savollarni olish yoki chiqarish |
