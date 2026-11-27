@@ -302,39 +302,79 @@ async def _put(client, url: str, body: str, headers: dict | None = None):
 # --- free document stores -------------------------------------------------
 # No sign-up and no key: the bot creates the document itself and reports where
 # it lives. Each provider answers GET with the document and accepts PUT/POST.
-async def _provision_jsonblob(client) -> str:
+# A plain python user agent is refused by several of these, so look like a
+# browser and keep redirects in our own hands (a followed redirect hides the
+# Location header that carries the new address).
+_STORE_HEADERS = {
+    "content-type": "application/json",
+    "accept": "application/json, text/plain, */*",
+    "user-agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 ZakovatBot/1.0"),
+}
+
+
+def _detail(response, extra: dict | None = None) -> dict:
+    info = {"kod": response.status_code, "javob": response.text[:200].strip()}
+    location = response.headers.get("location") or response.headers.get("Location")
+    if location:
+        info["location"] = str(location)[:160]
+    if extra:
+        info.update(extra)
+    return info
+
+
+async def _provision_jsonblob(client) -> tuple[str, dict]:
     response = await client.post("https://jsonblob.com/api/jsonBlob",
                                  content=json.dumps(_empty_document("init")),
-                                 headers={"content-type": "application/json"})
+                                 headers=_STORE_HEADERS, follow_redirects=False)
     location = (response.headers.get("location") or "").strip()
-    if response.status_code >= 400 or not location:
-        return ""
-    return ("https://jsonblob.com" + location) if location.startswith("/") else location
+    url = ("https://jsonblob.com" + location) if location.startswith("/") else location
+    return url, _detail(response)
 
 
-async def _provision_kvdb(client) -> str:
-    response = await client.post("https://kvdb.io/")
+async def _provision_kvdb(client) -> tuple[str, dict]:
+    response = await client.post("https://kvdb.io/", headers=_STORE_HEADERS,
+                                 follow_redirects=False)
     bucket = response.text.strip()
     if response.status_code >= 400 or not bucket or len(bucket) > 64 or " " in bucket:
-        return ""
-    return f"https://kvdb.io/{bucket}/zakovat-stats"
+        return "", _detail(response)
+    return f"https://kvdb.io/{bucket}/zakovat-stats", _detail(response, {"bucket": bucket})
 
 
-async def _provision_extendsclass(client) -> str:
+async def _provision_extendsclass(client) -> tuple[str, dict]:
     response = await client.post("https://extendsclass.com/api/json-storage",
                                  content=json.dumps(_empty_document("init")),
-                                 headers={"content-type": "application/json"})
+                                 headers=_STORE_HEADERS, follow_redirects=False)
+    detail = _detail(response)
     try:
         blob_id = str(response.json().get("id") or "")
     except Exception:
-        return ""
-    return f"https://extendsclass.com/api/json-storage/{blob_id}" if blob_id else ""
+        return "", detail
+    if not blob_id:
+        return "", detail
+    return f"https://extendsclass.com/api/json-storage/{blob_id}", detail
+
+
+async def _provision_npoint(client) -> tuple[str, dict]:
+    """npoint.io keeps a JSON document behind a short id and allows PUT."""
+    response = await client.post("https://api.npoint.io/",
+                                 content=json.dumps({"v": 1, "c": {}}),
+                                 headers=_STORE_HEADERS, follow_redirects=False)
+    detail = _detail(response)
+    try:
+        blob_id = str(response.json().get("id") or "")
+    except Exception:
+        return "", detail
+    if not blob_id:
+        return "", detail
+    return f"https://api.npoint.io/{blob_id}", detail
 
 
 PROVIDERS: tuple[tuple[str, object], ...] = (
     ("jsonblob", _provision_jsonblob),
     ("kvdb", _provision_kvdb),
     ("extendsclass", _provision_extendsclass),
+    ("npoint", _provision_npoint),
 )
 
 
@@ -347,25 +387,26 @@ async def create_store(transport=None) -> dict:
     """
     marker = f"init-{int(time.time())}"
     body = json.dumps(_empty_document(marker), ensure_ascii=False)
-    plain = {"content-type": "application/json"}
+    plain = {"content-type": "application/json", "accept": "application/json, */*",
+             "user-agent": _STORE_HEADERS["user-agent"]}
     attempts: list[dict] = []
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(12.0, connect=5.0),
+        async with httpx.AsyncClient(timeout=httpx.Timeout(15.0, connect=6.0),
                                      follow_redirects=True, transport=transport) as client:
             for name, provision in PROVIDERS:
                 try:
-                    url = await provision(client)
+                    url, detail = await provision(client)
                 except Exception as exc:
                     attempts.append({"xizmat": name, "xato": f"{type(exc).__name__}: {exc}"})
                     continue
                 if not url:
-                    attempts.append({"xizmat": name, "xato": "manzil qaytmadi"})
+                    attempts.append({"xizmat": name, "bosqich": "yaratish", **detail})
                     continue
                 try:
                     written = await _put(client, url, body, plain)
                     read = await client.get(url, headers=plain)
                 except Exception as exc:
-                    attempts.append({"xizmat": name, "manzil": url,
+                    attempts.append({"xizmat": name, "manzil": url, "bosqich": "yozish",
                                      "xato": f"{type(exc).__name__}: {exc}"})
                     continue
                 if written.status_code < 400 and marker in read.text:
@@ -373,9 +414,9 @@ async def create_store(transport=None) -> dict:
                             "yozish": written.status_code, "oqish": read.status_code,
                             "urinishlar": attempts,
                             "izoh": "shu manzilni ZAKOVAT_STATS_URL ga yozing"}
-                attempts.append({"xizmat": name, "manzil": url,
+                attempts.append({"xizmat": name, "manzil": url, "bosqich": "tekshirish",
                                  "yozish": written.status_code, "oqish": read.status_code,
-                                 "xato": "yozib-qayta o‘qish ishlamadi"})
+                                 "oqish_javobi": read.text[:200].strip()})
     except Exception as exc:
         return {"ok": False, "xato": f"{type(exc).__name__}: {exc}", "urinishlar": attempts}
     return {"ok": False, "urinishlar": attempts,
