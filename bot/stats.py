@@ -45,6 +45,7 @@ FLUSH_SECONDS = max(5, int(os.getenv("ZAKOVAT_STATS_FLUSH", "20")))
 DRY_RUN = False        # the self-test counts, but never writes to the store
 EVENT_LIMIT = 30
 MAP_LIMIT = 400
+ACCESS_LIMIT = 60           # nechta foydalanuvchini Mini App ga ruxsat berish mumkin
 
 COUNTERS = (
     "games_started",        # o‘yin boshlandi
@@ -58,6 +59,7 @@ COUNTERS = (
     "skips",                # admin o‘tkazishlari
     "refreshes",            # «Vaqtni yangilash» bosishlari
     "clock_opened",         # jonli soat oynasi ochilishi
+    "app_opened",           # Mini App oynasi ochilishi
     "commands",             # buyruqlar soni
 )
 
@@ -91,6 +93,7 @@ _remote: dict = {}
 _remote_at = 0.0
 _blob_url = ""          # the public address of our blob, learned on first write
 _tg_message_id = 0      # the pinned message that holds the document
+_access: dict = {}      # user ids the owner let into the Mini App
 
 
 def backend() -> str:
@@ -158,6 +161,9 @@ def _normalise(doc: object) -> dict:
     events = doc.get("e")
     if isinstance(events, list):
         result["e"] = [event for event in events if isinstance(event, dict)][:EVENT_LIMIT]
+    access = doc.get("a")
+    result["a"] = {str(key): value for key, value in access.items()
+                   if isinstance(value, dict)} if isinstance(access, dict) else {}
     result["s"] = doc.get("s")
     return result
 
@@ -194,6 +200,91 @@ def record(kind: str, *, user_id: int | None = None, chat_id: int | None = None,
     # burst of events queues a single write. Any backend counts, not only an
     # address that was configured by hand.
     return backend() != "lokal" and time.time() - _last_flush >= FLUSH_SECONDS
+
+
+def allowed(user_id: int | str | None) -> bool:
+    """May this user open the Mini App? The owner always may, plus granted ids."""
+    try:
+        number = int(user_id or 0)
+    except (TypeError, ValueError):
+        return False
+    if not number:
+        return False
+    return number == int(OWNER_ID) or str(number) in _access
+
+
+def access_list() -> dict:
+    """Everyone the owner let in: ``{user id: {"name": …, "since": …}}``."""
+    return dict(_access)
+
+
+async def set_access(user_id: int, name: str = "", grant: bool = True,
+                     transport=None) -> tuple[bool, dict]:
+    """Add or remove one user, writing the document out at once.
+
+    The list lives in the same document as the counters, so it survives a cold
+    start exactly like the numbers do.
+    """
+    global _access, _remote, _remote_at
+    entry = str(int(user_id))
+    access = dict(_access)
+    if grant:
+        access[entry] = {"name": (name or "").strip()[:40], "since": int(time.time())}
+        if len(access) > ACCESS_LIMIT:
+            # The oldest grant goes first, so a new one is never silently dropped.
+            for key in sorted(access,
+                              key=lambda item: int((access[item] or {}).get("since") or 0)):
+                if len(access) <= ACCESS_LIMIT:
+                    break
+                access.pop(key, None)
+    else:
+        access.pop(entry, None)
+    if backend() == "lokal":
+        _access = access
+        return True, dict(access)
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=4.0),
+                                     transport=transport) as client:
+            code, text = await store_read(client)
+            document = _normalise(_try_json(text)) if code == 200 else {}
+            document["a"] = access
+            payload = {"v": 1, "s": int(time.time()),
+                       "c": {str(k): int(v) for k, v in (document.get("c") or {}).items()},
+                       "u": _cap(Counter(document.get("u") or {})),
+                       "h": _cap(Counter(document.get("h") or {})),
+                       "p": _cap(Counter(document.get("p") or {})),
+                       "e": list(document.get("e") or [])[:EVENT_LIMIT],
+                       "a": access}
+            code, _ = await store_write(client, json.dumps(payload, ensure_ascii=False))
+    except Exception:
+        logging.getLogger(__name__).debug("access write failed", exc_info=True)
+        return False, dict(_access)
+    _access = access
+    if code < 400:
+        _remote = payload
+        _remote_at = time.time()
+    return code < 400, dict(access)
+
+
+async def load_access(transport=None) -> dict:
+    """Refresh the list from the store (a cold instance starts knowing nobody)."""
+    global _access, _remote, _remote_at
+    if backend() == "lokal":
+        return dict(_access)
+    if _remote and time.time() - _remote_at < FLUSH_SECONDS:
+        _access = dict(_remote.get("a") or {})
+        return dict(_access)
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0),
+                                     transport=transport) as client:
+            code, text = await store_read(client)
+        if code == 200:
+            _remote = _normalise(_try_json(text))
+            _remote_at = time.time()
+            _access = dict(_remote.get("a") or {})
+    except Exception:
+        logging.getLogger(__name__).debug("access read failed", exc_info=True)
+    return dict(_access)
 
 
 def archive_sections(archive) -> list[dict]:
@@ -300,7 +391,7 @@ def _shrink(payload: dict, room: int) -> dict:
 
 async def sync(force: bool = False, transport=None) -> bool:
     """Read the document, fold our pending deltas in and write it back."""
-    global _remote, _remote_at, _last_flush
+    global _remote, _remote_at, _last_flush, _access
     if backend() == "lokal" or DRY_RUN:
         return False
     if not force and time.time() - _last_flush < FLUSH_SECONDS:
@@ -320,7 +411,7 @@ async def sync(force: bool = False, transport=None) -> bool:
             body = _merge(document, deltas)
             payload = {"v": 1, "s": int(time.time()), "c": dict(body["c"]),
                        "u": _cap(body["u"]), "h": _cap(body["h"]), "p": _cap(body["p"]),
-                       "e": body["e"][:EVENT_LIMIT]}
+                       "e": body["e"][:EVENT_LIMIT], "a": body.get("a") or {}}
             payload = _shrink(payload, MESSAGE_LIMIT)
             body_text = json.dumps(payload, ensure_ascii=False)
             status, _ = await store_write(client, body_text)
@@ -338,6 +429,7 @@ async def sync(force: bool = False, transport=None) -> bool:
     _pending["e"] = [event for event in _pending["e"] if event["t"] not in sent]
     _remote = payload
     _remote_at = time.time()
+    _access = dict(payload.get("a") or {})
     return True
 
 
@@ -698,7 +790,8 @@ async def probe(transport=None) -> dict:
                         "h": _cap(Counter(existing.get("h") or {})),
                         "p": _cap(Counter(existing.get("p") or {})),
                         "e": ([{"t": int(time.time()), "k": "probe", "x": marker}]
-                              + list(existing.get("e") or []))[:EVENT_LIMIT]}
+                              + list(existing.get("e") or []))[:EVENT_LIMIT],
+                        "a": dict(existing.get("a") or {})}
             body_text = json.dumps(document, ensure_ascii=False)
             write_code, _ = await store_write(client, body_text)
             read_code, read_text = await store_read(client)
@@ -718,7 +811,7 @@ async def probe(transport=None) -> dict:
 
 async def snapshot(archive=None, force: bool = True) -> dict:
     """Everything the panel shows: stored totals, this copy's totals, archive."""
-    global _remote, _remote_at
+    global _remote, _remote_at, _access
     stored = False
     if backend() != "lokal" and not DRY_RUN:
         try:
@@ -738,6 +831,8 @@ async def snapshot(archive=None, force: bool = True) -> dict:
         await asyncio.sleep(0)
 
     stored_doc = _normalise(_remote)
+    if _remote:                     # nothing stored yet: keep what this copy knows
+        _access = dict(stored_doc.get("a") or {})
     totals: Counter = Counter(stored_doc.get("c") or {})
     users: Counter = Counter(stored_doc.get("u") or {})
     chats: Counter = Counter(stored_doc.get("h") or {})
@@ -769,6 +864,7 @@ async def snapshot(archive=None, force: bool = True) -> dict:
                                  "telegram": f"Telegram: chat {STATS_CHAT}"}.get(backend(), ""),
         "stored": backend() != "lokal",
         "backend": backend(),
+        "access": dict(_access),
         "dry_run": DRY_RUN,
         "synced": stored,
         "remote_age": int(time.time() - _remote_at) if _remote_at else None,
@@ -803,7 +899,7 @@ def restore(state: dict) -> None:
 
 def reset() -> None:
     """Test helper: drop everything this instance has counted."""
-    global _last_flush, _remote, _remote_at, _blob_url, _tg_message_id
+    global _last_flush, _remote, _remote_at, _blob_url, _tg_message_id, _access
     _pending["c"] = Counter()
     _pending["u"] = Counter()
     _pending["h"] = Counter()
@@ -819,3 +915,4 @@ def reset() -> None:
     _remote_at = 0.0
     _blob_url = ""
     _tg_message_id = 0
+    _access = {}

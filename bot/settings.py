@@ -189,14 +189,23 @@ def page_keyboard(page: int, pages: int, query: str = ""):
     return InlineKeyboardMarkup([row])
 
 
-def stats_keyboard(view: str = "main"):
-    """Buttons of the owner's statistics panel."""
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+def stats_keyboard(view: str = "main", app_url: str = ""):
+    """Buttons of the owner's statistics panel.
 
+    ``app_url`` adds the Mini App row: the full dashboard opens inside Telegram,
+    with the same numbers but room to show them properly.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+
+    rows = []
+    if app_url:
+        rows.append([InlineKeyboardButton("Mini App — to‘liq panel",
+                                          web_app=WebAppInfo(url=app_url))])
     row = [InlineKeyboardButton("Yangilash", callback_data=STATS_REFRESH)]
     if view == "main":
         row.append(InlineKeyboardButton("Bo‘limlar", callback_data=STATS_SECTIONS))
         row.append(InlineKeyboardButton("O‘yinlar", callback_data=STATS_EVENTS))
     else:
         row.append(InlineKeyboardButton("Orqaga", callback_data=STATS_REFRESH))
-    return InlineKeyboardMarkup([row])
+    rows.append(row)
+    return InlineKeyboardMarkup(rows)

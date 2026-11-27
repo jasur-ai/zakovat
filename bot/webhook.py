@@ -27,7 +27,10 @@ from fastapi import FastAPI, Header, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.background import BackgroundTask
 
-from telegram import BotCommand, BotCommandScopeChat, ForceReply, InputFile, Update
+from telegram import (
+    BotCommand, BotCommandScopeChat, ForceReply, InputFile, MenuButtonDefault,
+    MenuButtonWebApp, Update, WebAppInfo,
+)
 from telegram.constants import ParseMode
 from telegram.error import RetryAfter, TelegramError
 from telegram.ext import (
@@ -36,9 +39,11 @@ from telegram.ext import (
 )
 
 from . import clock as clock_page
+from . import dashboard
 from . import messages as msg
 from . import settings as st
 from . import stats
+from . import webapp as wa
 from .answers import AnswerChecker, normalize
 from .archive import Archive
 from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session, build_playlist
@@ -1225,7 +1230,7 @@ async def render_stats(context: ContextTypes.DEFAULT_TYPE, view: str = "main",
     data = await stats.snapshot(_archive_of(context))
     render = {"sections": msg.stats_sections, "events": msg.stats_events}.get(view, msg.stats_panel)
     text = render(data)[:4090]
-    keyboard = st.stats_keyboard("main" if view == "main" else view)
+    keyboard = st.stats_keyboard("main" if view == "main" else view, app_menu_url())
     if callback is not None:
         try:
             await callback.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
@@ -1239,7 +1244,9 @@ async def render_stats(context: ContextTypes.DEFAULT_TYPE, view: str = "main",
 
 async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_owner(update):
-        await update.effective_message.reply_text(msg.stats_denied())
+        await update.effective_message.reply_text(
+            msg.stats_denied(getattr(update.effective_user, "id", None)),
+            parse_mode=ParseMode.HTML)
         return
     view = (context.args[0].strip().lower() if context.args else "main")
     view = {"bo'limlar": "sections", "bolimlar": "sections", "b": "sections",
@@ -1255,11 +1262,157 @@ async def on_stats_button(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if not data.startswith(st.PREFIX_STATS + "|"):
         return
     if not is_owner(update):
-        await query.answer(msg.stats_denied(), show_alert=True)
+        await query.answer(msg.stats_denied(getattr(update.effective_user, "id", None)),
+                           show_alert=True)
         return
     view = {"r": "main", "b": "sections", "e": "events"}.get(data.split("|", 1)[1], "main")
     await query.answer()
     await render_stats(context, view, callback=query)
+
+
+APP_MENU_TEXT = "Statistika"
+
+
+def app_menu_url() -> str:
+    """Absolute address of the Mini App, or empty when there is no public one."""
+    return wa.app_url(public_base_url())
+
+
+async def apply_menu_button(bot, chat_id, granted: bool) -> str:
+    """Point one private chat's menu button at the Mini App, or back to default.
+
+    The menu button is what makes the Mini App visible in Telegram: it is set per
+    chat, so somebody who was never granted has no button to tap. The server side
+    checks the signature anyway, because an address can be shared.
+    """
+    url = app_menu_url()
+    if not url:
+        return "o‘rnatilmadi (ochiq manzil yo‘q)"
+    try:
+        if granted:
+            await bot.set_chat_menu_button(
+                chat_id=int(chat_id),
+                menu_button=MenuButtonWebApp(text=APP_MENU_TEXT, web_app=WebAppInfo(url=url)))
+        else:
+            await bot.set_chat_menu_button(chat_id=int(chat_id), menu_button=MenuButtonDefault())
+        return "o‘rnatildi" if granted else "oddiy holatga qaytdi"
+    except TelegramError as exc:
+        return f"xato: {str(exc)[:90]}"
+
+
+async def apply_menu_buttons(client=None, ids=None) -> dict:
+    """Set the menu button for the owner and everybody granted, with plain HTTP.
+
+    Used by ``?appprobe=1&menu=1``, which runs outside an update handler where a
+    PTB application may already have been shut down.
+    """
+    url = app_menu_url()
+    await stats.load_access()
+    targets = list(ids) if ids is not None else (
+        [int(stats.OWNER_ID)] + [int(key) for key in stats.access_list() if str(key).isdigit()])
+    report: dict = {"manzil": url}
+    if not url:
+        report["izoh"] = "ochiq manzil yo‘q (WEBHOOK_URL / VERCEL_PROJECT_PRODUCTION_URL)"
+        return report
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=4.0))
+    try:
+        for target in targets[:stats.ACCESS_LIMIT + 1]:
+            answer = await stats._tg_call(
+                client, "setChatMenuButton", chat_id=int(target),
+                menu_button={"type": "web_app", "text": APP_MENU_TEXT,
+                             "web_app": {"url": url}})
+            report[str(target)] = ("ok" if answer.get("ok")
+                                   else str(answer.get("description") or answer)[:90])
+    finally:
+        if own_client:
+            await client.aclose()
+    report["jami"] = len(targets)
+    return report
+
+
+async def chat_display_name(bot, chat_id: int) -> str:
+    """Ask Telegram how to call a user the owner only knows by id."""
+    try:
+        chat = await bot.get_chat(int(chat_id))
+    except TelegramError:
+        return ""
+    return str(getattr(chat, "full_name", "") or "").strip()[:40]
+
+
+async def cmd_access(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Owner-only: who may open the Mini App."""
+    if not is_owner(update):
+        await update.effective_message.reply_text(
+            msg.stats_denied(getattr(update.effective_user, "id", None)),
+            parse_mode=ParseMode.HTML)
+        return
+    await stats.load_access()
+    await update.effective_message.reply_text(
+        msg.access_list(wa.access_report(), app_menu_url()),
+        parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+
+
+async def cmd_grant(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Owner-only: give one user id access to the Mini App."""
+    if not is_owner(update):
+        await update.effective_message.reply_text(
+            msg.stats_denied(getattr(update.effective_user, "id", None)),
+            parse_mode=ParseMode.HTML)
+        return
+    args = list(context.args or [])
+    raw = (args[0] if args else "").strip()
+    name = " ".join(str(part) for part in args[1:]).strip()[:40]
+    if not raw.lstrip("-").isdigit():
+        await update.effective_message.reply_text(msg.access_usage(), parse_mode=ParseMode.HTML)
+        return
+    target = int(raw)
+    if target == int(stats.OWNER_ID):
+        await update.effective_message.reply_text(
+            "Siz bot egasisiz — kirish har doim ochiq. Ro‘yxat: /access",
+            parse_mode=ParseMode.HTML)
+        return
+    if not name:
+        name = await chat_display_name(context.bot, target)
+    saved, _ = await stats.set_access(target, name, True)
+    menu = await apply_menu_button(context.bot, target, True)
+    note("grant", user_id=int(stats.OWNER_ID),
+         chat_id=getattr(update.effective_chat, "id", None),
+         detail=f"{target} {name}".strip()[:80])
+    await update.effective_message.reply_text(
+        msg.access_changed(target, name, True, saved, menu),
+        parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+
+
+async def cmd_revoke(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Owner-only: take the Mini App away from one user id."""
+    if not is_owner(update):
+        await update.effective_message.reply_text(
+            msg.stats_denied(getattr(update.effective_user, "id", None)),
+            parse_mode=ParseMode.HTML)
+        return
+    args = list(context.args or [])
+    raw = (args[0] if args else "").strip()
+    if not raw.lstrip("-").isdigit():
+        await update.effective_message.reply_text(msg.access_usage(), parse_mode=ParseMode.HTML)
+        return
+    target = int(raw)
+    if target == int(stats.OWNER_ID):
+        await update.effective_message.reply_text(
+            "Eganing o‘z kirishini olib bo‘lmaydi.", parse_mode=ParseMode.HTML)
+        return
+    await stats.load_access()
+    entry = stats.access_list().get(str(target)) or {}
+    name = str(entry.get("name") or "")
+    saved, _ = await stats.set_access(target, name, False)
+    menu = await apply_menu_button(context.bot, target, False)
+    note("revoke", user_id=int(stats.OWNER_ID),
+         chat_id=getattr(update.effective_chat, "id", None),
+         detail=f"{target} {name}".strip()[:80])
+    await update.effective_message.reply_text(
+        msg.access_changed(target, name, False, saved, menu),
+        parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 _recent_errors: list[str] = []
@@ -1286,7 +1439,12 @@ BOT_COMMANDS = [
     ("accept", "Javobni qabul qilish (admin)"),
     ("stop", "O‘yinni to‘xtatish"),
 ]
-OWNER_COMMANDS = BOT_COMMANDS + [("stats", "Statistika (faqat bot egasi)")]
+OWNER_COMMANDS = BOT_COMMANDS + [
+    ("stats", "Statistika (faqat bot egasi)"),
+    ("access", "Mini App ruxsatlari"),
+    ("grant", "Ruxsat berish: /grant 123456789 Ism"),
+    ("revoke", "Ruxsatni olish: /revoke 123456789"),
+]
 
 COMMANDS = {
     "start": cmd_start,
@@ -1301,6 +1459,9 @@ COMMANDS = {
     "stop": cmd_stop,
     "accept": cmd_accept,
     "stats": cmd_stats,
+    "access": cmd_access,
+    "grant": cmd_grant,
+    "revoke": cmd_revoke,
 }
 
 
@@ -1361,6 +1522,9 @@ def build_app(bot=None) -> Application:
         command_handler("stop", cmd_stop),
         command_handler("accept", cmd_accept),
         command_handler("stats", cmd_stats),
+        command_handler("access", cmd_access),
+        command_handler("grant", cmd_grant),
+        command_handler("revoke", cmd_revoke),
         ChatMemberHandler(on_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER),
         CallbackQueryHandler(on_settings_button, pattern="^" + st.PREFIX_CONFIG + r"\|"),
         CallbackQueryHandler(on_page_button, pattern="^" + st.PREFIX_PAGE + r"\|"),
@@ -1443,6 +1607,12 @@ async def ensure_webhook(application: Application, force: bool = False, drop_pen
             )
         except Exception as exc:
             logging.getLogger(__name__).debug("owner command scope failed: %s", exc)
+        try:
+            # The owner always sees the Mini App in their chat menu. Granted users
+            # are handled by /grant and by ?appprobe=1&menu=1.
+            await apply_menu_button(application.bot, int(stats.OWNER_ID), True)
+        except Exception as exc:
+            logging.getLogger(__name__).debug("owner menu button failed: %s", exc)
         _webhook_ready = True
         _setup_error = ""
     except Exception as exc:  # telegram API errors must not break the site
@@ -1547,6 +1717,9 @@ async def status():
         f"Statistika: {stats.store_label()}"
         f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1",
         f"Jonli soat: /api/timer (Mini App) · server vaqti: /api/now",
+        f"Mini App panel: {app_menu_url() or '(manzil yo‘q)'} · "
+        f"ruxsatlar: {len(stats.access_list())} ta · egasi {stats.OWNER_ID} · "
+        f"/access /grant /revoke · ?appprobe=1",
         f"Yashirin holat: {HIDDEN_MODE} · fon ishi: "
         f"{_bg_probe_log[-1] if _bg_probe_log else 'tekshirilmagan'} · "
         f"diagnostika: ?tickprobe=1 · ?bgprobe=1",
@@ -1652,7 +1825,8 @@ async def tg_storage_probe() -> dict:
                         "c": {str(k): int(v) for k, v in (existing.get("c") or {}).items()},
                         "u": {}, "h": {}, "p": {},
                         "e": ([{"t": int(time.time()), "k": "probe", "x": marker}]
-                              + list(existing.get("e") or []))[:stats.EVENT_LIMIT]}
+                              + list(existing.get("e") or []))[:stats.EVENT_LIMIT],
+                        "a": dict(existing.get("a") or {})}
             write_code, how = await stats.telegram_write(
                 client, json.dumps(document, ensure_ascii=False))
             result["yozish"] = write_code
@@ -1730,6 +1904,11 @@ async def index(request: Request):
         report["hisoblagichlar"] = dict(stats._pending["c"])
         report["rejim_hozir"] = stats.backend()
         return JSONResponse(report)
+    if request.query_params.get("appprobe") == "1":
+        report = await app_probe(menu=request.query_params.get("menu") == "1")
+        report["hisoblagichlar"] = dict(stats._pending["c"])
+        report["rejim_hozir"] = stats.backend()
+        return JSONResponse(report)
     if request.query_params.get("bgstep") == "1":
         bucket: list = []
         token = _bg_tasks.set(bucket)
@@ -1742,6 +1921,60 @@ async def index(request: Request):
     if mode == "1":
         return status_page("O‘z-o‘zini sinash", await self_test())
     return await status()
+
+
+async def app_probe(menu: bool = False) -> dict:
+    """Prove the Mini App gate end to end, without leaving a trace in the numbers.
+
+    The signature is checked four ways (valid, tampered, expired, wrong token),
+    then the access gate is checked for the owner and for a stranger, then the
+    dashboard payload is built once with counting switched off. Everything runs
+    inside ``stats.freeze()`` so the probe cannot move a single real counter.
+    """
+    token = wa.signing_token()
+    report: dict = {"ok": False, "manzil": app_menu_url(), "sahifa": wa.APP_PATH,
+                    "demo": wa.demo_enabled()}
+    if not token:
+        report["izoh"] = "BOT_TOKEN yo‘q — imzoni tekshirib bo‘lmaydi"
+        return report
+    owner = {"id": int(stats.OWNER_ID), "first_name": "Ega", "username": "zakovat_owner"}
+    stranger = {"id": 424242, "first_name": "Begona"}
+    good = wa.forge_init_data(owner, token)
+    checks: dict = {}
+    checks["imzo_qabul_qilindi"] = bool(wa.validate_init_data(good, token))
+    broken = good[:-1] + ("0" if good[-1] != "0" else "1")
+    checks["buzilgan_imzo_rad_etildi"] = wa.validate_init_data(broken, token) is None
+    stale = wa.forge_init_data(owner, token,
+                               auth_date=int(time.time()) - wa.INIT_DATA_TTL - 60)
+    checks["eskirgan_rad_etildi"] = wa.validate_init_data(stale, token) is None
+    checks["begona_token_rad_etildi"] = wa.validate_init_data(
+        wa.forge_init_data(owner, "999:not-the-token"), token) is None
+    outside = wa.validate_init_data(wa.forge_init_data(stranger, token), token) or {}
+    checks["begona_id_ko‘rindi"] = int((outside.get("user") or {}).get("id") or 0) == 424242
+
+    state = stats.freeze()
+    try:
+        await stats.load_access()
+        checks["ega_kira_oladi"] = wa.can_open(owner["id"])
+        checks["begona_kira_olmaydi"] = not wa.can_open(stranger["id"])
+        body = await wa.payload(owner, ARCHIVE, count=False)
+        panel = {"ok": bool(body.get("ok")), "ega": bool(body.get("owner")),
+                 "hisoblagichlar": len(body.get("counters") or {}),
+                 "bo‘limlar": len(body.get("sections") or []),
+                 "yozuvlar": len(body.get("events") or []),
+                 "ruxsatlar": len(body.get("access") or [])}
+    except Exception as exc:
+        panel = {"ok": False, "xato": f"{type(exc).__name__}: {exc}"}
+    finally:
+        stats.restore(state)
+    report["tekshiruvlar"] = checks
+    report["panel"] = panel
+    if menu:
+        report["menyu"] = await apply_menu_buttons()
+    report["ok"] = bool(panel.get("ok")) and all(value is True for value in checks.values())
+    report["izoh"] = ("imzo tekshiriladi, faqat ega va /grant olganlar ko‘radi"
+                      if report["ok"] else "biror tekshiruv ishlamadi — pastga qarang")
+    return report
 
 
 async def self_test() -> list[str]:
@@ -1772,6 +2005,64 @@ async def timer_page(request: Request):
         if str(params.get("demo") or "") != "1":
             note("clock_opened", clock_opened=1, log=False)
         response: Response = HTMLResponse(clock_page.render(params))
+    finally:
+        _bg_tasks.reset(token)
+    return with_background(response, bucket)
+
+
+@app.get("/app")
+async def app_page(request: Request):
+    """The owner's Mini App: one self-contained page, Telegram-native look.
+
+    The page carries no numbers of its own; it asks ``/api/app`` with the signed
+    initData Telegram hands it, and that endpoint decides who sees what.
+    """
+    init_data = (request.query_params.get("initData")
+                 or request.query_params.get("initDataUnsafe") or wa.demo_init_data())
+    response = HTMLResponse(dashboard.render(init_data, api="/api/app"))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+async def app_payload(request: Request) -> dict:
+    """Verify who is asking, then answer with the dashboard (or a refusal)."""
+    init_data = ""
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:
+            body = None
+        if isinstance(body, dict):
+            init_data = str(body.get("initData") or body.get("init_data") or "")
+    if not init_data:
+        init_data = str(request.query_params.get("initData")
+                        or request.query_params.get("auth") or "")
+    verified = wa.validate_init_data(init_data)
+    if not verified:
+        return wa.denied("Telegram imzosi tekshirilmadi: initData yaroqsiz, eskirgan "
+                         "yoki bu sahifa Telegram ichida ochilmagan.")
+    user = verified.get("user") or {}
+    user_id = int(user.get("id") or 0)
+    await stats.load_access()
+    if not wa.can_open(user_id):
+        note("app_denied", user_id=user_id, chat_id=(verified.get("chat") or {}).get("id"),
+             detail="mini app urinishi")
+        answer = wa.denied()
+        answer["sizning_id"] = user_id
+        answer["yechim"] = f"Bot egasiga shu id ni yuboring, u /grant {user_id} Ism deb yozadi."
+        return answer
+    return await wa.payload(user, ARCHIVE, flush=bg_add)
+
+
+@app.post("/api/app")
+@app.get("/api/app")
+async def api_app(request: Request):
+    """Numbers for the Mini App, only for a verified and allowed Telegram user."""
+    bucket: list = []
+    token = _bg_tasks.set(bucket)
+    try:
+        response: Response = JSONResponse(await app_payload(request))
+        response.headers["Cache-Control"] = "no-store"
     finally:
         _bg_tasks.reset(token)
     return with_background(response, bucket)
