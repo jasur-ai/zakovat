@@ -251,7 +251,7 @@ def _fake_store_transport(store: dict, *, fail_first: bool = False):
             calls["kvdb"] += 1
             if fail_first:                      # the first service in the list refuses
                 return httpx.Response(503, text="<html>blocked</html>")
-            store["https://kvdb.io/bucket42/zakovat-stats"] = body
+            store["https://kvdb.io/bucket42/zakovat"] = body
             return httpx.Response(200, text="bucket42")
         if url in store:
             if request.method == "GET":
@@ -273,7 +273,8 @@ class StoreProvisioningTests(unittest.TestCase):
         report = asyncio.run(stats.create_store(transport=transport))
         self.assertTrue(report["ok"])
         self.assertEqual(report["xizmat"], "kvdb")
-        self.assertEqual(report["manzil"], "https://kvdb.io/bucket42/zakovat-stats")
+        self.assertEqual(report["manzil"], "https://kvdb.io/bucket42/zakovat")
+        self.assertTrue(report.get("kalit"))                # private bucket key
         self.assertEqual(calls["kvdb"], 1)
         self.assertIn("init-", store[report["manzil"]])       # the document was seeded
 

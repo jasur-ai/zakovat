@@ -19,6 +19,7 @@ import asyncio
 import json
 import logging
 import os
+import secrets
 import time
 from collections import Counter
 
@@ -333,22 +334,34 @@ async def _provision_jsonblob(client) -> tuple[str, dict]:
     return url, _detail(response)
 
 
+KVDB_TTL = 7776000      # 90 days: the longest the free plan keeps an idle key
+
+
 async def _provision_kvdb(client) -> tuple[str, dict]:
-    """kvdb hands out a bucket for a contact address, sent as a form field."""
-    form = {**_STORE_HEADERS, "content-type": "application/x-www-form-urlencoded"}
-    response = await client.post("https://kvdb.io/", content=f"email={STORE_EMAIL}",
-                                 headers=form, follow_redirects=False)
+    """kvdb: a free key-value bucket, private from the moment it is created.
+
+    The email has to be a deliverable address (kvdb validates it), and a
+    ``secret_key`` makes every later read and write need ``Authorization:
+    Bearer <key>`` — exactly what ``ZAKOVAT_STATS_TOKEN`` already sends.
+    """
+    secret = secrets.token_urlsafe(18)
+    fields = {"email": STORE_EMAIL, "secret_key": secret, "default_ttl": str(KVDB_TTL)}
+    response = await client.post("https://kvdb.io/", data=fields,
+                                 headers={"accept": "text/plain, */*",
+                                          "user-agent": _STORE_HEADERS["user-agent"]},
+                                 follow_redirects=False)
     detail = _detail(response, {"usul": "forma"})
     bucket = response.text.strip()
     if not _usable_bucket(response.status_code, bucket):
-        # some deployments take it as a query parameter instead
+        # a query parameter is the other form kvdb has been seen to accept
         response = await client.post(f"https://kvdb.io/?email={STORE_EMAIL}",
                                      headers=_STORE_HEADERS, follow_redirects=False)
         detail = _detail(response, {"usul": "so‘rov"})
         bucket = response.text.strip()
     if not _usable_bucket(response.status_code, bucket):
         return "", detail
-    return f"https://kvdb.io/{bucket}/zakovat-stats", detail
+    detail["kalit"] = secret
+    return f"https://kvdb.io/{bucket}/zakovat", detail
 
 
 def _usable_bucket(status: int, bucket: str) -> bool:
@@ -438,21 +451,28 @@ async def create_store(transport=None) -> dict:
                     continue
                 if not url:
                     attempts.append({"xizmat": name, "bosqich": "yaratish",
-                                     "kod": detail.get("kod"),
+                                     "kod": detail.get("kod"), "usul": detail.get("usul"),
                                      "javob": detail.get("javob", "")[:70]})
                     continue
+                # a private bucket needs its key for the very first check
+                auth = ({**plain, "authorization": f"Bearer {detail['kalit']}"}
+                        if detail.get("kalit") else plain)
                 try:
-                    written = await _put(client, url, body, plain)
-                    read = await client.get(url, headers=plain)
+                    written = await _put(client, url, body, auth)
+                    read = await client.get(url, headers=auth)
                 except Exception as exc:
                     attempts.append({"xizmat": name, "manzil": url, "bosqich": "yozish",
                                      "xato": f"{type(exc).__name__}: {exc}"})
                     continue
                 if written.status_code < 400 and marker in read.text:
-                    return {"ok": True, "xizmat": name, "manzil": url,
-                            "yozish": written.status_code, "oqish": read.status_code,
-                            "urinishlar": attempts,
-                            "izoh": "shu manzilni ZAKOVAT_STATS_URL ga yozing"}
+                    report = {"ok": True, "xizmat": name, "manzil": url,
+                              "yozish": written.status_code, "oqish": read.status_code,
+                              "urinishlar": attempts,
+                              "izoh": ("manzilni ZAKOVAT_STATS_URL ga, kalitni "
+                                       "ZAKOVAT_STATS_TOKEN ga yozing")}
+                    if detail.get("kalit"):
+                        report["kalit"] = detail["kalit"]
+                    return report
                 attempts.append({"xizmat": name, "manzil": url, "bosqich": "tekshirish",
                                  "yozish": written.status_code, "oqish": read.status_code,
                                  "oqish_javobi": read.text[:200].strip()})
