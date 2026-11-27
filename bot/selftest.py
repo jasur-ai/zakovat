@@ -127,7 +127,11 @@ def _callback_update(update_id: int, bot: Bot, data: str, message: Message) -> U
 
 
 def _preview(text: str, limit: int = 150) -> str:
-    value = " ".join(str(text or "").split())
+    """One clean line: the invisible state run is dropped from the transcript."""
+    from .webhook import INVISIBLE
+
+    value = "".join(ch for ch in str(text or "") if ch not in INVISIBLE)
+    value = " ".join(value.split())
     return value[:limit] + ("…" if len(value) > limit else "")
 
 

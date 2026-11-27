@@ -31,6 +31,23 @@ def timer_line(remaining: int, total: int) -> str:
     return f"Qolgan vaqt: {remaining} s   {bar(remaining, total)}"
 
 
+def clock(remaining: int) -> str:
+    """Countdown digits, the way a timer reads: 01:00, 00:47, 00:03."""
+    remaining = max(0, int(remaining))
+    return f"{remaining // 60:02d}:{remaining % 60:02d}"
+
+
+def countdown(remaining: int, total: int) -> str:
+    """The live countdown of the strip: clock digits over a shrinking bar.
+
+    Every tick rewrites both, so the numbers and the bar visibly move instead of
+    one time value being written down once.
+    """
+    if remaining <= 0:
+        return "VAQT TUGADI  00:00\n" + "▱" * BAR_WIDTH
+    return f"QOLGAN VAQT  {clock(remaining)}\n{bar(remaining, total)}"
+
+
 def welcome(packages: int, questions: int) -> str:
     return (
         "<b>ZAKOVAT AGENT</b>\n"

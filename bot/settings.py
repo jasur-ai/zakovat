@@ -146,11 +146,16 @@ def settings_keyboard(config: GameConfig):
     return InlineKeyboardMarkup(rows)
 
 
-def game_keyboard(admin: bool = True):
-    """Buttons under every question message."""
+def game_keyboard(admin: bool = True, clock: str = ""):
+    """Buttons under every question message.
+
+    With a clock the refresh button carries the live countdown, so the timer is
+    a control that changes on every tick and answers the moment it is tapped.
+    """
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-    row = [InlineKeyboardButton("Vaqtni yangilash", callback_data=GAME_REFRESH)]
+    label = f"{clock} · Vaqtni yangilash" if clock else "Vaqtni yangilash"
+    row = [InlineKeyboardButton(label, callback_data=GAME_REFRESH)]
     if admin:
         row.append(InlineKeyboardButton("O‘tkazish", callback_data=GAME_SKIP))
     row.append(InlineKeyboardButton("Hisob", callback_data=GAME_SCORE))

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextvars
 import html
 import json
 import logging
@@ -23,6 +24,7 @@ import httpx
 
 from fastapi import FastAPI, Header, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from starlette.background import BackgroundTask
 
 from telegram import BotCommand, ForceReply, InputFile, Update
 from telegram.constants import ParseMode
@@ -41,10 +43,25 @@ from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session, build_playlist
 MARKER = "\n\n#ZS2 "
 LEGACY_MARKER = "\n\n#ZS "
 TIMER = int(os.getenv("ZAKOVAT_TIMER_SECONDS", "60"))
-TICK_SECONDS = max(2, int(os.getenv("ZAKOVAT_TICK_SECONDS", "6")))
+TICK_SECONDS = max(1, int(os.getenv("ZAKOVAT_TICK_SECONDS", "3")))
 IDLE_LIMIT = max(0, int(os.getenv("ZAKOVAT_IDLE_LIMIT", "3")))
 TICKS_ENABLED = os.getenv("ZAKOVAT_LIVE_TIMER", "1") not in ("0", "false", "no")
+TICK_MODE = os.getenv("ZAKOVAT_TICK_MODE", "bg")     # "bg" (after response) | "sleep"
 MAX_TICK_HORIZON = 900          # a countdown never runs longer than this
+PROBE_WAIT = 4                  # seconds used by the ?bgprobe= diagnostic
+
+# Work queued while handling a request, run after the response has been sent.
+_bg_tasks: "contextvars.ContextVar[list]" = contextvars.ContextVar("bg_tasks", default=None)  # type: ignore[assignment]
+_bg_probe_log: list[str] = []
+
+# The game state rides along inside the message, but nobody should see it:
+# ZWNJ/ZWJ are kept verbatim by Telegram (real scripts depend on them) and are
+# zero-width, so unlike a spoiler there is nothing on screen to tap open.
+ZW0 = "\u200c"
+ZW1 = "\u200d"
+INVISIBLE = (ZW0, ZW1)
+SENTINEL = 0xA5
+HIDDEN_MODE = os.getenv("ZAKOVAT_HIDDEN_STATE", "invisible")   # or "spoiler"
 PER_PAGE = int(os.getenv("ZAKOVAT_PACKAGES_PER_PAGE", "12"))
 ROOT = Path(__file__).resolve().parent.parent
 ARCHIVE = Archive(
@@ -60,10 +77,10 @@ def _esc(value: object) -> str:
 
 
 def pack_state(session: Session, deadline: int, latest: str | None = None, aliases: list[str] | None = None) -> str:
-    """Compact game state: one short line instead of a block of base64 JSON.
+    """Compact game state: one short line of pipe separated numbers.
 
-    Serverless has no memory, so the state travels inside the message. The line
-    is wrapped in a spoiler when it is rendered (see `hide_state`).
+    Serverless has no memory, so the state travels inside the message. It is
+    rendered invisibly (see `hide_state`), never as readable text.
     """
     fields = [
         "s" if session.mode == "solo" else "g",
@@ -89,50 +106,128 @@ def pack_state(session: Session, deadline: int, latest: str | None = None, alias
         raw = json.dumps({"l": latest, "a": aliases or []}, ensure_ascii=False,
                          separators=(",", ":")).encode("utf-8")
         extra = "|" + base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
-    return MARKER + core + extra
+    return core + extra
 
 
-def hide_state(marker: str) -> str:
-    """Render the state line as a collapsed spoiler so it does not clutter the chat."""
-    return f'<span class="tg-spoiler">{html.escape(marker.strip())}</span>'
+def encode_invisible(body: str) -> str:
+    """Write the state as a run of zero-width characters (one bit each)."""
+    data = body.encode("utf-8")
+    payload = bytes([SENTINEL]) + data + bytes([sum(data) & 0xFF])
+    return "".join(ZW1 if bit == "1" else ZW0 for byte in payload for bit in f"{byte:08b}")
+
+
+def _decode_run(run: list[str]) -> str | None:
+    """Turn one zero-width run back into text, checking sentinel and checksum."""
+    if len(run) < 24 or len(run) % 8:
+        return None
+    payload = bytearray(
+        int("".join("1" if c == ZW1 else "0" for c in run[i:i + 8]), 2)
+        for i in range(0, len(run), 8)
+    )
+    if payload[0] != SENTINEL:
+        return None
+    data, checksum = bytes(payload[1:-1]), payload[-1]
+    if not data or (sum(data) & 0xFF) != checksum:
+        return None
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def decode_invisible(text: str) -> str | None:
+    """Read the zero-width state back out of a message, wherever it sits.
+
+    Any run qualifies only with both the sentinel byte and the checksum, so text
+    that happens to contain zero-width characters of its own is ignored. The
+    longest valid run wins.
+    """
+    found: str | None = None
+    longest = 0
+    run: list[str] = []
+    for char in str(text or "") + " ":          # the tail flushes the last run
+        if char in INVISIBLE:
+            run.append(char)
+            continue
+        if run:
+            body = _decode_run(run)
+            if body is not None and len(run) > longest:
+                found, longest = body, len(run)
+            run = []
+    return found
+
+
+def hide_state(body: str) -> str:
+    """Invisible by default; ZAKOVAT_HIDDEN_STATE=spoiler keeps the old look."""
+    if HIDDEN_MODE == "spoiler":
+        return f'<span class="tg-spoiler">{html.escape(MARKER + body)}</span>'
+    return encode_invisible(body)
+
+
+def utf16_length(text: str) -> int:
+    """Telegram counts UTF-16 code units, not Python characters."""
+    return len(text.encode("utf-16-le")) // 2
+
+
+def with_state(visible: str, body: str) -> str:
+    """Visible text plus the invisible state, inside Telegram's 4096 limit.
+
+    The run is placed after the first line rather than at the very end, so a
+    client that trims the tail of a message cannot take the state with it.
+    """
+    hidden = hide_state(body)
+    budget = 4096 - utf16_length(hidden) - 2
+    if budget <= 0:
+        return visible[:4000]
+    while utf16_length(visible) > budget:
+        visible = visible[:max(0, len(visible) - 24)]
+    head, _, tail = visible.partition("\n")
+    return f"{head}{hidden}\n{tail}" if tail else f"{head}{hidden}"
+
+
+def parse_body(body: str) -> dict | None:
+    """Turn the compact state line into the payload dict handlers use."""
+    parts = (body or "").strip().split("|")
+    if len(parts) < 16:
+        return None
+    try:
+        payload = {
+            "m": "solo" if parts[0] == "s" else "group",
+            "p": int(parts[1]), "i": int(parts[2]), "c": int(parts[3]), "w": int(parts[4]),
+            "o": int(parts[5]), "q": int(parts[6]), "d": int(parts[7]), "r": int(parts[8]),
+            "n": int(parts[9]), "t": int(parts[10]), "s": int(parts[11]),
+            "k": int(parts[12]) or None, "z": int(parts[13]), "y": int(parts[14]),
+            "x": bool(int(parts[15])), "l": None, "a": [],
+        }
+    except ValueError:
+        return None
+    if len(parts) > 16 and parts[16]:
+        try:
+            raw = base64.urlsafe_b64decode(parts[16] + "=" * (-len(parts[16]) % 4))
+            extra = json.loads(raw.decode("utf-8"))
+            payload["l"] = extra.get("l")
+            payload["a"] = extra.get("a") or []
+        except (ValueError, UnicodeDecodeError):
+            pass
+    return payload
 
 
 def unpack_state(text: str | None) -> dict | None:
-    """Read the compact marker; the old base64-JSON marker is still accepted."""
+    """Read the state: invisible run first, then the older visible markers."""
     if not text:
         return None
+    body = decode_invisible(text)
+    if body is not None:
+        return parse_body(body)
     token = MARKER.strip()
     legacy = LEGACY_MARKER.strip()
     if token in text:
-        body = text.split(token, 1)[1].strip().split("\n", 1)[0]
-        body = body.split("<", 1)[0].strip()
-        parts = body.split("|")
-        if len(parts) < 16:
-            return None
-        try:
-            payload = {
-                "m": "solo" if parts[0] == "s" else "group",
-                "p": int(parts[1]), "i": int(parts[2]), "c": int(parts[3]), "w": int(parts[4]),
-                "o": int(parts[5]), "q": int(parts[6]), "d": int(parts[7]), "r": int(parts[8]),
-                "n": int(parts[9]), "t": int(parts[10]), "s": int(parts[11]),
-                "k": int(parts[12]) or None, "z": int(parts[13]), "y": int(parts[14]),
-                "x": bool(int(parts[15])), "l": None, "a": [],
-            }
-        except ValueError:
-            return None
-        if len(parts) > 16 and parts[16]:
-            try:
-                raw = base64.urlsafe_b64decode(parts[16] + "=" * (-len(parts[16]) % 4))
-                extra = json.loads(raw.decode("utf-8"))
-                payload["l"] = extra.get("l")
-                payload["a"] = extra.get("a") or []
-            except (ValueError, UnicodeDecodeError):
-                pass
-        return payload
+        found = text.split(token, 1)[1].strip().split("\n", 1)[0].split("<", 1)[0].strip()
+        return parse_body(found)
     if legacy in text:
-        token = text.split(legacy, 1)[1].strip().split()[0].split("<", 1)[0]
+        raw_token = text.split(legacy, 1)[1].strip().split()[0].split("<", 1)[0]
         try:
-            raw = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
+            raw = base64.urlsafe_b64decode(raw_token + "=" * (-len(raw_token) % 4))
             payload = json.loads(raw.decode("utf-8"))
             return payload if isinstance(payload, dict) else None
         except (ValueError, UnicodeDecodeError):
@@ -325,10 +420,8 @@ def strip_text(session: Session, remaining: int, deadline: int,
     head = f"Savol {session.number} / {session.total}"
     if session.rounds > 1:
         head += f" · {session.current_round}-raund"
-    return (
-        f"{head}\n{msg.timer_line(remaining, session.timer_seconds)}\n"
-        + hide_state(pack_state(session, deadline, aliases=aliases))
-    )
+    visible = f"{head}\n{msg.countdown(remaining, session.timer_seconds)}"
+    return with_state(visible, pack_state(session, deadline, aliases=aliases))
 
 
 async def detect_can_delete(bot, chat_id: int, chat_type: str) -> bool:
@@ -351,37 +444,84 @@ async def detect_can_delete(bot, chat_id: int, chat_type: str) -> bool:
     return bool(getattr(member, "can_delete_messages", False))
 
 
+def bg_add(factory) -> bool:
+    """Queue work for right after this request's response has been sent."""
+    bucket = _bg_tasks.get()
+    if bucket is None:
+        return False
+    bucket.append(factory)
+    return True
+
+
+async def run_background(bucket: list) -> None:
+    """Run the queued work once the client already has its answer."""
+    token = _bg_tasks.set(None)
+    try:
+        for factory in bucket:
+            try:
+                await factory()
+            except Exception:
+                logging.getLogger(__name__).warning("background task failed", exc_info=True)
+    finally:
+        _bg_tasks.reset(token)
+
+
+async def post_tick(body: str, chat_id: int, wait: int, mode: str | None = None) -> None:
+    """Hand the next countdown hop over to a fresh invocation of ourselves."""
+    base = public_base_url()
+    if not base:
+        return
+    mode = mode or TICK_MODE
+    payload = {"tick": body, "chat": chat_id, "wait": wait, "mode": mode}
+    headers = {"X-Telegram-Bot-Api-Secret-Token": SECRET} if SECRET else {}
+    # In "bg" mode the other side answers at once. Should a platform buffer the
+    # response instead, we still wait long enough for its whole hop, so the next
+    # hop is never left running against a dropped connection.
+    if mode == "bg":
+        timeout = min(55.0, max(8.0, wait + 5.0))
+    else:
+        timeout = min(55.0, max(12.0, wait + 10.0))
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=3.0)) as client:
+            await client.post(base + "/api/index", json=payload, headers=headers)
+    except Exception:  # cosmetic feature — never break the game over it
+        logging.getLogger(__name__).debug("tick scheduling failed", exc_info=True)
+
+
 async def schedule_tick(session: Session, deadline: int, aliases: list[str] | None = None,
-                        wait: int | None = None) -> None:
-    """Wake our own endpoint up so the countdown repaints itself.
+                        wait: int | None = None, mode: str | None = None) -> None:
+    """Keep the countdown moving: wait, repaint, resolve, chain the next hop.
 
     Serverless functions freeze between requests, so the timer is a chain of
-    short self-invocations: each one waits, rewrites the strip and calls the
-    next. If a hop is lost the game still ends correctly — the deadline is also
-    checked lazily on every reply and button press.
+    short hops. If a hop is ever lost the game still ends correctly — the
+    deadline is also checked lazily on every reply and button press.
     """
     # Without delete rights a resolved strip cannot be removed, so a late tick
     # would repaint a question that is already closed. Those chats keep the
     # manual "Vaqtni yangilash" button instead.
     if not TICKS_ENABLED or not session.control_message_id or not session.can_delete:
         return
-    base = public_base_url()
     remaining = deadline - int(time.time())
-    if not base or remaining <= 0:
+    if remaining <= 0:
         return
     step = TICK_SECONDS if wait is None else wait
     step = max(1, min(int(step), remaining, 50))
-    payload = {
-        "tick": pack_state(session, deadline, aliases=aliases).strip(),
-        "chat": session.chat_id,
-        "wait": step,
-    }
-    headers = {"X-Telegram-Bot-Api-Secret-Token": SECRET} if SECRET else {}
+    body = pack_state(session, deadline, aliases=aliases)
+    chat_id = session.chat_id
+    mode = mode or TICK_MODE
+    if mode == "bg" and bg_add(lambda: tick_after_wait(body, chat_id, step)):
+        return
+    await post_tick(body, chat_id, step, mode)
+
+
+async def tick_after_wait(body: str, chat_id: int, wait: int) -> None:
+    """A countdown hop that runs after the response has gone out."""
+    if wait:
+        await asyncio.sleep(wait)
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(1.5, connect=1.5)) as client:
-            await client.post(base + "/api/index", json=payload, headers=headers)
-    except Exception:  # cosmetic feature — never break the game over it
-        logging.getLogger(__name__).debug("tick scheduling failed", exc_info=True)
+        await tick_work(body, chat_id)
+    except Exception:
+        logging.getLogger(__name__).warning("tick hop failed", exc_info=True)
 
 
 async def send_control(bot, chat_id: int, session: Session, deadline: int,
@@ -389,8 +529,8 @@ async def send_control(bot, chat_id: int, session: Session, deadline: int,
     """Countdown strip above every question: live remaining time + buttons."""
     remaining = max(0, deadline - int(time.time()))
     message = await bot.send_message(
-        chat_id=chat_id, text=strip_text(session, remaining, deadline, aliases)[:4090],
-        parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(),
+        chat_id=chat_id, text=strip_text(session, remaining, deadline, aliases),
+        parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
         disable_web_page_preview=True,
     )
     session.control_message_id = getattr(message, "message_id", None)
@@ -417,7 +557,7 @@ async def send_question(bot, chat_id: int, session: Session, aliases: list[str] 
         await send_photo_safely(bot, chat_id, question, caption="Savol rasmi")
     await bot.send_message(
         chat_id=chat_id,
-        text=(text + "\n" + hide_state(pack_state(session, deadline, aliases=aliases)))[:4090],
+        text=with_state(text, pack_state(session, deadline, aliases=aliases)),
         parse_mode=ParseMode.HTML,
         reply_markup=ForceReply(input_field_placeholder="Javobingizni yozing..."),
         disable_web_page_preview=True,
@@ -491,29 +631,46 @@ async def next_question(bot, chat_id: int, session: Session, headline: str, alia
 
 
 async def handle_tick(payload: dict) -> JSONResponse:
-    """One hop of the live countdown: wait, repaint, resolve or chain again."""
-    global _ticks_seen, _ticks_painted, _ticks_resolved, _ticks_stopped
-    _ticks_seen += 1
-    marker = str(payload.get("tick") or "")
-    data = unpack_state(marker if marker.lstrip().startswith("#") else MARKER + marker)
+    """Entry point of a countdown hop.
+
+    "bg" mode answers at once and lets the hop run after the response has been
+    sent — the way a serverless platform keeps such work alive — so the chain
+    never depends on holding an HTTP connection open. "sleep" mode runs the hop
+    inline and stays as the fallback.
+    """
+    body = str(payload.get("tick") or "")
     try:
         chat_id = int(payload.get("chat") or 0)
         wait = min(max(0, int(payload.get("wait") or 0)), 50)
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "reason": "bad payload"})
+    if str(payload.get("mode") or TICK_MODE) == "bg":
+        if bg_add(lambda: tick_after_wait(body, chat_id, wait)):
+            return JSONResponse({"ok": True, "scheduled": wait, "mode": "bg"},
+                                background=BackgroundTask(run_background, _bg_tasks.get()))
+    if wait:
+        await asyncio.sleep(wait)
+    return JSONResponse(await tick_work(body, chat_id))
+
+
+async def tick_work(body: str, chat_id: int) -> dict:
+    """One hop of the live countdown: repaint, resolve or chain again."""
+    global _ticks_seen, _ticks_painted, _ticks_resolved, _ticks_stopped
+    _ticks_seen += 1
+    state = body if body.lstrip().startswith(MARKER.strip()) else MARKER + body
+    data = unpack_state(state)
     if not data or not chat_id:
-        return JSONResponse({"ok": False, "reason": "no state"})
+        return {"ok": False, "reason": "no state"}
 
     deadline = int(data.get("d") or 0)
     if deadline - int(time.time()) > MAX_TICK_HORIZON:
-        return JSONResponse({"ok": False, "reason": "deadline too far ahead"})
-
-    if wait:
-        await asyncio.sleep(wait)
+        return {"ok": False, "reason": "deadline too far ahead"}
 
     session = session_from_data(data, chat_id)
     if session is None:
-        return JSONResponse({"ok": False, "reason": "unknown question"})
+        return {"ok": False, "reason": "unknown question"}
+    if not session.control_message_id:
+        return {"ok": True, "stopped": "no strip"}
 
     application = get_application()
     await application.initialize()
@@ -522,33 +679,32 @@ async def handle_tick(payload: dict) -> JSONResponse:
         remaining = deadline - int(time.time())
         aliases = list(data.get("a") or [])
 
-        if not session.control_message_id:
-            return JSONResponse({"ok": True, "stopped": "no strip"})
-
         if remaining > 0:
             try:
                 await bot.edit_message_text(
                     chat_id=chat_id, message_id=int(session.control_message_id),
-                    text=strip_text(session, remaining, deadline, aliases)[:4090],
-                    parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(),
+                    text=strip_text(session, remaining, deadline, aliases),
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
                 )
             except TelegramError as exc:
                 if "not modified" not in str(exc).lower():
                     # The strip is gone: answered, skipped or stopped elsewhere.
-                    return JSONResponse({"ok": True, "stopped": "strip closed"})
+                    _ticks_stopped += 1
+                    return {"ok": True, "stopped": "strip closed"}
             _ticks_painted += 1
             await schedule_tick(session, deadline, aliases)
-            return JSONResponse({"ok": True, "remaining": remaining})
+            return {"ok": True, "remaining": remaining}
 
         # Time is up. Whoever manages to close the strip resolves the question,
         # so a reply arriving at the same moment cannot produce a second reveal.
         if not await claim_strip(bot, chat_id, session):
             _ticks_stopped += 1
-            return JSONResponse({"ok": True, "stopped": "already resolved"})
+            return {"ok": True, "stopped": "already resolved"}
         _ticks_resolved += 1
         if session.resolve_unanswered():
             await next_question(bot, chat_id, session, "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
-        return JSONResponse({"ok": True, "resolved": True})
+        return {"ok": True, "resolved": True}
     finally:
         await application.shutdown()
 
@@ -796,9 +952,9 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     elif result == FOREIGN:
         await update.message.reply_text("Bu yakka o‘yin — faqat boshlagan kishi javob yozadi.")
     elif result == WRONG and session.mode == "solo":
-        text = ("Noto‘g‘ri. Yana urinib ko‘ring.\n"
-                + hide_state(pack_state(session, deadline, latest=update.message.text, aliases=aliases)))
-        await update.message.reply_text(text[:4090], parse_mode=ParseMode.HTML,
+        text = with_state("Noto‘g‘ri. Yana urinib ko‘ring.",
+                          pack_state(session, deadline, latest=update.message.text, aliases=aliases))
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML,
                                         reply_markup=ForceReply(input_field_placeholder="Yangi javob..."))
 
 
@@ -821,11 +977,12 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if action == "f":
         if remaining > 0 and not session.answered:
-            await query.answer(f"Qolgan vaqt: {remaining} s")
+            await query.answer(f"Qolgan vaqt: {msg.clock(remaining)}")
             try:
                 await query.edit_message_text(
-                    strip_text(session, remaining, deadline, aliases)[:4090],
-                    parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard())
+                    strip_text(session, remaining, deadline, aliases),
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=st.game_keyboard(clock=msg.clock(remaining)))
             except TelegramError:
                 pass
             await schedule_tick(session, deadline, aliases)
@@ -1183,7 +1340,11 @@ async def status():
         f"Webhook uchun tanlangan manzil: {public_base_url() or '(yo‘q)'}",
         f"So‘nggi o‘rnatish xatoligi: {_setup_error or 'yo‘q'}",
         f"Jonli taymer: {'yoqilgan' if TICKS_ENABLED else 'o‘chirilgan'} · "
-        f"qadam {TICK_SECONDS} s · javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
+        f"qadam {TICK_SECONDS} s · usul {TICK_MODE} · "
+        f"javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
+        f"Yashirin holat: {HIDDEN_MODE} · fon ishi: "
+        f"{_bg_probe_log[-1] if _bg_probe_log else 'tekshirilmagan'} · "
+        f"diagnostika: ?tickprobe=1 · ?bgprobe=1",
         f"Shu nusxadagi taymer urinishlari: {_ticks_seen} · yangilangan: {_ticks_painted} · "
         f"vaqti tugagan: {_ticks_resolved} · to‘xtagan: {_ticks_stopped}",
     ]
@@ -1225,14 +1386,87 @@ async def tick_probe() -> dict:
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(20.0, connect=5.0)) as client:
             response = await client.post(base + "/api/index",
-                                         json={"tick": "#ZS2 probe", "chat": 0, "wait": 0},
+                                         json={"tick": "#ZS2 probe", "chat": 0, "wait": 0,
+                                               "mode": "sleep"},
                                          headers=headers)
         body = response.text[:200]
         return {"ok": response.status_code == 200, "status": response.status_code,
-                "ms": round((time.time() - started) * 1000), "javob": body}
+                "ms": round((time.time() - started) * 1000), "javob": body,
+                "kod": hidden_state_report()}
     except Exception as exc:
         return {"ok": False, "xato": f"{type(exc).__name__}: {exc}",
                 "ms": round((time.time() - started) * 1000)}
+
+
+def hidden_state_report() -> dict:
+    """Round-trip the invisible state so the encoding can be checked live."""
+    body = "s|959|0|0|0|777|23300|1795749465|3|10|60|976953|0|0|0|1"
+    hidden = hide_state(body)
+    parsed = unpack_state("Savol 1 / 30\n" + hidden)
+    return {
+        "usul": HIDDEN_MODE,
+        "belgilar": len(hidden),
+        "korinar_eni": 0 if HIDDEN_MODE == "invisible" else len(MARKER.strip() + body),
+        "aylanma": bool(parsed and parsed.get("p") == 959 and parsed.get("q") == 23300),
+    }
+
+
+async def bg_step(stamp: str) -> JSONResponse:
+    """Queue PROBE_WAIT seconds of work and answer at once (probe internals)."""
+    started = time.time()
+
+    async def work() -> None:
+        await asyncio.sleep(PROBE_WAIT)
+        _bg_probe_log.append(f"{stamp} + {time.time() - started:.1f} s")
+        del _bg_probe_log[:-5]
+
+    queued = bg_add(work)
+    body = {"ok": True, "navbatga_olindi": queued, "belgi": stamp}
+    if queued:
+        return JSONResponse(body, background=BackgroundTask(run_background, _bg_tasks.get()))
+    return JSONResponse(body)
+
+
+async def bg_probe() -> JSONResponse:
+    """Does this platform still run work after the response was sent?
+
+    Asks itself to queue a few seconds of work, measures how long that request
+    took to come back, then looks whether the work finished anyway. The live
+    countdown depends on the answer: a fast reply plus finished work means "bg"
+    mode is real; a slow reply means the platform buffers the response and
+    "sleep" mode is the safer choice.
+    """
+    base = public_base_url()
+    if not base:
+        return JSONResponse({"ok": False, "reason": "ochiq manzil yo‘q (WEBHOOK_URL / VERCEL_*)"})
+    stamp = time.strftime("%H:%M:%S")
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=5.0)) as client:
+            started = time.time()
+            first = await client.get(f"{base}/api/index?bgstep=1&stamp={stamp}")
+            inner_ms = round((time.time() - started) * 1000)
+            await asyncio.sleep(PROBE_WAIT + 3)
+            second = await client.get(base + "/api/index?bglog=1")
+    except Exception as exc:
+        return JSONResponse({"ok": False, "xato": f"{type(exc).__name__}: {exc}"})
+
+    try:
+        log = list((second.json() or {}).get("log") or [])
+    except ValueError:
+        log = []
+    finished = any(stamp in line for line in log)
+    if finished and inner_ms < PROBE_WAIT * 600:
+        verdict = ("javob darhol yuborildi va ish keyin bajarildi — "
+                   "ZAKOVAT_TICK_MODE=bg ishlaydi")
+    elif finished:
+        verdict = ("ish bajarildi, lekin javob shundan keyin yuborildi — "
+                   "ZAKOVAT_TICK_MODE=sleep ishonchliroq")
+    else:
+        verdict = ("aniqlanmadi: so‘rov boshqa nusxaga tushgan bo‘lishi mumkin, "
+                   "qayta urinib ko‘ring")
+    return JSONResponse({"ok": finished, "belgi": stamp, "ichki_javob_ms": inner_ms,
+                         "fon_ishi": "bajarildi" if finished else "ko‘rinmadi",
+                         "kutildi": PROBE_WAIT, "kundalik": log[-5:], "xulosa": verdict})
 
 
 @app.get("/api/index")
@@ -1243,6 +1477,17 @@ async def index(request: Request):
         return await setup(request)
     if request.query_params.get("tickprobe") == "1":
         return JSONResponse(await tick_probe())
+    if request.query_params.get("bgprobe") == "1":
+        return await bg_probe()
+    if request.query_params.get("bgstep") == "1":
+        bucket: list = []
+        token = _bg_tasks.set(bucket)
+        try:
+            return await bg_step(request.query_params.get("stamp") or time.strftime("%H:%M:%S"))
+        finally:
+            _bg_tasks.reset(token)
+    if request.query_params.get("bglog") == "1":
+        return JSONResponse({"ok": True, "log": _bg_probe_log[-5:]})
     if mode == "1":
         return status_page("O‘z-o‘zini sinash", await self_test())
     return await status()
@@ -1283,16 +1528,27 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None 
             _recent_errors[:] = _recent_errors[:5]
         return Response(status_code=403)
     data = await request.json()
-    if isinstance(data, dict) and "tick" in data and "update_id" not in data:
-        return await handle_tick(data)
-    update = Update.de_json(data, get_application().bot)
-    if not update:
-        return Response(status_code=400)
-    _updates_seen += 1
-    application = get_application()
-    await application.initialize()
+    # Anything the handlers queue here runs after the response has been sent, so
+    # the countdown keeps ticking without keeping Telegram waiting for it.
+    bucket: list = []
+    token = _bg_tasks.set(bucket)
     try:
-        await application.process_update(update)
+        if isinstance(data, dict) and "tick" in data and "update_id" not in data:
+            response: Response = await handle_tick(data)
+        else:
+            update = Update.de_json(data, get_application().bot)
+            if not update:
+                return Response(status_code=400)
+            _updates_seen += 1
+            application = get_application()
+            await application.initialize()
+            try:
+                await application.process_update(update)
+            finally:
+                await application.shutdown()
+            response = JSONResponse({"ok": True})
     finally:
-        await application.shutdown()
-    return JSONResponse({"ok": True})
+        _bg_tasks.reset(token)
+    if bucket and response.background is None:
+        response.background = BackgroundTask(run_background, bucket)
+    return response
