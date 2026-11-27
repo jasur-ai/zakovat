@@ -1,20 +1,25 @@
 name: Export turnirlar.uz question base
 
-# turnirlar.uz has no API, so the pages are read here — in CI, which has a route
-# to the site. Two jobs:
+# turnirlar.uz has no JSON API, so its pages are read here — in CI, which has a
+# route to the site. Two jobs:
 #
-#   probe   runs on every push that touches the exporter and uploads the raw
-#           pages as an artifact, so the parser can be written against the real
-#           HTML instead of guesswork;
-#   import  is started by hand (Actions → Export turnirlar.uz → Run workflow),
-#           walks the whole base, dedupes it against data/all and commits the
-#           shards. It is resumable: packages already stored are skipped.
+#   probe   runs on every push that touches the exporter: it fetches a list page
+#           and a package page, parses them offline and commits a small digest,
+#           so the parsers can be checked without reaching the site;
+#   import  is started by hand (Actions → Export turnirlar.uz → Run workflow).
+#           It walks the whole catalogue, drops questions that are already in
+#           data/all, writes gzipped shards and publishes them to the Release
+#           "savollar-bazasi". Only the manifest (≈2 MB) is committed — the
+#           shards (≈170 MB) would bloat the repository and the deployment.
+#
+# The import is resumable: shards already in the Release are downloaded first and
+# the packages they hold are skipped.
 
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe — sahifa tuzilishini ko‘rsatish; import — bazani yig‘ish"
+        description: "probe — sahifa tuzilishi; import — bazani yig‘ish"
         type: choice
         default: "import"
         options: [probe, import]
@@ -24,17 +29,22 @@ on:
       pages:
         description: "Ro‘yxatdan necha sahifa o‘qilsin (0 = hammasi)"
         default: "0"
+      source:
+        description: "Manba filtri"
+        type: choice
+        default: "all"
+        options: [all, zakovat-klubi, boshqa]
       workers:
         description: "Parallel so‘rovlar soni"
         default: "8"
       commit:
-        description: "Natijani main ga commit qilish"
+        description: "Manifest va namunani shu branch ga commit qilish"
         type: boolean
         default: true
       release:
-        description: "To‘liq bazani GitHub Release ga ham yuklash"
+        description: "Shardlarni GitHub Release ga yuklash"
         type: boolean
-        default: false
+        default: true
   push:
     branches: ['**']
     paths:
@@ -53,7 +63,7 @@ jobs:
     name: Sahifa tuzilishini tekshirish
     if: github.event_name == 'push' || inputs.mode == 'probe'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -61,50 +71,28 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Probe the site
+      - name: Fetch the pages
         run: |
+          mkdir -p data/turnirlar/probe
           python3 scripts/export_turnirlar.py --mode probe \
             --probe-dir data/turnirlar/probe \
-            --probe-package 7800 --probe-page 1
+            --probe-package "${{ inputs.probe_package || 7800 }}" \
+            --probe-page 1 2>&1 | tee data/turnirlar/probe/digest.txt
 
-      - name: Try the list parser
+      - name: Parse them offline
         run: |
-          python3 - <<'PY'
-          import sys
-          sys.path.insert(0, "scripts")
-          import export_turnirlar as ex
-          rows = ex.list_all_packages(2, 1, 4, 40)
-          print(f"parsed {len(rows)} packages from two pages")
-          for row in rows[:8]:
-              print(" ", row)
-          PY
+          python3 scripts/export_turnirlar.py --mode check \
+            --probe-dir data/turnirlar/probe \
+            --sample data/turnirlar/probe/sample.json 2>&1 | tee -a data/turnirlar/probe/digest.txt
 
-      - name: Try the package parser
-        run: |
-          python3 - <<'PY'
-          import sys
-          sys.path.insert(0, "scripts")
-          import export_turnirlar as ex
-          package = {"id": ex.ID_OFFSET + 7800, "source_id": 7800,
-                     "title": "Özbekiston çempionati 2025 savollari"}
-          status, markup = ex.fetch(f"{ex.SITE}/paket/7800")
-          rows = ex.parse_package(markup, package)
-          print(f"HTTP {status} · parsed {len(rows)} questions")
-          for row in rows[:3]:
-              print("---")
-              for key in ("id", "round", "text", "answer", "accepted", "comment", "author"):
-                  print(f"{key}: {str(row.get(key))[:220]}")
-          PY
-
-      # The sandbox cannot reach the Actions artifact store, so the probe output
-      # is committed as well — it can then be read back through the repo API.
-      # This does not re-trigger the job: the push filter only watches the
-      # exporter and this workflow file.
-      - name: Publish probe output
+      # The sandbox that writes the parsers cannot reach the Actions artifact
+      # store, so the digest (a few KB) is committed and read back through the
+      # repository API. The raw pages stay in the artifact for a human.
+      - name: Publish the digest
         run: |
           git config user.name "Zakovat Archive Bot"
           git config user.email "archive@users.noreply.github.com"
-          git add data/turnirlar/probe
+          git add data/turnirlar/probe/digest.txt data/turnirlar/probe/sample.json
           if ! git diff --cached --quiet; then
             git commit -m "Probe: turnirlar.uz sahifa tuzilishi"
             git pull --rebase origin "${GITHUB_REF#refs/heads/}"
@@ -129,16 +117,17 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Restore what is already stored
-        run: |
-          mkdir -p data/turnirlar
-          if gh release download savollar-bazasi --pattern 'turnirlar-*.json.gz' --dir data/turnirlar/shards --clobber 2>/dev/null; then
-            echo "downloaded the previous shards"
-          else
-            echo "no previous release, starting from scratch"
-          fi
+      - name: Restore the shards that are already stored
         env:
           GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data/turnirlar/shards
+          if gh release download savollar-bazasi --pattern 'turnirlar-*.json.gz' \
+               --dir data/turnirlar/shards --clobber 2>/dev/null; then
+            echo "restored $(ls data/turnirlar/shards | wc -l) shards"
+          else
+            echo "no release yet — starting from scratch"
+          fi
 
       - name: Import
         run: |
@@ -146,37 +135,55 @@ jobs:
             --out-dir data/turnirlar \
             --max-packages "${{ inputs.max_packages }}" \
             --pages "${{ inputs.pages }}" \
-            --workers "${{ inputs.workers }}"
+            --source "${{ inputs.source }}" \
+            --workers "${{ inputs.workers }}" \
+            --sample data/turnirlar/sample.json
 
       - name: Show the result
         run: |
-          du -sh data/turnirlar
-          ls -la data/turnirlar/shards | head
-          python3 -c "import json;m=json.load(open('data/turnirlar/manifest.json'));print('packages',m['package_count'],'questions',m['question_count'],'shards',len(m['shards']))"
+          du -sh data/turnirlar/shards 2>/dev/null || true
+          ls data/turnirlar/shards | head -5
+          ls data/turnirlar/shards | wc -l
+          python3 - <<'PY'
+          import json, pathlib
+          manifest = json.loads(pathlib.Path("data/turnirlar/manifest.json").read_text(encoding="utf-8"))
+          print("packages", manifest["package_count"], "questions", manifest["question_count"],
+                "shards", len(manifest["shards"]), "bytes",
+                sum(int(s.get("bytes") or 0) for s in manifest["shards"]))
+          for row in manifest["packages"][:3]:
+              print(" ", json.dumps(row, ensure_ascii=False)[:220])
+          PY
 
-      - name: Commit and push
-        if: inputs.commit
-        run: |
-          git config user.name "Zakovat Archive Bot"
-          git config user.email "archive@users.noreply.github.com"
-          git add data/turnirlar
-          if git diff --cached --quiet; then
-            echo "No changes"
-            exit 0
-          fi
-          git commit -m "turnirlar.uz savollar bazasi yangilandi"
-          git pull --rebase origin main
-          git push origin HEAD:main
-
-      - name: Upload the full base to a release
+      - name: Publish the shards
         if: inputs.release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd data/turnirlar/shards
+          if ! gh release view savollar-bazasi >/dev/null 2>&1; then
+            gh release create savollar-bazasi --title "Zakovat savollar bazasi" \
+              --notes "turnirlar.uz bazasining to‘liq eksporti. Bot kerakli shardni shu yerdan oladi: https://github.com/jasur-ai/zakovat/releases/download/savollar-bazasi/<fayl>"
+          fi
+          total=$(ls | wc -l)
+          number=0
           for file in *.json.gz; do
-            gh release upload savollar-bazasi "$file" --clobber \
-              || gh release create savollar-bazasi "$file" \
-                   --title "Zakovat savollar bazasi (turnirlar.uz)" \
-                   --notes "To‘liq baza: shardlar va manifest. Bot kerakli shardni shu yerdan oladi."
+            number=$((number + 1))
+            echo "[$number/$total] $file"
+            gh release upload savollar-bazasi "$file" --clobber
           done
+          cd ../../..
+          gh release upload savollar-bazasi data/turnirlar/manifest.json --clobber
+
+      - name: Commit the manifest
+        if: inputs.commit
+        run: |
+          git config user.name "Zakovat Archive Bot"
+          git config user.email "archive@users.noreply.github.com"
+          git add data/turnirlar/manifest.json data/turnirlar/sample.json
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "turnirlar.uz savollar bazasi yangilandi"
+          git pull --rebase origin "${GITHUB_REF#refs/heads/}"
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
