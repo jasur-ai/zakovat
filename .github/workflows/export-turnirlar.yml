@@ -82,8 +82,18 @@ jobs:
           git add data/turnirlar/probe/digest.txt data/turnirlar/probe/sample.json
           if ! git diff --cached --quiet; then
             git commit -m "Probe: turnirlar.uz sahifa tuzilishi"
-            git pull --rebase origin "${GITHUB_REF#refs/heads/}"
-            git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+            # An import run can commit to the same branch while this one parses:
+            # replay onto its tip and retry instead of failing the job.
+            branch="${GITHUB_REF#refs/heads/}"
+            for attempt in 1 2 3; do
+              git fetch origin "$branch"
+              if git rebase -X theirs FETCH_HEAD && git push origin "HEAD:$branch"; then
+                echo "published on attempt $attempt"; break
+              fi
+              git rebase --abort 2>/dev/null || true
+              echo "attempt $attempt lost the race with another push"
+              sleep 5
+            done
           fi
 
       - uses: actions/upload-artifact@v4

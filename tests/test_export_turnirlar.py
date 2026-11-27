@@ -491,6 +491,19 @@ class VerifyModeTest(unittest.TestCase):
         self.assertEqual(stats["card_mismatch"], 1)      # 6001's card says 12, the page 36
         self.assertEqual(stats["short"], 2)              # and the parser is short of both
 
+    def test_verify_names_the_packages_whose_card_disagrees_with_the_page(self):
+        def fetch(url: str, *args, **kwargs):
+            if "/paketlar" in url:
+                return 200, LIST_PAGE
+            return 200, PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                             "<dt>Savollar soni</dt><dd>36</dd>", 1)
+        with mock.patch.object(ex, "fetch", fetch), \
+                contextlib.redirect_stdout(io.StringIO()) as printed:
+            stats, _problems = ex.verify(1, 8, "all", 2, 0.0)
+        self.assertEqual(stats["card_mismatch"], 1)      # 6001's card says 12
+        self.assertIn("package 6001: the card promises 12 questions, the package page 36",
+                      printed.getvalue())
+
     def test_verify_survives_a_package_that_refuses(self):
         def fetch(url: str, *args, **kwargs):
             if "/paketlar" in url:

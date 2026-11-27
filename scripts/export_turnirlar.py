@@ -1034,6 +1034,7 @@ def verify(sample_pages: int, per_page: int, source: str, workers: int,
     stats = {"checked": 0, "failed": 0, "empty": 0, "short": 0, "multi_tour": 0,
              "announced": 0, "parsed": 0, "card_mismatch": 0}
     problems: list[dict] = []
+    disagreements: list[dict] = []
 
     def one(row: dict) -> dict:
         source_id = int(row["source_id"])
@@ -1070,6 +1071,7 @@ def verify(sample_pages: int, per_page: int, source: str, workers: int,
             stats["parsed"] += found["parsed"]
             if found["page"] and found["card"] and found["page"] != found["card"]:
                 stats["card_mismatch"] += 1
+                disagreements.append(found)
             if found["tours"] > 1:
                 stats["multi_tour"] += 1
             if not found["parsed"]:
@@ -1086,6 +1088,12 @@ def verify(sample_pages: int, per_page: int, source: str, workers: int,
           f"empty {stats['empty']} · failed {stats['failed']} · "
           f"card/page disagreement {stats['card_mismatch']} · "
           f"read over several tour pages {stats['multi_tour']}")
+    for found in sorted(disagreements, key=lambda row: abs(row["page"] - row["card"]),
+                        reverse=True)[:5]:
+        # The catalogue card and the package page disagree: worth knowing which
+        # one the archive believes (it believes the page, and parses all of it).
+        print(f"[verify] package {found['source_id']}: the card promises {found['card']} "
+              f"questions, the package page {found['page']} — parsed {found['parsed']}")
     if stats["checked"] and stats["announced"]:
         ratio = stats["parsed"] / stats["announced"]
         print(f"[verify] the parser keeps {ratio:.1%} of what those pages announce; "
