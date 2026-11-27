@@ -1,14 +1,14 @@
 {
   "_comment": "Options for the next turnirlar-import run. Pushing a change to this file starts it — the sandbox cannot send workflow_dispatch. The Monday cron uses these same options, so keep them light: pages counts how many catalogue pages to walk from start_page (the newest packages are on page 1). 0 means everything; source: all | zakovat-klubi | boshqa; dedupe=false keeps questions that data/all already has; fresh=true rebuilds from an empty archive (after a parser change) and prunes the shards it supersedes; commit pushes manifest.json + sample.json back to this branch; release uploads the shards to 'savollar-bazasi'.",
   "source": "boshqa",
-  "start_page": 1,
-  "pages": 110,
+  "start_page": 111,
+  "pages": 109,
   "max_packages": 0,
   "workers": 8,
   "polite": 0.4,
   "dedupe": true,
   "commit": true,
   "release": true,
-  "run": "1/3 (qayta) — tur sahifalari bilan noldan: boshqa manbalar, 1–110 sahifa",
-  "fresh": true
+  "run": "2/3 (qayta) — boshqa manbalar, 111–219 sahifa (1/3 shardlari tiklanadi)",
+  "fresh": false
 }
