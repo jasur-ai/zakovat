@@ -149,6 +149,10 @@ h2{
 .err button{
   background:var(--accent);color:#fff;padding:11px 22px;border-radius:12px;font-weight:600;font-size:14.5px;
 }
+.err small{
+  display:block;color:var(--muted);font-size:12px;line-height:1.6;
+  margin:-8px auto 20px;max-width:40ch;overflow-wrap:anywhere;
+}
 .empty{color:var(--muted);font-size:13.5px;padding:4px 2px;line-height:1.7;overflow-wrap:anywhere}
 .empty b{color:var(--text);font-weight:600}
 .sk{
@@ -196,9 +200,36 @@ var data = null;
 var busy = false;
 var failed = "";
 var themeTries = 0;
+var proofSource = "";
 
 function tg(){
   return (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+}
+function proof(){
+  /*
+   * Telegram never puts initData in the query string. Opening the app from a menu
+   * button or a web_app button appends it to the address as a fragment:
+   * #tgWebAppData=<urlencoded initData>. The SDK decodes that fragment and
+   * exposes it as Telegram.WebApp.initData, which is what a server can verify.
+   * The fragment itself is the fallback when the SDK has not arrived yet, and the
+   * value the page was rendered with is the last resort (local preview).
+   */
+  var w = tg();
+  if (w && w.initData){ proofSource = "sdk"; return w.initData; }
+  var hash = window.location.hash || "";
+  /* The fragment also carries tgWebAppVersion / tgWebAppPlatform, so the value is
+     taken up to the next tgWebApp key. That works whether the client encoded the
+     whole initData once more (the documented way) or left it plain. */
+  var found = hash.match(/tgWebAppData=([^#]*?)(?:&tgWebApp[A-Za-z]+=|$)/);
+  if (found && found[1]){
+    var raw = found[1];
+    try{ raw = decodeURIComponent(raw); }catch(e){}
+    proofSource = "fragment";
+    return raw;
+  }
+  if (INIT){ proofSource = "sahifa"; return INIT; }
+  proofSource = "";
+  return "";
 }
 function haptic(kind, style){
   var w = tg();
@@ -270,11 +301,15 @@ function applyTheme(){
   if (meta) meta.setAttribute("content", background);
   return !!w;
 }
-function chaseTheme(){
+function chaseTheme(onReady){
   /* In a plain browser the SDK arrives a moment late; pick it up when it does. */
-  if (applyTheme() || themeTries > 12) return;
+  if (applyTheme()){
+    if (onReady) onReady();
+    return;
+  }
+  if (themeTries > 12) return;
   themeTries += 1;
-  setTimeout(chaseTheme, 250);
+  setTimeout(function(){ chaseTheme(onReady); }, 250);
 }
 
 /* ---- data ----------------------------------------------------------- */
@@ -288,7 +323,7 @@ function load(){
   fetch(API, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({initData: INIT}),
+    body: JSON.stringify({initData: proof(), manba: proofSource || "yo‘q"}),
     credentials: "same-origin"
   }).then(function(response){
     return response.json()["catch"](function(){
@@ -476,12 +511,16 @@ function paint(){
 
   if (failed && !data){
     tabsBox.innerHTML = "";
-    view.innerHTML = '<div class="err"><b>Kirish yo‘q</b><p>' + esc(failed) +
-      '</p><button id="again">Qayta urinish</button></div>';
+    view.innerHTML = '<div class="err"><b>Kirish yo‘q</b><p>' + esc(failed) + '</p>' +
+      '<small>' + esc(proofSource ? "initData manbasi: " + proofSource :
+        "Telegram initData topilmadi. Sahifani bot menyusidagi «Statistika» " +
+        "tugmasidan oching — oddiy brauzerda imzo bo‘lmaydi.") + '</small>' +
+      '<button id="again">Qayta urinish</button></div>';
     var again = document.getElementById("again");
     if (again) again.addEventListener("click", load);
     name.textContent = "Zakovat";
-    sub.textContent = "ruxsat tekshirilmadi";
+    sub.textContent = proofSource ? "isbot tekshirilmadi (" + proofSource + ")" :
+      "initData yo‘q";
     ava.innerHTML = "Z";
     return;
   }
@@ -532,7 +571,7 @@ function paint(){
 
 /* ---- boot ----------------------------------------------------------- */
 function boot(){
-  chaseTheme();
+  chaseTheme(function(){ if (!data && proof()) load(); });
   var w = tg();
   try{
     if (w){
