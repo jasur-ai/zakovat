@@ -94,7 +94,14 @@
 
   <div class="card">
     <h2>Statistika</h2>
-    <p class="muted">Bot egasi uchun <code>/stats</code> bo‘limi bor: barcha foydalanuvchilar o‘yinlari, berilgan savollar, to‘g‘ri va noto‘g‘ri javoblar, javobsiz qolganlar, o‘ynalgan paketlar, arxivdagi turkumlar va bo‘limlar, oxirgi harakatlar. Raqamlar tashqi JSON saqlashga (<code>ZAKOVAT_STATS_URL</code>) yoziladi, shuning uchun nusxalar almashsa ham yig‘ilib boradi.</p>
+    <p class="muted">Bot egasi uchun <code>/stats</code> bo‘limi bor: barcha foydalanuvchilar o‘yinlari, berilgan savollar, to‘g‘ri va noto‘g‘ri javoblar, javobsiz qolganlar, o‘ynalgan paketlar, arxivdagi turkumlar va bo‘limlar, oxirgi harakatlar. Boshqa hech kim bu bo‘limni ko‘rmaydi; rad javobida so‘rovchi o‘z <code>id</code> sini ko‘radi.</p>
+    <p class="muted">Raqamlar bitta kichik JSON hujjatda saqlanadi. Standart saqlagich — Telegram: hujjat eganing chatidagi <b>pinlangan xabar</b>da turadi, shuning uchun server qayta ishga tushsa ham hisob yo‘qolmaydi. Xohlasangiz Vercel Blob yoki istalgan JSON manzil (<code>ZAKOVAT_STATS_URL</code>) ishlatiladi.</p>
+  </div>
+
+  <div class="card">
+    <h2>Mini App paneli</h2>
+    <p class="muted">O‘sha raqamlarning keng versiyasi Telegram oynasida: <a href="/app"><code>/app</code></a>. Sahifa Telegram ko‘rinishida — yorug‘ va qora rejimni o‘zi oladi, tashqi kutubxonaga bog‘liq emas (bitta HTML, ichida CSS va JS). Bo‘limlar: <b>Umumiy</b>, <b>Bo‘limlar</b>, <b>O‘yinlar</b>, <b>Ruxsatlar</b>.</p>
+    <p class="muted">Kirish ikki qavatli: «Statistika» tugmasi faqat ega va u ruxsat bergan chatlarning menyusida ko‘rinadi, server esa har bir so‘rovda Telegram <code>initData</code> imzosini tekshiradi — manzil tarqalib ketsa ham, begonaga raqam berilmaydi. Buyruqlar: <code>/access</code> (ro‘yxat), <code>/grant 123456789 Ism</code> (ruxsat berish), <code>/revoke 123456789</code> (olish).</p>
   </div>
 
   <div class="card">
@@ -104,6 +111,8 @@
       <li><a href="/api/index?test=1">/api/index?test=1</a> — o‘z-o‘zini sinash</li>
       <li><a href="/api/index?tickprobe=1">/api/index?tickprobe=1</a> — jonli taymer transporti</li>
       <li><a href="/api/index?bgprobe=1">/api/index?bgprobe=1</a> — javobdan keyingi ish yuradimi</li>
+      <li><a href="/api/index?statsprobe=1">/api/index?statsprobe=1</a> — statistika saqlanadimi</li>
+      <li><a href="/api/index?appprobe=1">/api/index?appprobe=1</a> — Mini App imzosi va ruxsat darvozasi</li>
     </ul>
   </div>
 </main>

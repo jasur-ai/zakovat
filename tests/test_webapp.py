@@ -476,7 +476,7 @@ class RouteTests(unittest.TestCase):
             answer = self.client.get("/")
         self.assertEqual(answer.status_code, 200)
         self.assertIn("/api/app", answer.text)
-        self.assertIn("Ruxsatlar", answer.text)
+        self.assertIn('id="tabs"', answer.text)          # the panel, not the landing page
 
     def test_production_keeps_the_landing_page_at_the_root(self):
         with mock.patch.dict(os.environ, {"VERCEL_ENV": "production", "ZAKOVAT_APP_DEMO": "1"}):
@@ -484,8 +484,9 @@ class RouteTests(unittest.TestCase):
         self.assertFalse(wa.demo_enabled())
         answer = self.client.get("/")
         self.assertEqual(answer.status_code, 200)
-        self.assertNotIn("Ruxsatlar", answer.text)
-        self.assertIn("Zakovat", answer.text)
+        self.assertNotIn('id="tabs"', answer.text)       # no panel here
+        self.assertIn("Zakovat Agent", answer.text)
+        self.assertIn("Mini App paneli", answer.text)    # but the page tells visitors about it
 
     def test_the_diagnostic_proves_the_gate_and_leaves_no_trace(self):
         before = asyncio.run(stats.snapshot(self.archive))
