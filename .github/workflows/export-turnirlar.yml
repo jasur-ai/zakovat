@@ -1,79 +1,37 @@
-name: Export turnirlar.uz question base
+name: Probe turnirlar.uz pages
 
-# turnirlar.uz has no JSON API, so its pages are read here — in CI, which has a
-# route to the site (the development sandbox does not). Two jobs:
+# turnirlar.uz has no JSON API, so its pages are read by scripts/export_turnirlar.py
+# — here, in CI, because the development sandbox has no route to the site.
 #
-#   probe   runs when the exporter or this file changes: it fetches a list page
-#           and a package page, parses them offline (--mode check) and commits a
-#           few-KB digest plus a sample, so the parsers can be verified from a
-#           sandbox that cannot reach the site. The raw pages stay in the
-#           Actions artifact.
-#   import  walks the whole catalogue, drops questions already present in
-#           data/all, writes gzipped shards and publishes them to the Release
-#           "savollar-bazasi". Only the manifest and a sample (≈2 MB) are
-#           committed — 160 MB of shards would bloat the repository and the
-#           Vercel bundle (.vercelignore, .gitignore).
-#
-# import is started by hand (Actions → Run workflow) or by a push that touches
-# .turnirlar-run, a small JSON file with the run options — the sandbox can push
-# but cannot send workflow_dispatch. The import is resumable: shards already in
-# the Release are downloaded first and the packages they hold are skipped, and a
-# manifest that lists shards which are not on disk is pruned.
+# This job fetches a list page and two package pages, parses them offline
+# (--mode check) and commits a few-KB digest plus a sample. That is how the
+# parsers get verified without reaching the site; the raw pages stay in the
+# Actions artifact. Collecting the base itself is turnirlar-import.yml.
 
 on:
   workflow_dispatch:
     inputs:
-      mode:
-        description: "probe — sahifa tuzilishi; import — bazani yig‘ish"
-        type: choice
-        default: "import"
-        options: [probe, import]
-      max_packages:
-        description: "Nechta to‘plam (0 = hammasi)"
-        default: "0"
-      pages:
-        description: "Ro‘yxatdan necha sahifa o‘qilsin (0 = hammasi)"
-        default: "0"
-      source:
-        description: "Manba filtri"
-        type: choice
-        default: "all"
-        options: [all, zakovat-klubi, boshqa]
-      workers:
-        description: "Parallel so‘rovlar soni"
-        default: "8"
-      commit:
-        description: "Manifest va namunani shu branch ga commit qilish"
-        type: boolean
-        default: true
-      release:
-        description: "Shardlarni GitHub Release ga yuklash"
-        type: boolean
-        default: true
-  repository_dispatch:
-    types: [archive-turnirlar]
+      package:
+        description: "Tekshiriladigan to‘plam id si"
+        default: "7800"
+      package2:
+        description: "Ikkinchi to‘plam id si (boshqacha tuzilish)"
+        default: "7742"
+      page:
+        description: "Ro‘yxat sahifasi"
+        default: "1"
   push:
     branches: ['**']
     paths:
       - scripts/export_turnirlar.py
       - .github/workflows/export-turnirlar.yml
-      - .turnirlar-run
 
 permissions:
   contents: write
 
-concurrency:
-  group: turnirlar-export
-  cancel-in-progress: false
-
 jobs:
   probe:
     name: Sahifa tuzilishini tekshirish
-    if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.mode == 'probe') ||
-      (github.event_name == 'push' &&
-       !contains(github.event.head_commit.modified, '.turnirlar-run') &&
-       !contains(github.event.head_commit.added, '.turnirlar-run'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -88,7 +46,9 @@ jobs:
           mkdir -p data/turnirlar/probe
           python3 scripts/export_turnirlar.py --mode probe \
             --probe-dir data/turnirlar/probe \
-            --probe-package 7800 --probe-package2 7742 --probe-page 1 \
+            --probe-package "${{ inputs.package || 7800 }}" \
+            --probe-package2 "${{ inputs.package2 || 7742 }}" \
+            --probe-page "${{ inputs.page || 1 }}" \
             2>&1 | tee data/turnirlar/probe/digest.txt
 
       - name: Parse them offline
@@ -113,135 +73,3 @@ jobs:
           name: turnirlar-probe
           path: data/turnirlar/probe
           retention-days: 14
-
-  import:
-    name: Bazani yig‘ish
-    if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.mode == 'import') ||
-      github.event_name == 'repository_dispatch' ||
-      (github.event_name == 'push' &&
-       (contains(github.event.head_commit.modified, '.turnirlar-run') ||
-        contains(github.event.head_commit.added, '.turnirlar-run')))
-    runs-on: ubuntu-latest
-    timeout-minutes: 350
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Read the run options
-        id: opts
-        env:
-          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
-          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
-        run: |
-          python3 - <<'PY' | tee -a "$GITHUB_OUTPUT"
-          import json, os, pathlib
-
-          def flat(text):
-              out = {}
-              for item in (text or "").split(";"):
-                  if "=" in item:
-                      key, value = item.split("=", 1)
-                      if value.strip():
-                          out[key.strip()] = value.strip()
-              return out
-
-          # .turnirlar-run (a JSON file in the push) wins: it is how a run is
-          # started from somewhere that cannot send workflow_dispatch.
-          options = {}
-          path = pathlib.Path(".turnirlar-run")
-          if path.exists():
-              try:
-                  loaded = json.loads(path.read_text(encoding="utf-8"))
-                  options = loaded if isinstance(loaded, dict) else {}
-              except json.JSONDecodeError as exc:
-                  print(f"# .turnirlar-run is not valid JSON: {exc}")
-          try:
-              payload = json.loads(os.environ.get("PAYLOAD") or "{}")
-          except json.JSONDecodeError:
-              payload = {}
-          if not isinstance(payload, dict):
-              payload = {}
-
-          merged = {}
-          for source in (payload, flat(os.environ.get("DISPATCH_INPUTS")), options):
-              merged.update({k: v for k, v in source.items() if v not in (None, "")})
-
-          for key, default in (("max_packages", 0), ("pages", 0), ("workers", 8), ("source", "all")):
-              print(f"{key}={merged.get(key, default)}")
-          for key, default in (("commit", "true"), ("release", "true")):
-              value = str(merged.get(key, default)).lower()
-              print(f"{key}={'true' if value in ('true', '1', 'yes') else 'false'}")
-          PY
-
-      - name: Restore the shards that are already stored
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p data/turnirlar/shards
-          if gh release download savollar-bazasi --pattern 'turnirlar-*.json.gz' \
-               --dir data/turnirlar/shards --clobber 2>/dev/null; then
-            echo "restored $(ls data/turnirlar/shards | wc -l) shards"
-          else
-            echo "no release yet — starting from scratch"
-          fi
-
-      - name: Import
-        run: |
-          echo "options: max_packages=${{ steps.opts.outputs.max_packages }} pages=${{ steps.opts.outputs.pages }} workers=${{ steps.opts.outputs.workers }} source=${{ steps.opts.outputs.source }}"
-          python3 scripts/export_turnirlar.py --mode import \
-            --out-dir data/turnirlar \
-            --max-packages "${{ steps.opts.outputs.max_packages }}" \
-            --pages "${{ steps.opts.outputs.pages }}" \
-            --source "${{ steps.opts.outputs.source }}" \
-            --workers "${{ steps.opts.outputs.workers }}" \
-            --sample data/turnirlar/sample.json
-
-      - name: Show the result
-        run: |
-          du -sh data/turnirlar/shards 2>/dev/null || true
-          echo "shard files: $(ls data/turnirlar/shards | wc -l)"
-          python3 - <<'PY'
-          import json, pathlib
-          manifest = json.loads(pathlib.Path("data/turnirlar/manifest.json").read_text(encoding="utf-8"))
-          print("packages", manifest["package_count"], "questions", manifest["question_count"],
-                "shards", len(manifest["shards"]), "bytes",
-                sum(int(s.get("bytes") or 0) for s in manifest["shards"]))
-          for row in manifest["packages"][:3]:
-              print(" ", json.dumps(row, ensure_ascii=False)[:220])
-          PY
-
-      - name: Publish the shards
-        if: steps.opts.outputs.release == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if ! gh release view savollar-bazasi >/dev/null 2>&1; then
-            gh release create savollar-bazasi --title "Zakovat savollar bazasi" \
-              --notes "turnirlar.uz bazasining to‘liq eksporti: gzip shardlar va manifest. Bot kerakli shardni shu yerdan oladi: https://github.com/jasur-ai/zakovat/releases/download/savollar-bazasi/<fayl>"
-          fi
-          cd data/turnirlar/shards
-          total=$(ls | wc -l); number=0
-          for file in *.json.gz; do
-            number=$((number + 1)); echo "[$number/$total] $file"
-            gh release upload savollar-bazasi "$file" --clobber
-          done
-          cd "$GITHUB_WORKSPACE"
-          gh release upload savollar-bazasi data/turnirlar/manifest.json --clobber
-
-      - name: Commit the manifest
-        if: steps.opts.outputs.commit == 'true'
-        run: |
-          git config user.name "Zakovat Archive Bot"
-          git config user.email "archive@users.noreply.github.com"
-          git add data/turnirlar/manifest.json data/turnirlar/sample.json
-          if git diff --cached --quiet; then
-            echo "nothing to commit"
-            exit 0
-          fi
-          git commit -m "turnirlar.uz savollar bazasi yangilandi"
-          git pull --rebase origin "${GITHUB_REF#refs/heads/}"
-          git push origin "HEAD:${GITHUB_REF#refs/heads/}"

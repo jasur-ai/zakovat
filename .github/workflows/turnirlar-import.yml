@@ -1,0 +1,197 @@
+name: Import turnirlar.uz question base
+
+# Collects the whole turnirlar.uz base: 260 catalogue pages → 7 798 packages →
+# ~559 000 questions. Questions already present in data/all (the zakovatklubi.uz
+# export) are dropped, the rest are written to gzipped shards.
+#
+# Only the manifest and a small sample are committed (~2 MB); the shards
+# (~160 MB) are published to the Release "savollar-bazasi", which is where the
+# bot fetches them from (see .vercelignore and bot/archive.py).
+#
+# Started by pushing a change to .turnirlar-run — a JSON file with the options —
+# because the development sandbox can push but cannot send workflow_dispatch.
+# It can also be started by hand, and by repository_dispatch archive-turnirlar.
+#
+# The run is resumable: shards already in the Release are downloaded first and
+# the packages they hold are skipped, and a manifest listing shards that are not
+# on disk is pruned before anything is counted as stored.
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_packages:
+        description: "Nechta to‘plam (0 = hammasi)"
+        default: "0"
+      pages:
+        description: "Ro‘yxatdan necha sahifa o‘qilsin (0 = hammasi)"
+        default: "0"
+      source:
+        description: "Manba filtri"
+        type: choice
+        default: "all"
+        options: [all, zakovat-klubi, boshqa]
+      workers:
+        description: "Parallel so‘rovlar soni"
+        default: "8"
+      commit:
+        description: "Manifest va namunani shu branch ga commit qilish"
+        type: boolean
+        default: true
+      release:
+        description: "Shardlarni GitHub Release ga yuklash"
+        type: boolean
+        default: true
+  repository_dispatch:
+    types: [archive-turnirlar]
+  push:
+    branches: ['**']
+    paths:
+      - .turnirlar-run
+
+permissions:
+  contents: write
+
+concurrency:
+  group: turnirlar-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Bazani yig‘ish
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Read the run options
+        id: opts
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
+        run: |
+          python3 - <<'PY' | tee -a "$GITHUB_OUTPUT"
+          import json, os, pathlib
+
+          def flat(text):
+              out = {}
+              for item in (text or "").split(";"):
+                  if "=" in item:
+                      key, value = item.split("=", 1)
+                      if value.strip():
+                          out[key.strip()] = value.strip()
+              return out
+
+          # .turnirlar-run wins: it is how a run is started from a sandbox that
+          # cannot send workflow_dispatch.
+          options = {}
+          path = pathlib.Path(".turnirlar-run")
+          if path.exists():
+              try:
+                  loaded = json.loads(path.read_text(encoding="utf-8"))
+                  options = loaded if isinstance(loaded, dict) else {}
+              except json.JSONDecodeError as exc:
+                  print(f"# .turnirlar-run is not valid JSON: {exc}")
+          try:
+              payload = json.loads(os.environ.get("PAYLOAD") or "{}")
+          except json.JSONDecodeError:
+              payload = {}
+          if not isinstance(payload, dict):
+              payload = {}
+
+          merged = {}
+          for source in (payload, flat(os.environ.get("DISPATCH_INPUTS")), options):
+              merged.update({key: value for key, value in source.items()
+                             if value not in (None, "")})
+
+          for key, default in (("max_packages", 0), ("pages", 0), ("workers", 8),
+                               ("source", "all")):
+              print(f"{key}={merged.get(key, default)}")
+          for key, default in (("commit", "true"), ("release", "true")):
+              value = str(merged.get(key, default)).lower()
+              print(f"{key}={'true' if value in ('true', '1', 'yes') else 'false'}")
+          PY
+
+      - name: Restore the shards that are already stored
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data/turnirlar/shards
+          if gh release download savollar-bazasi --pattern 'turnirlar-*.json.gz' \
+               --dir data/turnirlar/shards --clobber 2>/dev/null; then
+            echo "restored $(ls data/turnirlar/shards | wc -l) shards"
+          else
+            echo "no release yet — starting from scratch"
+          fi
+
+      - name: Import
+        run: |
+          set -o pipefail
+          echo "options: max_packages=${{ steps.opts.outputs.max_packages }} pages=${{ steps.opts.outputs.pages }} workers=${{ steps.opts.outputs.workers }} source=${{ steps.opts.outputs.source }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
+          python3 scripts/export_turnirlar.py --mode import \
+            --out-dir data/turnirlar \
+            --max-packages "${{ steps.opts.outputs.max_packages }}" \
+            --pages "${{ steps.opts.outputs.pages }}" \
+            --source "${{ steps.opts.outputs.source }}" \
+            --workers "${{ steps.opts.outputs.workers }}" \
+            --sample data/turnirlar/sample.json 2>&1 | tee data/turnirlar/run-log.txt
+
+      - name: Show the result
+        run: |
+          du -sh data/turnirlar/shards 2>/dev/null || true
+          echo "shard files: $(ls data/turnirlar/shards | wc -l)"
+          python3 - <<'PY' | tee -a data/turnirlar/run-log.txt
+          import json, pathlib
+          path = pathlib.Path("data/turnirlar/manifest.json")
+          if not path.exists():
+              print("no manifest written")
+              raise SystemExit(0)
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          print("packages", manifest["package_count"], "questions", manifest["question_count"],
+                "shards", len(manifest["shards"]), "bytes",
+                sum(int(s.get("bytes") or 0) for s in manifest["shards"]))
+          for row in manifest["packages"][:3]:
+              print(" ", json.dumps(row, ensure_ascii=False)[:220])
+          PY
+
+      - name: Publish the shards
+        if: steps.opts.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view savollar-bazasi >/dev/null 2>&1; then
+            gh release create savollar-bazasi --title "Zakovat savollar bazasi" \
+              --notes "turnirlar.uz bazasining to‘liq eksporti: gzip shardlar va manifest. Bot kerakli shardni shu yerdan oladi: https://github.com/jasur-ai/zakovat/releases/download/savollar-bazasi/<fayl>" \
+              2>&1 | tee -a data/turnirlar/run-log.txt
+          fi
+          cd data/turnirlar/shards
+          total=$(ls | wc -l); number=0
+          for file in *.json.gz; do
+            number=$((number + 1)); echo "[$number/$total] $file"
+            gh release upload savollar-bazasi "$file" --clobber || exit 1
+          done
+          cd "$GITHUB_WORKSPACE"
+          gh release upload savollar-bazasi data/turnirlar/manifest.json --clobber
+
+      # The sandbox cannot read Actions logs, so the run log travels back the
+      # same way the digest does: committed to the branch.
+      - name: Publish the run log and manifest
+        if: always()
+        run: |
+          git config user.name "Zakovat Archive Bot"
+          git config user.email "archive@users.noreply.github.com"
+          tail -c 300000 data/turnirlar/run-log.txt > data/turnirlar/run-log.tail.txt 2>/dev/null || true
+          git add -f data/turnirlar/run-log.tail.txt
+          if [ "${{ steps.opts.outputs.commit }}" = "true" ]; then
+            git add data/turnirlar/manifest.json data/turnirlar/sample.json 2>/dev/null || true
+          fi
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "turnirlar.uz: yig‘ish natijasi"
+          git pull --rebase origin "${GITHUB_REF#refs/heads/}" || git rebase --abort
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"

@@ -11,3 +11,4 @@ data/answer_aliases.json
 # "savollar-bazasi", not in git, and the probe keeps only its digest.
 data/turnirlar/shards/
 data/turnirlar/probe/*.html
+data/turnirlar/run-log.txt
