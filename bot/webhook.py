@@ -7,6 +7,7 @@ interaction. No token or secret is stored in the repository.
 """
 from __future__ import annotations
 
+import asyncio
 import base64
 import html
 import json
@@ -17,6 +18,8 @@ import re
 import secrets
 import time
 from pathlib import Path
+
+import httpx
 
 from fastapi import FastAPI, Header, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
@@ -35,8 +38,13 @@ from .answers import AnswerChecker, normalize
 from .archive import Archive
 from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session, build_playlist
 
-MARKER = "\n\n#ZS "
+MARKER = "\n\n#ZS2 "
+LEGACY_MARKER = "\n\n#ZS "
 TIMER = int(os.getenv("ZAKOVAT_TIMER_SECONDS", "60"))
+TICK_SECONDS = max(2, int(os.getenv("ZAKOVAT_TICK_SECONDS", "6")))
+IDLE_LIMIT = max(0, int(os.getenv("ZAKOVAT_IDLE_LIMIT", "3")))
+TICKS_ENABLED = os.getenv("ZAKOVAT_LIVE_TIMER", "1") not in ("0", "false", "no")
+MAX_TICK_HORIZON = 900          # a countdown never runs longer than this
 PER_PAGE = int(os.getenv("ZAKOVAT_PACKAGES_PER_PAGE", "12"))
 ROOT = Path(__file__).resolve().parent.parent
 ARCHIVE = Archive(
@@ -52,37 +60,84 @@ def _esc(value: object) -> str:
 
 
 def pack_state(session: Session, deadline: int, latest: str | None = None, aliases: list[str] | None = None) -> str:
-    payload = {
-        "m": session.mode,
-        "p": session.package_id,
-        "i": session.index,
-        "c": session.correct,
-        "w": session.wrong,
-        "o": session.owner_id,
-        "q": session.question["id"] if session.question else None,
-        "d": deadline,
-        "l": latest,
-        "a": aliases or [],
-        "r": session.rounds,
-        "n": session.per_round,
-        "t": session.timer_seconds,
-        "s": session.seed,
-        "k": session.control_message_id,
-    }
-    raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    return MARKER + base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+    """Compact game state: one short line instead of a block of base64 JSON.
+
+    Serverless has no memory, so the state travels inside the message. The line
+    is wrapped in a spoiler when it is rendered (see `hide_state`).
+    """
+    fields = [
+        "s" if session.mode == "solo" else "g",
+        session.package_id,
+        session.index,
+        session.correct,
+        session.wrong,
+        session.owner_id,
+        session.question["id"] if session.question else 0,
+        deadline,
+        session.rounds,
+        session.per_round,
+        session.timer_seconds,
+        session.seed,
+        session.control_message_id or 0,
+        session.idle_streak,
+        session.attempts,
+        1 if session.can_delete else 0,
+    ]
+    core = "|".join(str(value) for value in fields)
+    extra = ""
+    if latest or aliases:
+        raw = json.dumps({"l": latest, "a": aliases or []}, ensure_ascii=False,
+                         separators=(",", ":")).encode("utf-8")
+        extra = "|" + base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+    return MARKER + core + extra
+
+
+def hide_state(marker: str) -> str:
+    """Render the state line as a collapsed spoiler so it does not clutter the chat."""
+    return f'<span class="tg-spoiler">{html.escape(marker.strip())}</span>'
 
 
 def unpack_state(text: str | None) -> dict | None:
-    if not text or MARKER.strip() not in text:
+    """Read the compact marker; the old base64-JSON marker is still accepted."""
+    if not text:
         return None
-    token = text.split(MARKER.strip(), 1)[1].strip().split()[0] if MARKER.strip() in text else ""
-    try:
-        raw = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
-        payload = json.loads(raw.decode("utf-8"))
-        return payload if isinstance(payload, dict) else None
-    except (ValueError, UnicodeDecodeError):
-        return None
+    token = MARKER.strip()
+    legacy = LEGACY_MARKER.strip()
+    if token in text:
+        body = text.split(token, 1)[1].strip().split("\n", 1)[0]
+        body = body.split("<", 1)[0].strip()
+        parts = body.split("|")
+        if len(parts) < 16:
+            return None
+        try:
+            payload = {
+                "m": "solo" if parts[0] == "s" else "group",
+                "p": int(parts[1]), "i": int(parts[2]), "c": int(parts[3]), "w": int(parts[4]),
+                "o": int(parts[5]), "q": int(parts[6]), "d": int(parts[7]), "r": int(parts[8]),
+                "n": int(parts[9]), "t": int(parts[10]), "s": int(parts[11]),
+                "k": int(parts[12]) or None, "z": int(parts[13]), "y": int(parts[14]),
+                "x": bool(int(parts[15])), "l": None, "a": [],
+            }
+        except ValueError:
+            return None
+        if len(parts) > 16 and parts[16]:
+            try:
+                raw = base64.urlsafe_b64decode(parts[16] + "=" * (-len(parts[16]) % 4))
+                extra = json.loads(raw.decode("utf-8"))
+                payload["l"] = extra.get("l")
+                payload["a"] = extra.get("a") or []
+            except (ValueError, UnicodeDecodeError):
+                pass
+        return payload
+    if legacy in text:
+        token = text.split(legacy, 1)[1].strip().split()[0].split("<", 1)[0]
+        try:
+            raw = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
+            payload = json.loads(raw.decode("utf-8"))
+            return payload if isinstance(payload, dict) else None
+        except (ValueError, UnicodeDecodeError):
+            return None
+    return None
 
 
 def checker_for(aliases: list[str]):
@@ -112,11 +167,11 @@ def state_from(update: Update) -> dict | None:
     return unpack_state(source.text or source.caption)
 
 
-def restore(update: Update, context: ContextTypes.DEFAULT_TYPE) -> tuple[Session, dict] | None:
-    data = state_from(update)
-    if not data or data.get("q") is None:
+def session_from_data(data: dict, chat_id: int, archive: Archive | None = None) -> Session | None:
+    """Rebuild a Session from a marker payload (used by replies, buttons and ticks)."""
+    archive = archive or ARCHIVE
+    if not data or not data.get("q"):
         return None
-    archive: Archive = context.application.bot_data["archive"]
     question = archive.question(int(data["q"]))
     if not question:
         return None
@@ -125,10 +180,10 @@ def restore(update: Update, context: ContextTypes.DEFAULT_TYPE) -> tuple[Session
     seed = int(data.get("s") or 0)
     package_id = int(data["p"])
     session = Session(
-        chat_id=update.effective_chat.id,
+        chat_id=chat_id,
         mode=data.get("m", "solo"),
         package_id=package_id,
-        package_title=(archive.package(package_id) or {}).get("title", ""),
+        package_title=(archive.package_info(package_id) or {}).get("title", ""),
         questions=build_playlist(archive.questions(package_id), rounds, per_round, seed),
         owner_id=int(data["o"]),
         timer_seconds=int(data.get("t") or TIMER),
@@ -141,7 +196,23 @@ def restore(update: Update, context: ContextTypes.DEFAULT_TYPE) -> tuple[Session
     session.wrong = int(data.get("w", 0))
     session.question = question
     session.answered = False
+    session.deadline = int(data.get("d") or 0)
+    session.attempts = int(data.get("y") or 0)
+    session.idle_streak = int(data.get("z") or 0)
+    session.idle_limit = IDLE_LIMIT
+    session.can_delete = bool(data.get("x", True))
     session.control_message_id = data.get("k")
+    return session
+
+
+def restore(update: Update, context: ContextTypes.DEFAULT_TYPE) -> tuple[Session, dict] | None:
+    data = state_from(update)
+    if not data:
+        return None
+    archive: Archive = context.application.bot_data["archive"]
+    session = session_from_data(data, update.effective_chat.id, archive)
+    if session is None:
+        return None
     return session, data
 
 
@@ -184,31 +255,143 @@ def has_picture(question: dict) -> bool:
     return any(isinstance(a, str) and a.startswith("http") for a in (question.get("attachments") or []))
 
 
+def closed_strip_text(session: Session) -> str:
+    """One line that replaces a finished countdown strip."""
+    return f"Savol {session.number} / {session.total} — yakunlandi"
+
+
 async def delete_control(bot, chat_id: int, session: Session) -> None:
-    """Remove the countdown strip once its question is resolved."""
+    """Remove the countdown strip once its question is resolved.
+
+    Where the bot has no delete rights (a group it merely joined) the strip is
+    collapsed into one line instead, so no stale countdown is left behind.
+    """
     if not session.control_message_id:
         return
+    message_id = int(session.control_message_id)
     try:
-        await bot.delete_message(chat_id=chat_id, message_id=int(session.control_message_id))
+        await bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except (TelegramError, ValueError, TypeError):
+        try:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                        text=closed_strip_text(session), reply_markup=None)
+        except (TelegramError, ValueError, TypeError):
+            pass
+    session.control_message_id = None
+
+
+async def close_strip(bot, chat_id: int, session: Session) -> bool:
+    """Close the countdown strip; True when this caller may resolve the question.
+
+    A chat where no strip was ever sent (Telegram refused it) has nothing to
+    claim, so the question is resolved normally.
+    """
+    if not session.control_message_id:
+        return True
+    return await claim_strip(bot, chat_id, session)
+
+
+async def claim_strip(bot, chat_id: int, session: Session) -> bool:
+    """Take ownership of the strip before resolving its question.
+
+    The countdown keeps running on its own, so a timeout can be reached by the
+    timer and by a button press at the same moment. Whoever closes the strip
+    first resolves the question; everybody else stands down. Without delete
+    rights the strip is collapsed into a fixed line — a second attempt then
+    fails with "message is not modified", which is exactly the signal we need.
+    """
+    if not session.control_message_id:
+        return False
+    message_id = int(session.control_message_id)
+    try:
+        await bot.delete_message(chat_id=chat_id, message_id=message_id)
+        session.control_message_id = None
+        return True
     except (TelegramError, ValueError, TypeError):
         pass
-    session.control_message_id = None
+    try:
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                    text=closed_strip_text(session), reply_markup=None)
+        session.control_message_id = None
+        return True
+    except (TelegramError, ValueError, TypeError):
+        session.control_message_id = None
+        return False
+
+
+def strip_text(session: Session, remaining: int, deadline: int,
+               aliases: list[str] | None = None) -> str:
+    """Countdown strip content: position, live remaining time and hidden state."""
+    head = f"Savol {session.number} / {session.total}"
+    if session.rounds > 1:
+        head += f" · {session.current_round}-raund"
+    return (
+        f"{head}\n{msg.timer_line(remaining, session.timer_seconds)}\n"
+        + hide_state(pack_state(session, deadline, aliases=aliases))
+    )
+
+
+async def detect_can_delete(bot, chat_id: int, chat_type: str) -> bool:
+    """Groups only let the bot remove its own countdown strip with delete rights."""
+    if chat_type == "private":
+        return True
+    try:
+        bot_id = bot.id
+    except RuntimeError:
+        try:
+            bot_id = (await bot.get_me()).id
+        except TelegramError:
+            return False
+    try:
+        member = await bot.get_chat_member(chat_id, bot_id)
+    except TelegramError:
+        return False
+    if member.status == "creator":
+        return True
+    return bool(getattr(member, "can_delete_messages", False))
+
+
+async def schedule_tick(session: Session, deadline: int, aliases: list[str] | None = None,
+                        wait: int | None = None) -> None:
+    """Wake our own endpoint up so the countdown repaints itself.
+
+    Serverless functions freeze between requests, so the timer is a chain of
+    short self-invocations: each one waits, rewrites the strip and calls the
+    next. If a hop is lost the game still ends correctly — the deadline is also
+    checked lazily on every reply and button press.
+    """
+    # Without delete rights a resolved strip cannot be removed, so a late tick
+    # would repaint a question that is already closed. Those chats keep the
+    # manual "Vaqtni yangilash" button instead.
+    if not TICKS_ENABLED or not session.control_message_id or not session.can_delete:
+        return
+    base = public_base_url()
+    remaining = deadline - int(time.time())
+    if not base or remaining <= 0:
+        return
+    step = TICK_SECONDS if wait is None else wait
+    step = max(1, min(int(step), remaining, 50))
+    payload = {
+        "tick": pack_state(session, deadline, aliases=aliases).strip(),
+        "chat": session.chat_id,
+        "wait": step,
+    }
+    headers = {"X-Telegram-Bot-Api-Secret-Token": SECRET} if SECRET else {}
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(1.5, connect=1.5)) as client:
+            await client.post(base + "/api/index", json=payload, headers=headers)
+    except Exception:  # cosmetic feature — never break the game over it
+        logging.getLogger(__name__).debug("tick scheduling failed", exc_info=True)
 
 
 async def send_control(bot, chat_id: int, session: Session, deadline: int,
                        aliases: list[str] | None = None) -> None:
-    """Countdown strip above every question: remaining seconds + in-game buttons."""
+    """Countdown strip above every question: live remaining time + buttons."""
     remaining = max(0, deadline - int(time.time()))
-    head = f"🎯 {session.number}/{session.total}-savol"
-    if session.rounds > 1:
-        head += f" · {session.current_round}-raund"
-    text = (
-        f"{head}\n{msg.timer_line(remaining, session.timer_seconds)}\n"
-        + pack_state(session, deadline, aliases=aliases)
-    )
     message = await bot.send_message(
-        chat_id=chat_id, text=text[:4090], parse_mode=ParseMode.HTML,
-        reply_markup=st.game_keyboard(), disable_web_page_preview=True,
+        chat_id=chat_id, text=strip_text(session, remaining, deadline, aliases)[:4090],
+        parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(),
+        disable_web_page_preview=True,
     )
     session.control_message_id = getattr(message, "message_id", None)
 
@@ -219,6 +402,7 @@ async def send_question(bot, chat_id: int, session: Session, aliases: list[str] 
         return
     timer = session.timer_seconds or TIMER
     deadline = int(time.time()) + timer
+    session.deadline = deadline
     await send_control(bot, chat_id, session, deadline, aliases)
 
     picture = has_picture(question)
@@ -227,17 +411,18 @@ async def send_question(bot, chat_id: int, session: Session, aliases: list[str] 
     round_label = f"{session.current_round}-raund" if session.rounds > 1 else ""
     text = msg.question(
         session.number, session.total, session.package_title, question.get("text"),
-        timer, session.score_text(), note, round_label, timer,
+        timer, session.score_text(), note, round_label,
     )
     if picture:
-        await send_photo_safely(bot, chat_id, question, caption="🖼 Savol rasmi")
+        await send_photo_safely(bot, chat_id, question, caption="Savol rasmi")
     await bot.send_message(
         chat_id=chat_id,
-        text=(text + pack_state(session, deadline, aliases=aliases))[:4090],
+        text=(text + "\n" + hide_state(pack_state(session, deadline, aliases=aliases)))[:4090],
         parse_mode=ParseMode.HTML,
         reply_markup=ForceReply(input_field_placeholder="Javobingizni yozing..."),
         disable_web_page_preview=True,
     )
+    await schedule_tick(session, deadline, aliases)
 
 
 async def reveal(bot, chat_id: int, session: Session, headline: str) -> None:
@@ -251,27 +436,51 @@ async def reveal(bot, chat_id: int, session: Session, headline: str) -> None:
     pictures = [a for a in (question.get("answer_attachments") or []) if isinstance(a, str) and a.startswith("http")]
     if pictures:
         try:
-            await bot.send_photo(chat_id=chat_id, photo=pictures[0], caption="🖼 Javob rasmi")
+            await bot.send_photo(chat_id=chat_id, photo=pictures[0], caption="Javob rasmi")
         except TelegramError:
-            await bot.send_message(chat_id=chat_id, text=f"🖼 {_esc(pictures[0])}",
+            await bot.send_message(chat_id=chat_id, text=f"Rasm: {_esc(pictures[0])}",
                                    disable_web_page_preview=True)
+
+
+def _percent(session: Session) -> int:
+    return round(session.correct * 100 / session.total) if session.total else 0
 
 
 async def next_question(bot, chat_id: int, session: Session, headline: str, aliases: list[str] | None = None) -> None:
     await delete_control(bot, chat_id, session)
     await reveal(bot, chat_id, session, headline)
     previous_round = session.current_round
+    idle_streak = session.idle_streak
     session.index += 1
     session.advance()
+
     if session.question is None:
-        percent = round(session.correct * 100 / session.total) if session.total else 0
         await bot.send_message(
             chat_id=chat_id,
             text=msg.summary(session.package_title, session.total, session.correct, session.wrong,
-                             percent, session.rounds),
+                             _percent(session), session.rounds),
             parse_mode=ParseMode.HTML,
         )
         return
+
+    if session.idle_limit_reached:
+        session.auto_stopped = True
+        session.finished = True
+        await bot.send_message(
+            chat_id=chat_id,
+            text=msg.auto_stop(session.idle_streak, session.package_title, session.index,
+                               session.correct, session.wrong, _percent(session), session.rounds),
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    if idle_streak and session.idle_limit and idle_streak < session.idle_limit:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=msg.idle_warning(idle_streak, session.idle_limit),
+            parse_mode=ParseMode.HTML,
+        )
+
     if session.rounds > 1 and session.current_round != previous_round:
         await bot.send_message(
             chat_id=chat_id,
@@ -279,6 +488,70 @@ async def next_question(bot, chat_id: int, session: Session, headline: str, alia
             parse_mode=ParseMode.HTML,
         )
     await send_question(bot, chat_id, session, aliases)
+
+
+async def handle_tick(payload: dict) -> JSONResponse:
+    """One hop of the live countdown: wait, repaint, resolve or chain again."""
+    global _ticks_seen, _ticks_painted, _ticks_resolved, _ticks_stopped
+    _ticks_seen += 1
+    marker = str(payload.get("tick") or "")
+    data = unpack_state(marker if marker.lstrip().startswith("#") else MARKER + marker)
+    try:
+        chat_id = int(payload.get("chat") or 0)
+        wait = min(max(0, int(payload.get("wait") or 0)), 50)
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "reason": "bad payload"})
+    if not data or not chat_id:
+        return JSONResponse({"ok": False, "reason": "no state"})
+
+    deadline = int(data.get("d") or 0)
+    if deadline - int(time.time()) > MAX_TICK_HORIZON:
+        return JSONResponse({"ok": False, "reason": "deadline too far ahead"})
+
+    if wait:
+        await asyncio.sleep(wait)
+
+    session = session_from_data(data, chat_id)
+    if session is None:
+        return JSONResponse({"ok": False, "reason": "unknown question"})
+
+    application = get_application()
+    await application.initialize()
+    try:
+        bot = application.bot
+        remaining = deadline - int(time.time())
+        aliases = list(data.get("a") or [])
+
+        if not session.control_message_id:
+            return JSONResponse({"ok": True, "stopped": "no strip"})
+
+        if remaining > 0:
+            try:
+                await bot.edit_message_text(
+                    chat_id=chat_id, message_id=int(session.control_message_id),
+                    text=strip_text(session, remaining, deadline, aliases)[:4090],
+                    parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(),
+                )
+            except TelegramError as exc:
+                if "not modified" not in str(exc).lower():
+                    # The strip is gone: answered, skipped or stopped elsewhere.
+                    return JSONResponse({"ok": True, "stopped": "strip closed"})
+            _ticks_painted += 1
+            await schedule_tick(session, deadline, aliases)
+            return JSONResponse({"ok": True, "remaining": remaining})
+
+        # Time is up. Whoever manages to close the strip resolves the question,
+        # so a reply arriving at the same moment cannot produce a second reveal.
+        if not await claim_strip(bot, chat_id, session):
+            _ticks_stopped += 1
+            return JSONResponse({"ok": True, "stopped": "already resolved"})
+        _ticks_resolved += 1
+        if session.resolve_unanswered():
+            await next_question(bot, chat_id, session, "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
+        return JSONResponse({"ok": True, "resolved": True})
+    finally:
+        await application.shutdown()
+
 
 
 def _archive_of(context: ContextTypes.DEFAULT_TYPE) -> Archive:
@@ -310,7 +583,7 @@ async def render_settings(context: ContextTypes.DEFAULT_TYPE, config: st.GameCon
     text = msg.settings_panel(config.package_id, title, available, config.rounds,
                               config.per_round, config.timer, config.mode, total)
     if available and total > available:
-        text += f"\n\nℹ️ Bazada {available} savol bor — qolgan {total - available} savol takrorlanadi."
+        text += "\n\n" + msg.repeat_notice(available, total - available)
     keyboard = st.settings_keyboard(config)
     if query is not None:
         try:
@@ -340,7 +613,7 @@ async def open_settings(update: Update, context: ContextTypes.DEFAULT_TYPE, mode
 
 
 async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameConfig,
-                            chat_id: int, user_id: int) -> None:
+                            chat_id: int, user_id: int, chat=None) -> None:
     archive = _archive_of(context)
     questions = archive.questions(config.package_id)
     if not questions:
@@ -361,13 +634,15 @@ async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameC
         seed=config.seed,
     )
     session.begin()
+    session.idle_limit = IDLE_LIMIT
+    chat_type = getattr(chat, "type", "private") or "private"
+    session.can_delete = await detect_can_delete(context.bot, chat_id, chat_type)
     label = "Yakka o‘yin" if config.mode == "solo" else "Guruh o‘yini"
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text=msg.game_start(label, session.package_title, session.total, session.timer_seconds,
-                            session.score_text(), session.rounds, session.per_round),
-        parse_mode=ParseMode.HTML,
-    )
+    text = msg.game_start(label, session.package_title, session.total, session.timer_seconds,
+                          session.score_text(), session.rounds, session.per_round)
+    if chat_type != "private" and not session.can_delete:
+        text += "\n\n" + msg.no_delete_rights()
+    await context.bot.send_message(chat_id=chat_id, text=text[:4090], parse_mode=ParseMode.HTML)
     await send_question(context.bot, chat_id, session)
 
 
@@ -469,7 +744,7 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if action == st.ACTION_CANCEL:
         await query.answer("Bekor qilindi")
         try:
-            await query.edit_message_text("❌ O‘yin bekor qilindi. <code>/solo</code> bilan qayta boshlang.",
+            await query.edit_message_text("O‘yin bekor qilindi. <code>/solo</code> bilan qayta boshlang.",
                                           parse_mode=ParseMode.HTML)
         except TelegramError:
             pass
@@ -490,7 +765,8 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     await query.answer("O‘yin boshlandi!")
-    await start_from_config(context, config, query.message.chat_id, query.from_user.id)
+    await start_from_config(context, config, query.message.chat_id, query.from_user.id,
+                            chat=query.message.chat)
 
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -506,23 +782,24 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
 
     if int(time.time()) > deadline:
-        if session.resolve_unanswered():
+        if await close_strip(context.bot, chat_id, session) and session.resolve_unanswered():
             await next_question(context.bot, chat_id, session,
-                                "⏰ Vaqt tugadi. Ochko Qarshi tarafga qo‘shildi.", aliases)
+                                "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
         return
 
     result = session.submit(update.effective_user.id, update.message.text, checker_for(aliases))
     if result == CORRECT:
         await next_question(
             context.bot, chat_id, session,
-            f"🎉 To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.", aliases,
+            f"To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.", aliases,
         )
     elif result == FOREIGN:
         await update.message.reply_text("Bu yakka o‘yin — faqat boshlagan kishi javob yozadi.")
     elif result == WRONG and session.mode == "solo":
-        text = "❌ Noto‘g‘ri. Yana urinib ko‘ring." + pack_state(session, deadline, latest=update.message.text,
-                                                                 aliases=aliases)
-        await update.message.reply_text(text[:4090], reply_markup=ForceReply(input_field_placeholder="Yangi javob..."))
+        text = ("Noto‘g‘ri. Yana urinib ko‘ring.\n"
+                + hide_state(pack_state(session, deadline, latest=update.message.text, aliases=aliases)))
+        await update.message.reply_text(text[:4090], parse_mode=ParseMode.HTML,
+                                        reply_markup=ForceReply(input_field_placeholder="Yangi javob..."))
 
 
 async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -544,32 +821,29 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if action == "f":
         if remaining > 0 and not session.answered:
-            await query.answer(f"⏳ {remaining} sekund qoldi")
-            head = f"🎯 {session.number}/{session.total}-savol"
-            if session.rounds > 1:
-                head += f" · {session.current_round}-raund"
-            text = (f"{head}\n{msg.timer_line(remaining, session.timer_seconds)}\n"
-                    + pack_state(session, deadline, state.get("l"), aliases))
+            await query.answer(f"Qolgan vaqt: {remaining} s")
             try:
-                await query.edit_message_text(text[:4090], parse_mode=ParseMode.HTML,
-                                              reply_markup=st.game_keyboard())
+                await query.edit_message_text(
+                    strip_text(session, remaining, deadline, aliases)[:4090],
+                    parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard())
             except TelegramError:
                 pass
+            await schedule_tick(session, deadline, aliases)
             return
-        await query.answer("⌛ Vaqt tugadi")
-        if session.resolve_unanswered():
+        await query.answer("Vaqt tugadi")
+        if await close_strip(context.bot, chat_id, session) and session.resolve_unanswered():
             await next_question(context.bot, chat_id, session,
-                                "⏰ Vaqt tugadi. Ochko Qarshi tarafga qo‘shildi.", aliases)
+                                "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
         return
 
     if action == "k":
         if not await is_admin(update, context, session):
-            await query.answer("⛔ O‘tkazish faqat admin uchun", show_alert=True)
+            await query.answer("O‘tkazish faqat admin uchun", show_alert=True)
             return
-        await query.answer("⏭ O‘tkazildi")
-        if session.resolve_unanswered():
+        await query.answer("O‘tkazildi")
+        if await close_strip(context.bot, chat_id, session) and session.resolve_unanswered():
             await next_question(context.bot, chat_id, session,
-                                "⏭ O‘tkazildi — hech kim javobni topmadi.", aliases)
+                                "O‘tkazildi — hech kim javobni topmadi.", aliases)
         else:
             await query.answer("Bu savol allaqachon yechilgan.", show_alert=True)
         return
@@ -609,11 +883,12 @@ async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await is_admin(update, context, session):
         await update.effective_message.reply_text(msg.admin_only("/skip"), parse_mode=ParseMode.HTML)
         return
-    if not session.resolve_unanswered():
+    claimed = await close_strip(context.bot, update.effective_chat.id, session)
+    if not claimed or not session.resolve_unanswered():
         await update.effective_message.reply_text("Bu savol allaqachon yechilgan.")
         return
     await next_question(context.bot, update.effective_chat.id, session,
-                        "⏭ O‘tkazildi — hech kim javobni topmadi.", data.get("a") or [])
+                        "O‘tkazildi — hech kim javobni topmadi.", data.get("a") or [])
 
 
 async def cmd_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -647,7 +922,7 @@ async def cmd_accept(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         int(session.question["id"]), str(session.question.get("answer", "")), latest
     ):
         await next_question(context.bot, update.effective_chat.id, session,
-                            "✅ Javob qabul qilindi va o‘rganildi.", aliases)
+                            "Javob qabul qilindi va o‘rganildi.", aliases)
     else:
         await update.effective_message.reply_text("Bu javob hali mos kelmadi.")
 
@@ -758,6 +1033,10 @@ _setup_error = ""
 _setup_attempted = False
 _updates_seen = 0
 _updates_rejected = 0
+_ticks_seen = 0
+_ticks_painted = 0
+_ticks_resolved = 0
+_ticks_stopped = 0
 
 
 def get_application() -> Application:
@@ -811,12 +1090,21 @@ async def ensure_webhook(application: Application, force: bool = False, drop_pen
         _setup_error = str(exc)
 
 
+def _set_setup_error(exc: Exception) -> None:
+    global _setup_error
+    _setup_error = f"{type(exc).__name__}: {exc}"[:300]
+
+
 async def bootstrap_webhook() -> None:
     """Runs on any first HTTP request so a plain site visit registers the webhook."""
     if _webhook_ready or _setup_attempted or not os.getenv("BOT_TOKEN"):
         return
     application = get_application()
-    await application.initialize()
+    try:
+        await application.initialize()
+    except Exception as exc:          # Telegram unreachable must not break the page
+        _set_setup_error(exc)
+        return
     try:
         await ensure_webhook(application)
     finally:
@@ -894,6 +1182,10 @@ async def status():
         f"VERCEL_URL (himoyalangan bo‘lishi mumkin): {os.getenv('VERCEL_URL') or '(yo‘q)'}",
         f"Webhook uchun tanlangan manzil: {public_base_url() or '(yo‘q)'}",
         f"So‘nggi o‘rnatish xatoligi: {_setup_error or 'yo‘q'}",
+        f"Jonli taymer: {'yoqilgan' if TICKS_ENABLED else 'o‘chirilgan'} · "
+        f"qadam {TICK_SECONDS} s · javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
+        f"Shu nusxadagi taymer urinishlari: {_ticks_seen} · yangilangan: {_ticks_painted} · "
+        f"vaqti tugagan: {_ticks_resolved} · to‘xtagan: {_ticks_stopped}",
     ]
     lines += archive_lines()
     if os.getenv("BOT_TOKEN"):
@@ -919,12 +1211,38 @@ async def status():
     return status_page("Bot holati", lines)
 
 
+async def tick_probe() -> dict:
+    """Self-invoke the tick endpoint once, so the live timer can be verified live.
+
+    The payload is deliberately invalid (chat 0), so nothing is sent to Telegram:
+    it only proves that the function can reach itself through the public domain.
+    """
+    base = public_base_url()
+    if not base:
+        return {"ok": False, "reason": "ochiq manzil yo‘q (WEBHOOK_URL / VERCEL_*)"}
+    headers = {"X-Telegram-Bot-Api-Secret-Token": SECRET} if SECRET else {}
+    started = time.time()
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(20.0, connect=5.0)) as client:
+            response = await client.post(base + "/api/index",
+                                         json={"tick": "#ZS2 probe", "chat": 0, "wait": 0},
+                                         headers=headers)
+        body = response.text[:200]
+        return {"ok": response.status_code == 200, "status": response.status_code,
+                "ms": round((time.time() - started) * 1000), "javob": body}
+    except Exception as exc:
+        return {"ok": False, "xato": f"{type(exc).__name__}: {exc}",
+                "ms": round((time.time() - started) * 1000)}
+
+
 @app.get("/api/index")
 async def index(request: Request):
     """Vercel exposes api/index.py at this path; it doubles as a diagnostics page."""
     mode = request.query_params.get("test") or request.query_params.get("setup")
     if request.query_params.get("setup") == "1" or mode == "setup":
         return await setup(request)
+    if request.query_params.get("tickprobe") == "1":
+        return JSONResponse(await tick_probe())
     if mode == "1":
         return status_page("O‘z-o‘zini sinash", await self_test())
     return await status()
@@ -965,6 +1283,8 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None 
             _recent_errors[:] = _recent_errors[:5]
         return Response(status_code=403)
     data = await request.json()
+    if isinstance(data, dict) and "tick" in data and "update_id" not in data:
+        return await handle_tick(data)
     update = Update.de_json(data, get_application().bot)
     if not update:
         return Response(status_code=400)

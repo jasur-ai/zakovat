@@ -13,6 +13,10 @@ IGNORED = "ignored"   # no active question / question already resolved
 LEFT_LABEL = "Bilimdonlar"
 RIGHT_LABEL = "Qarshi taraf"
 
+# A game with no activity stops itself: after this many questions in a row
+# without a single guess, the round is closed automatically.
+IDLE_LIMIT = 3
+
 
 def build_playlist(questions: list[dict[str, Any]], rounds: int = 1, per_round: int = 0,
                    seed: int = 0) -> list[dict[str, Any]]:
@@ -60,6 +64,11 @@ class Session:
     job_name: str | None = None
     control_message_id: int | None = None
     deadline: int = 0
+    attempts: int = 0
+    idle_streak: int = 0
+    idle_limit: int = IDLE_LIMIT
+    auto_stopped: bool = False
+    can_delete: bool = True
     finished: bool = False
     history: list[dict[str, Any]] = field(default_factory=list)
 
@@ -97,6 +106,7 @@ class Session:
             return None
         self.question = self.questions[self.index]
         self.answered = False
+        self.attempts = 0
         self.latest_answer = None
         self.latest_user = None
         return self.question
@@ -107,9 +117,12 @@ class Session:
             return IGNORED
         if self.mode == "solo" and user_id != self.owner_id:
             return FOREIGN
+        # Only a real participant's guess counts as activity for the idle rule.
+        self.attempts += 1
         if checker.is_correct(int(self.question["id"]), str(self.question.get("answer", "")), text):
             self.correct += 1
             self.answered = True
+            self.idle_streak = 0
             self.history.append({"id": self.question["id"], "result": "correct", "user_id": user_id})
             return CORRECT
         self.latest_answer = text
@@ -117,13 +130,26 @@ class Session:
         return WRONG
 
     def resolve_unanswered(self) -> bool:
-        """A skipped or timed-out question gives one point to the other side."""
+        """A skipped or timed-out question gives one point to the other side.
+
+        Questions closed without a single guess also grow the idle streak that
+        eventually stops the game on its own.
+        """
         if self.finished or self.question is None or self.answered:
             return False
         self.wrong += 1
         self.answered = True
-        self.history.append({"id": self.question["id"], "result": "unanswered", "user_id": None})
+        self.idle_streak = self.idle_streak + 1 if self.attempts == 0 else 0
+        self.history.append({
+            "id": self.question["id"], "result": "unanswered",
+            "user_id": None, "attempts": self.attempts,
+        })
         return True
+
+    @property
+    def idle_limit_reached(self) -> bool:
+        """True when the game should stop itself for lack of any guessing."""
+        return self.idle_limit > 0 and self.idle_streak >= self.idle_limit
 
     def score(self) -> tuple[int, int]:
         return self.correct, self.wrong
@@ -132,7 +158,7 @@ class Session:
         return f"{LEFT_LABEL} {self.correct} — {self.wrong} {RIGHT_LABEL}"
 
     def summary(self) -> str:
-        head = f"🏁 O‘yin tugadi: {self.score_text()}"
+        head = f"O‘YIN TUGADI · {self.score_text()}"
         if self.total:
             percent = round(self.correct * 100 / self.total)
             head += f"\nTo‘g‘ri javoblar: {self.correct}/{self.total} ({percent}%)"
