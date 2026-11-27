@@ -33,6 +33,14 @@ STORE_TOKEN = os.getenv("ZAKOVAT_STATS_TOKEN", "").strip()
 BLOB_TOKEN = os.getenv("BLOB_READ_WRITE_TOKEN", "").strip()
 BLOB_PATH = os.getenv("ZAKOVAT_STATS_BLOB_PATH", "zakovat-stats.json").strip()
 BLOB_WRITE_URL = "https://blob.vercel-storage.com/"
+# Telegram itself is the storage that needs no service at all: the bot keeps the
+# document in a pinned message of one chat and reads it back through getChat.
+TG_API = "https://api.telegram.org/bot"
+BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+STATS_CHAT = int(os.getenv("ZAKOVAT_STATS_CHAT", "0") or 0) or OWNER_ID
+DOC_HEADER = ("Zakovat Agent — statistika hujjati. Bu xabarni o‘chirmang: "
+              "bot hisoblarni shu yerda saqlaydi.")
+MESSAGE_LIMIT = 4096
 FLUSH_SECONDS = max(5, int(os.getenv("ZAKOVAT_STATS_FLUSH", "20")))
 DRY_RUN = False        # the self-test counts, but never writes to the store
 EVENT_LIMIT = 30
@@ -82,14 +90,22 @@ _last_flush = 0.0
 _remote: dict = {}
 _remote_at = 0.0
 _blob_url = ""          # the public address of our blob, learned on first write
+_tg_message_id = 0      # the pinned message that holds the document
 
 
 def backend() -> str:
-    """Which storage this copy writes to: ``blob``, ``http`` or ``lokal``."""
+    """Which storage this copy writes to.
+
+    ``http`` when an address was configured, ``blob`` when Vercel injected a
+    Blob token, ``telegram`` when only the bot token is there (the default on a
+    fresh deploy — nothing has to be set up), ``lokal`` otherwise.
+    """
     if STORE_URL:
         return "http"
     if BLOB_TOKEN:
         return "blob"
+    if BOT_TOKEN:
+        return "telegram"
     return "lokal"
 
 
@@ -100,6 +116,18 @@ def section_of(title: str) -> str:
         if any(key in low for key in keys):
             return name
     return OTHER_SECTION
+
+
+def store_label() -> str:
+    """One line for the status page: where the numbers are kept."""
+    kind = backend()
+    if kind == "http":
+        return STORE_URL.split("//")[-1].split("/")[0]
+    if kind == "blob":
+        return f"Vercel Blob · {BLOB_PATH}"
+    if kind == "telegram":
+        return f"Telegram · chat {STATS_CHAT} (pinlangan xabar)"
+    return "faqat shu nusxa"
 
 
 def _headers() -> dict:
@@ -250,6 +278,25 @@ def _cap(counter: Counter) -> dict:
     return {key: int(amount) for key, amount in counter.most_common(MAP_LIMIT)}
 
 
+def _shrink(payload: dict, room: int) -> dict:
+    """Trim maps and events until the document fits in one Telegram message.
+
+    The counters are the point of the panel, so they are never dropped; the
+    longest lists go first.
+    """
+    text = json.dumps(payload, ensure_ascii=False)
+    for maps, events in ((60, 12), (30, 8), (12, 5), (5, 3), (0, 0)):
+        if len(text) + len(DOC_HEADER) + 1 <= room:
+            return payload
+        trimmed = dict(payload)
+        for field in ("u", "h", "p"):
+            trimmed[field] = dict(Counter(payload.get(field) or {}).most_common(maps))
+        trimmed["e"] = list(payload.get("e") or [])[:events]
+        payload = trimmed
+        text = json.dumps(payload, ensure_ascii=False)
+    return payload
+
+
 async def sync(force: bool = False, transport=None) -> bool:
     """Read the document, fold our pending deltas in and write it back."""
     global _remote, _remote_at, _last_flush
@@ -266,27 +313,16 @@ async def sync(force: bool = False, transport=None) -> bool:
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0),
                                      transport=transport) as client:
-            if backend() == "blob":
-                status, text = await blob_read(client)
-            else:
-                response = await client.get(STORE_URL, headers=_headers())
-                status, text = response.status_code, response.text
+            status, text = await store_read(client)
             if status == 200 and text.strip():
                 document = _normalise(_try_json(text))
             body = _merge(document, deltas)
             payload = {"v": 1, "s": int(time.time()), "c": dict(body["c"]),
                        "u": _cap(body["u"]), "h": _cap(body["h"]), "p": _cap(body["p"]),
                        "e": body["e"][:EVENT_LIMIT]}
+            payload = _shrink(payload, MESSAGE_LIMIT)
             body_text = json.dumps(payload, ensure_ascii=False)
-            if backend() == "blob":
-                status, _ = await blob_write(client, body_text)
-            else:
-                written = await client.put(STORE_URL, content=body_text, headers=_headers())
-                if written.status_code in (405, 501):
-                    # Some stores (a Google Apps Script, a plain function) take POST only.
-                    written = await client.post(STORE_URL, content=body_text,
-                                                headers=_headers())
-                status = written.status_code
+            status, _ = await store_write(client, body_text)
         if status >= 400:
             return False
     except Exception:
@@ -350,11 +386,83 @@ async def blob_read(client) -> tuple[int, str]:
     return response.status_code, response.text
 
 
+async def _tg_call(client, method: str, **fields) -> dict:
+    """One plain Bot API call — no PTB lifecycle, so it also works after the
+    response was sent (that is when the statistics are flushed)."""
+    try:
+        response = await client.post(f"{TG_API}{BOT_TOKEN}/{method}", json=fields)
+        return response.json()
+    except Exception as exc:
+        return {"ok": False, "description": f"{type(exc).__name__}: {exc}"}
+
+
+async def telegram_read(client) -> tuple[int, str]:
+    """Read the document from the pinned message of the statistics chat."""
+    global _tg_message_id
+    answer = await _tg_call(client, "getChat", chat_id=STATS_CHAT)
+    pinned = (answer.get("result") or {}).get("pinned_message") or {}
+    text = pinned.get("text") or ""
+    _tg_message_id = int(pinned.get("message_id") or 0)
+    if not answer.get("ok") and not text:
+        return 502, str(answer.get("description") or "")[:120]
+    return (200, text) if text else (404, "")
+
+
+async def telegram_write(client, payload: str) -> tuple[int, str]:
+    """Put the document into that message, creating and pinning it if needed."""
+    global _tg_message_id
+    text = f"{DOC_HEADER}\n{payload}"
+    if len(text) > MESSAGE_LIMIT:
+        return 413, "hujjat xabarga sig‘madi"
+    if _tg_message_id:
+        answer = await _tg_call(client, "editMessageText", chat_id=STATS_CHAT,
+                                message_id=_tg_message_id, text=text)
+        if answer.get("ok") or "not modified" in str(answer.get("description", "")):
+            return 200, "tahrirlandi"
+        _tg_message_id = 0                     # the message is gone; send a new one
+    sent = await _tg_call(client, "sendMessage", chat_id=STATS_CHAT, text=text,
+                          disable_notification=True)
+    message_id = int((sent.get("result") or {}).get("message_id") or 0)
+    if not message_id:
+        return 502, str(sent.get("description") or "")[:120]
+    await _tg_call(client, "pinChatMessage", chat_id=STATS_CHAT,
+                   message_id=message_id, disable_notification=True)
+    _tg_message_id = message_id
+    return 200, "yuborildi va pinlandi"
+
+
+async def store_read(client) -> tuple[int, str]:
+    kind = backend()
+    if kind == "blob":
+        return await blob_read(client)
+    if kind == "telegram":
+        return await telegram_read(client)
+    response = await client.get(STORE_URL, headers=_headers())
+    return response.status_code, response.text
+
+
+async def store_write(client, payload: str) -> tuple[int, str]:
+    kind = backend()
+    if kind == "blob":
+        return await blob_write(client, payload)
+    if kind == "telegram":
+        return await telegram_write(client, payload)
+    written = await _put(client, STORE_URL, payload)
+    return written.status_code, written.text[:120]
+
+
 def _try_json(text: str):
     try:
         return json.loads(text)
     except ValueError:
-        return text
+        pass
+    start = text.find("{")                      # a header line may precede the JSON
+    if start > 0:
+        try:
+            return json.loads(text[start:])
+        except ValueError:
+            pass
+    return text
 
 
 def _empty_document(marker: str) -> dict:
@@ -575,16 +683,13 @@ async def probe(transport=None) -> dict:
                            "Blob do‘konini loyihaga ulang (BLOB_READ_WRITE_TOKEN paydo "
                            "bo‘ladi) yoki ZAKOVAT_STATS_URL bering")}
     marker = f"probe-{int(time.time())}"
-    host = "Vercel Blob" if backend() == "blob" else STORE_URL.split("//")[-1].split("/")[0]
+    host = {"blob": "Vercel Blob", "telegram": f"Telegram · chat {STATS_CHAT}"}.get(
+        backend(), STORE_URL.split("//")[-1].split("/")[0])
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=4.0),
                                      follow_redirects=True, transport=transport) as client:
             # Keep whatever is already stored: a check must not erase history.
-            if backend() == "blob":
-                before_code, before_text = await blob_read(client)
-            else:
-                before = await client.get(STORE_URL, headers=_headers())
-                before_code, before_text = before.status_code, before.text
+            before_code, before_text = await store_read(client)
             existing = _normalise(_try_json(before_text)) if before_code == 200 else {}
             document = {"v": 1, "s": int(time.time()),
                         "c": {str(k): int(v) for k, v in (existing.get("c") or {}).items()},
@@ -594,19 +699,18 @@ async def probe(transport=None) -> dict:
                         "e": ([{"t": int(time.time()), "k": "probe", "x": marker}]
                               + list(existing.get("e") or []))[:EVENT_LIMIT]}
             body_text = json.dumps(document, ensure_ascii=False)
-            if backend() == "blob":
-                write_code, _ = await blob_write(client, body_text)
-                read_code, read_text = await blob_read(client)
-            else:
-                written = await _put(client, STORE_URL, body_text)
-                read = await client.get(STORE_URL, headers=_headers())
-                write_code, read_code, read_text = written.status_code, read.status_code, read.text
+            write_code, _ = await store_write(client, body_text)
+            read_code, read_text = await store_read(client)
         found = marker in read_text
+        if write_code >= 400:
+            note = f"yozish ishlamadi ({write_code})"
+        elif found:
+            note = "saqlash ishlaydi: yozildi va qayta o‘qildi"
+        else:
+            note = "yozildi, lekin qayta o‘qishda topilmadi"
         return {"ok": write_code < 400 and found, "manzil": host, "rejim": backend(),
                 "yozish": write_code, "oqish": read_code,
-                "qayta_o‘qildi": found, "saqlangan_hisoblar": document["c"],
-                "izoh": ("saqlash ishlaydi: yozildi va qayta o‘qildi"
-                         if found else "yozildi, lekin qayta o‘qishda topilmadi")}
+                "qayta_o‘qildi": found, "saqlangan_hisoblar": document["c"], "izoh": note}
     except Exception as exc:
         return {"ok": False, "manzil": host, "xato": f"{type(exc).__name__}: {exc}"}
 
@@ -623,11 +727,7 @@ async def snapshot(archive=None, force: bool = True) -> dict:
         if not stored and not _remote:
             try:
                 async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0)) as client:
-                    if backend() == "blob":
-                        status, text = await blob_read(client)
-                    else:
-                        response = await client.get(STORE_URL, headers=_headers())
-                        status, text = response.status_code, response.text
+                    status, text = await store_read(client)
                 if status == 200:
                     _remote = _normalise(_try_json(text))
                     _remote_at = time.time()
@@ -664,7 +764,8 @@ async def snapshot(archive=None, force: bool = True) -> dict:
         },
         "accuracy": round(totals["answers_correct"] * 100 / asked) if asked else 0,
         "asked": asked,
-        "storage": STORE_URL or ("Vercel Blob: " + BLOB_PATH if BLOB_TOKEN else ""),
+        "storage": STORE_URL or {"blob": "Vercel Blob: " + BLOB_PATH,
+                                 "telegram": f"Telegram: chat {STATS_CHAT}"}.get(backend(), ""),
         "stored": backend() != "lokal",
         "backend": backend(),
         "dry_run": DRY_RUN,
@@ -676,7 +777,7 @@ async def snapshot(archive=None, force: bool = True) -> dict:
 
 def reset() -> None:
     """Test helper: drop everything this instance has counted."""
-    global _last_flush, _remote, _remote_at, _blob_url
+    global _last_flush, _remote, _remote_at, _blob_url, _tg_message_id
     _pending["c"] = Counter()
     _pending["u"] = Counter()
     _pending["h"] = Counter()
@@ -691,3 +792,4 @@ def reset() -> None:
     _remote = {}
     _remote_at = 0.0
     _blob_url = ""
+    _tg_message_id = 0

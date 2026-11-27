@@ -130,22 +130,16 @@ BO‘LIMLAR
 
 Panel ostidagi tugmalar: **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **O‘yinlar** (oxirgi harakatlar). `/stats` buyrug‘i faqat eganing buyruq menyusida ko‘rinadi.
 
-Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda saqlanadi: `ZAKOVAT_STATS_URL` — `GET` ga JSON qaytaradigan va `PUT` ni qabul qiladigan istalgan manzil (jsonblob.com, kvdb.io, o‘zingizning funksiyangiz). `ZAKOVAT_STATS_TOKEN` berilsa `Authorization: Bearer` sifatida yuboriladi. Yozuvlar `ZAKOVAT_STATS_FLUSH` (standart 20) sekundda bir to‘planib, **javob yuborilgandan keyin** yoziladi — o‘yin sekinlashmaydi; o‘yin boshlanishi va yakuni darhol yoziladi. Manzil berilmagan bo‘lsa, hisob shu nusxa ichida yuradi va panel buni ochiq aytadi. Arxiv bo‘limi (turkumlar, bo‘limlar, savollar, rasmlar) hech qanday saqlashni talab qilmaydi — u manifestdan hisoblanadi.
+Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda saqlanadi. Qaysi saqlagich ishlayotganini `stats.backend()` aytadi; ustunlik tartibi shunday:
 
-**Saqlashni yoqish (bir martalik).** Eng to‘g‘ri yo‘l — **Vercel Blob**: Vercel → Storage → Create Database → Blob → `zakovat` loyihasiga ulang. Vercel `BLOB_READ_WRITE_TOKEN` ni o‘zi qo‘shadi va bot saqlashni **o‘zi topadi** — boshqa hech narsa sozlash kerak emas (`/api/status` da `Statistika: Vercel Blob · zakovat-stats.json` ko‘rinadi).
+1. **Telegram — standart, hech narsa sozlash kerak emas.** Bot hujjatni egasi bilan bo‘lgan shaxsiy chatdagi **pinlangan xabar**da saqlaydi: yozish `editMessageText`, o‘qish `getChat().pinned_message`. Xabar boshida odam o‘qiy oladigan bir qator izoh turadi («Zakovat Agent — statistika hujjati. Bu xabarni o‘chirmang…»), ostida JSON. Xabar o‘chirilsa yoki pin yechilsa, bot yangisini yuborib pinlaydi. Hujjat 4096 belgiga sig‘ishi uchun uzun ro‘yxatlar qisqartiriladi — hisoblagichlar hech qachon tushirib qoldirilmaydi. Boshqa chat kerak bo‘lsa: `ZAKOVAT_STATS_CHAT=<chat id>`.
+2. **Vercel Blob.** Vercel → Storage → Create Database → Blob → loyihaga ulang: Vercel `BLOB_READ_WRITE_TOKEN` ni o‘zi qo‘shadi va bot saqlashni o‘zi topadi (`zakovat-stats.json`, manzil barqaror bo‘lishi uchun tasodifiy qo‘shimchasiz yoziladi).
+3. **Istalgan JSON manzil.** `ZAKOVAT_STATS_URL` — `GET` ga JSON qaytaradigan, `PUT`/`POST` ni qabul qiladigan joy; `ZAKOVAT_STATS_TOKEN` berilsa `Authorization: Bearer` sifatida yuboriladi. `.../api/index?statsprobe=1&create=1` bepul xizmatlarni o‘zi sinab ko‘radi, ammo amalda ular serverless manzillarini rad etadi: jsonblob 403 (Cloudflare), kvdb 500 («Unable to write to value log file»), npoint 500, extendsclass 404, pantry captcha. Hisobotda har birining sababi ko‘rinadi.
+4. **Hech narsa.** Saqlagich topilmasa hisob shu nusxa ichida yuradi va panel buni ochiq aytadi (`Manba: faqat shu nusxa`).
 
-Ikkinchi yo‘l — istalgan JSON hujjat manzili: `ZAKOVAT_STATS_URL` ga bering (`GET` ga JSON qaytaradigan va `PUT`/`POST` ni qabul qiladigan joy). `.../api/index?statsprobe=1&create=1` bepul xizmatlarni o‘zi sinab, tayyor manzilni qaytarishga urinadi, lekin amalda ular serverless manzillarini rad etadi (jsonblob 403, kvdb 500, pantry captcha) — hisobotda har birining sababi ko‘rinadi.
+Yozuvlar `ZAKOVAT_STATS_FLUSH` (standart 20) sekundda bir to‘planib, **javob yuborilgandan keyin** yoziladi — o‘yin sekinlashmaydi; o‘yin boshlanishi, yakuni, avto-to‘xtash va to‘xtatish darhol yoziladi. Har qanday xato yutiladi: saqlash ishlamasa ham o‘yin davom etadi. Ikki nusxa bir vaqtda yozsa, bir nechta hisob yo‘qolishi mumkin — dashboard uchun bu arzimas. Arxiv bo‘limi (turkumlar, bo‘limlar, savollar, rasmlar) saqlashni talab qilmaydi — u manifestdan hisoblanadi.
 
-Xohlasangiz o‘zingiz ham yaratishingiz mumkin:
-
-```bash
-curl -i -X POST https://jsonblob.com/api/jsonBlob -H 'Content-Type: application/json' -d '{}'
-# Location sarlavhasidagi manzilni ZAKOVAT_STATS_URL ga bering
-```
-
-Manzil maxfiy emas — uni bilgan odam hujjatni o‘zgartira oladi, shuning uchun token talab qiladigan joy (Vercel KV/Blob, o‘zingizning funksiyangiz) bo‘lsa, `ZAKOVAT_STATS_TOKEN` ham bering: u `Authorization: Bearer` sifatida yuboriladi. Saqlash `GET` ga JSON qaytarishi va `PUT` (yoki `POST`) ni qabul qilishi kifoya.
-
-Yoqilgandan keyin tekshirish: `.../api/index?statsprobe=1` — hujjatni **buzmasdan** (mavjud hisoblarni saqlab) sinov belgisini yozadi va qayta o‘qiydi; `"ok": true` bo‘lsa saqlash ishlaydi. `.../api/index?statsprobe=1&tg=1` esa Telegram’ning o‘zini saqlagich sifatida sinab ko‘radi (xabarni yuboradi, pinlaydi, `getChat` orqali qayta o‘qiydi va o‘chiradi).
+Tekshirish: `.../api/index?statsprobe=1` — amaldagi saqlagichni hujjatni **buzmasdan** (mavjud hisoblarni saqlab) sinaydi, `rejim` ni ko‘rsatadi; `"ok": true` bo‘lsa saqlash ishlaydi. `.../api/index?statsprobe=1&tg=1` — Telegram saqlagichini majburan sinaydi: pinlangan xabarni o‘qiydi, yozadi, qayta o‘qiydi (xabar o‘chirilmaydi, chunki u saqlagichning o‘zi).
 
 **Ko‘rinmas holat.** Serverless xotirasiz, shuning uchun o‘yin holati (paket, savol, hisob, deadline, javobsizlik seriyasi) xabar ichida nol kenglikli belgilar ketma-ketligi sifatida yuradi: sentinel va nazorat yig‘indisi bilan tekshiriladi, buzilgan bo‘lsa e’tiborsiz qoldiriladi, xabar 4096 belgi chegarasidan oshmaydi. Ekranda na matn, na ochib o‘qiladigan spoiler qoladi; eski `#ZS`/`#ZS2` ko‘rinishidagi xabarlar ham o‘qilaveradi. Kerak bo‘lsa `ZAKOVAT_HIDDEN_STATE=spoiler` bilan eski usulga qaytish mumkin.
 

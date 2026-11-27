@@ -1544,8 +1544,8 @@ async def status():
         f"Jonli taymer: {'yoqilgan' if TICKS_ENABLED else 'o‘chirilgan'} · "
         f"qadam {TICK_SECONDS} s · usul {TICK_MODE} · "
         f"javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
-        f"Statistika: {stats.STORE_URL.split('//')[-1].split('/')[0] if stats.STORE_URL else ('Vercel Blob · ' + stats.BLOB_PATH if stats.BLOB_TOKEN else 'faqat shu nusxa')}"
-        f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1 (create=1 — yangi saqlash)",
+        f"Statistika: {stats.store_label()}"
+        f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1",
         f"Jonli soat: /api/timer (Mini App) · server vaqti: /api/now",
         f"Yashirin holat: {HIDDEN_MODE} · fon ishi: "
         f"{_bg_probe_log[-1] if _bg_probe_log else 'tekshirilmagan'} · "
@@ -1633,64 +1633,37 @@ async def bg_step(stamp: str) -> JSONResponse:
 
 
 async def tg_storage_probe() -> dict:
-    """Can Telegram itself be the statistics store?
+    """Force the Telegram store and check it end to end.
 
-    Serverless has no disk, and the free JSON hosts refuse datacentre addresses
-    (jsonblob 403, kvdb 500, pantry wants a captcha). A pinned message is the
-    one place a bot can both write to and read back: ``getChat`` returns the
-    pinned message with its text. This probe sends one, pins it, reads it back
-    and cleans up, so it answers the question without leaving anything behind.
+    Telegram is the storage that needs no service at all: the document lives in
+    a pinned message of one chat, written with editMessageText and read back
+    through getChat. This keeps the message (it *is* the store) and reports the
+    whole round trip.
     """
-    chat_id = stats.OWNER_ID
-    marker = f"zakovat-stats-{int(time.time())}"
-    result: dict = {"chat": chat_id, "marker": marker}
-    application = get_application()
+    marker = f"tg-{int(time.time())}"
+    result: dict = {"chat": stats.STATS_CHAT, "marker": marker}
     try:
-        await application.initialize()
-        bot = application.bot
-        try:
-            sent = await bot.send_message(
-                chat_id=chat_id, disable_notification=True,
-                text=("Zakovat Agent — statistika saqlagichi sinovi. "
-                      f"Bu xabar hozir o‘chiriladi. Belgi: {marker}"))
-        except TelegramError as exc:
-            result["yuborish"] = f"xato: {exc}"
-            return result
-        result["yuborildi"] = sent.message_id
-        try:
-            await bot.pin_chat_message(chat_id=chat_id, message_id=sent.message_id,
-                                       disable_notification=True)
-            result["pin"] = "ok"
-        except TelegramError as exc:
-            result["pin"] = f"xato: {exc}"
-        pinned = None
-        try:
-            chat = await bot.get_chat(chat_id)
-            pinned = getattr(chat, "pinned_message", None)
-            text = getattr(pinned, "text", "") or ""
-            result["pinned_message"] = bool(pinned)
-            result["matn"] = text[:70]
-            result["oqildi"] = marker in text
-        except TelegramError as exc:
-            result["oqish"] = f"xato: {exc}"
-        # leave the chat exactly as it was
-        if getattr(pinned, "message_id", None):
-            try:
-                await bot.unpin_chat_message(chat_id=chat_id, message_id=pinned.message_id)
-            except TelegramError as exc:
-                result["unpin"] = f"xato: {exc}"
-        try:
-            await bot.delete_message(chat_id=chat_id, message_id=sent.message_id)
-            result["tozalandi"] = True
-        except TelegramError as exc:
-            result["tozalandi"] = f"yo‘q: {exc}"
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=4.0)) as client:
+            code, text = await stats.telegram_read(client)
+            result["oqish"] = code
+            result["pinlangan"] = code == 200 and bool(text)
+            existing = stats._normalise(stats._try_json(text)) if code == 200 else {}
+            document = {"v": 1, "s": int(time.time()),
+                        "c": {str(k): int(v) for k, v in (existing.get("c") or {}).items()},
+                        "u": {}, "h": {}, "p": {},
+                        "e": ([{"t": int(time.time()), "k": "probe", "x": marker}]
+                              + list(existing.get("e") or []))[:stats.EVENT_LIMIT]}
+            write_code, how = await stats.telegram_write(
+                client, json.dumps(document, ensure_ascii=False))
+            result["yozish"] = write_code
+            result["usul"] = how
+            code, text = await stats.telegram_read(client)
+            result["qayta_oqildi"] = marker in text
+            result["ok"] = write_code < 400 and marker in text
+            result["hisoblar_saqlandi"] = document["c"]
     except Exception as exc:
+        result["ok"] = False
         result["xato"] = f"{type(exc).__name__}: {exc}"
-    finally:
-        try:
-            await application.shutdown()
-        except Exception:
-            pass
     return result
 
 

@@ -427,5 +427,164 @@ class VercelBlobTests(unittest.TestCase):
         self.assertIn("Blob", report["reason"])
 
 
+def _telegram_transport(state: dict):
+    """Stand in for the Bot API calls the Telegram store makes."""
+
+    def handler(request):
+        method = str(request.url).rsplit("/", 1)[-1]
+        try:
+            body = json.loads(request.content.decode("utf-8"))
+        except ValueError:
+            body = {}
+        if method == "getChat":
+            result = {"id": body.get("chat_id"), "type": "private"}
+            pinned = state.get("pinned")
+            if pinned:
+                result["pinned_message"] = {"message_id": pinned,
+                                            "text": state["messages"][pinned]}
+            return httpx.Response(200, text=json.dumps({"ok": True, "result": result}))
+        if method == "sendMessage":
+            number = state["next"]
+            state["next"] += 1
+            state["messages"][number] = body.get("text", "")
+            state["sent"] += 1
+            return httpx.Response(200, text=json.dumps(
+                {"ok": True, "result": {"message_id": number}}))
+        if method == "pinChatMessage":
+            state["pinned"] = body.get("message_id")
+            return httpx.Response(200, text=json.dumps({"ok": True, "result": True}))
+        if method == "editMessageText":
+            number = body.get("message_id")
+            if number not in state["messages"]:
+                return httpx.Response(400, text=json.dumps(
+                    {"ok": False, "description": "message to edit not found"}))
+            if state["messages"][number] == body.get("text"):
+                return httpx.Response(400, text=json.dumps(
+                    {"ok": False, "description": "Bad Request: message is not modified"}))
+            state["messages"][number] = body.get("text", "")
+            state["edited"] += 1
+            return httpx.Response(200, text=json.dumps({"ok": True, "result": True}))
+        return httpx.Response(400, text=json.dumps({"ok": False, "description": method}))
+
+    return httpx.MockTransport(handler)
+
+
+def _telegram_state() -> dict:
+    return {"messages": {}, "pinned": None, "next": 100, "sent": 0, "edited": 0}
+
+
+@unittest.skipUnless(stats, "install requirements.txt to test statistics")
+class TelegramStoreTests(unittest.TestCase):
+    """A pinned message is a store that needs no service and no set-up."""
+
+    def setUp(self):
+        stats.reset()
+        self.patchers = [
+            mock.patch.object(stats, "STORE_URL", ""),
+            mock.patch.object(stats, "BLOB_TOKEN", ""),
+            mock.patch.object(stats, "BOT_TOKEN", "123456:TEST"),
+            mock.patch.object(stats, "STATS_CHAT", 8004724563),
+            mock.patch.object(stats, "DRY_RUN", False),
+            mock.patch.object(stats, "FLUSH_SECONDS", 0),
+        ]
+        for item in self.patchers:
+            item.start()
+        self.addCleanup(lambda: [item.stop() for item in self.patchers])
+        self.addCleanup(stats.reset)
+
+    def test_the_bot_token_alone_is_enough(self):
+        self.assertEqual(stats.backend(), "telegram")
+        self.assertIn("Telegram", stats.store_label())
+
+    def test_the_first_write_pins_a_message_and_later_ones_edit_it(self):
+        state = _telegram_state()
+        transport = _telegram_transport(state)
+        stats.record("game_start", user_id=1, chat_id=-100, package_id=959, games_started=1)
+        self.assertTrue(asyncio.run(stats.sync(force=True, transport=transport)))
+        self.assertEqual(state["sent"], 1)
+        self.assertEqual(state["pinned"], 100)
+        self.assertIn("statistika hujjati", state["messages"][100])   # a human-readable header
+        stats.record("question", package_id=959, questions_asked=1, log=False)
+        self.assertTrue(asyncio.run(stats.sync(force=True, transport=transport)))
+        self.assertEqual(state["sent"], 1)                     # no second message
+        self.assertEqual(state["edited"], 1)
+        saved = json.loads(state["messages"][100].split("\n", 1)[1])
+        self.assertEqual(saved["c"]["games_started"], 1)
+        self.assertEqual(saved["c"]["questions_asked"], 1)
+
+    def test_a_new_instance_finds_the_document_again(self):
+        state = _telegram_state()
+        transport = _telegram_transport(state)
+        stats.record("game_start", user_id=7, games_started=2)
+        asyncio.run(stats.sync(force=True, transport=transport))
+        stats.reset()                                          # a cold start knows nothing
+        self.assertEqual(stats._tg_message_id, 0)
+        stats.record("question", questions_asked=3, log=False)
+        self.assertTrue(asyncio.run(stats.sync(force=True, transport=transport)))
+        self.assertEqual(state["sent"], 1)                     # it edited, not re-sent
+        saved = json.loads(state["messages"][100].split("\n", 1)[1])
+        self.assertEqual(saved["c"]["games_started"], 2)       # history survived
+        self.assertEqual(saved["c"]["questions_asked"], 3)
+
+    def test_the_panel_reads_the_pinned_message(self):
+        state = _telegram_state()
+        transport = _telegram_transport(state)
+        stats.record("game_start", user_id=7, chat_id=-100, package_id=959, games_started=4)
+        asyncio.run(stats.sync(force=True, transport=transport))
+        stats.reset()
+        with mock.patch.object(stats, "httpx") as fake:
+            fake.AsyncClient = lambda **kwargs: httpx.AsyncClient(
+                transport=transport, **{k: v for k, v in kwargs.items() if k != "transport"})
+            fake.Timeout = httpx.Timeout
+            snapshot = asyncio.run(stats.snapshot(force=True))
+        self.assertEqual(snapshot["backend"], "telegram")
+        self.assertEqual(snapshot["counters"]["games_started"], 4)
+        self.assertEqual(snapshot["users"], 1)
+        self.assertIn("Telegram", snapshot["storage"])
+
+    def test_the_check_keeps_stored_numbers(self):
+        state = _telegram_state()
+        transport = _telegram_transport(state)
+        stats.record("game_start", games_started=9)
+        asyncio.run(stats.sync(force=True, transport=transport))
+        report = asyncio.run(stats.probe(transport=transport))
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["rejim"], "telegram")
+        self.assertEqual(report["saqlangan_hisoblar"]["games_started"], 9)
+        saved = json.loads(state["messages"][100].split("\n", 1)[1])
+        self.assertEqual(saved["c"]["games_started"], 9)
+
+    def test_a_gone_message_is_replaced(self):
+        state = _telegram_state()
+        transport = _telegram_transport(state)
+        stats.record("game_start", games_started=1)
+        asyncio.run(stats.sync(force=True, transport=transport))
+        state["pinned"] = None                                 # the owner deleted it
+        state["messages"].clear()
+        stats.record("question", questions_asked=1, log=False)
+        self.assertTrue(asyncio.run(stats.sync(force=True, transport=transport)))
+        self.assertEqual(state["sent"], 2)                     # a fresh message was pinned
+        self.assertEqual(state["pinned"], 101)
+
+    def test_a_big_document_is_trimmed_to_one_message(self):
+        payload = {"v": 1, "c": {"games_started": 1},
+                   "u": {str(i): i for i in range(400)},
+                   "h": {str(i): i for i in range(400)},
+                   "p": {str(i): i for i in range(400)},
+                   "e": [{"t": i, "k": "skip", "x": "x" * 60} for i in range(30)]}
+        trimmed = stats._shrink(payload, stats.MESSAGE_LIMIT)
+        text = stats.DOC_HEADER + "\n" + json.dumps(trimmed, ensure_ascii=False)
+        self.assertLessEqual(len(text), stats.MESSAGE_LIMIT)
+        self.assertEqual(trimmed["c"]["games_started"], 1)      # counters survive
+
+    def test_a_dead_telegram_does_not_break_the_game(self):
+        def handler(request):
+            raise httpx.ConnectError("no route")
+
+        stats.record("game_start", games_started=1)
+        self.assertFalse(asyncio.run(stats.sync(force=True,
+                                                transport=httpx.MockTransport(handler))))
+
+
 if __name__ == "__main__":
     unittest.main()
