@@ -2,8 +2,12 @@ import asyncio
 import json
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import time
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 from urllib.parse import quote
@@ -382,6 +386,14 @@ class PageTests(unittest.TestCase):
                        "setHeaderColor", "setBackgroundColor", "themeChanged"):
             self.assertIn(marker, self.page, marker)
 
+    def test_the_page_reads_the_proof_the_way_telegram_hands_it_over(self):
+        """Telegram appends initData to the address as #tgWebAppData, never as ?initData."""
+        self.assertIn("tgWebAppData", self.page)
+        self.assertIn("w.initData", self.page)
+        self.assertIn("decodeURIComponent", self.page)
+        self.assertIn("manba", self.page)
+        self.assertIn("window.location.hash", self.page)
+
     def test_the_page_uses_the_telegram_apis(self):
         for call in ("w.ready()", "w.expand()", "HapticFeedback", "BackButton"):
             self.assertIn(call, self.page, call)
@@ -394,6 +406,103 @@ class PageTests(unittest.TestCase):
         for chunk in self.page:
             if 0x1F300 <= ord(chunk) <= 0x1FAFF or 0x2600 <= ord(chunk) <= 0x27BF:
                 self.fail(f"emoji found: {chunk!r}")
+
+
+NODE = shutil.which("node")
+
+HARNESS = """
+const fs = require("fs");
+const scenario = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+global.window = {location: {hash: scenario.hash || ""}};
+var INIT = scenario.init || "";
+var proofSource = "";
+function tg(){ return scenario.sdk ? {initData: scenario.sdk} : null; }
+eval(fs.readFileSync(process.argv[1], "utf8"));
+fs.writeFileSync(process.argv[3], JSON.stringify({value: proof(), manba: proofSource}));
+"""
+
+
+def proof_source() -> str:
+    """The page's real proof-finding function, lifted out of the rendered HTML."""
+    page = dashboard.render("", api="/api/app")
+    start = page.index("function proof(){")
+    return page[start:page.index("function haptic(", start)]
+
+
+def run_proof(scenario: dict) -> dict:
+    """Run that function in node, with the window and SDK the scenario describes."""
+    with tempfile.TemporaryDirectory() as folder:
+        script = os.path.join(folder, "proof.js")
+        given = os.path.join(folder, "given.json")
+        result = os.path.join(folder, "result.json")
+        Path(script).write_text(proof_source(), encoding="utf-8")
+        Path(given).write_text(json.dumps(scenario), encoding="utf-8")
+        subprocess.run([NODE, "-e", HARNESS, script, given, result], check=True, timeout=30)
+        return json.loads(Path(result).read_text(encoding="utf-8"))
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the Mini App")
+@unittest.skipUnless(NODE, "node is needed to run the page's own proof lookup")
+class FragmentTests(unittest.TestCase):
+    """Telegram hands initData over in the address fragment, never in the query.
+
+    The page's own JavaScript is executed here, so what is asserted is what a
+    phone really does: the fragment is parsed, decoded once, and the result has
+    to survive the server's signature check.
+    """
+
+    def setUp(self):
+        stats.reset()
+        offline(self)
+        self.init = wa.forge_init_data({"id": OWNER, "first_name": "Ega"}, TOKEN)
+
+    def tearDown(self):
+        stop_offline(self)
+        stats.reset()
+
+    def _fragment(self, value):
+        return "#tgWebAppData=" + value + "&tgWebAppVersion=7.10&tgWebAppPlatform=android"
+
+    def test_the_sdk_value_is_used_first(self):
+        found = run_proof({"sdk": self.init, "hash": self._fragment("anything"),
+                           "init": "other"})
+        self.assertEqual(found["value"], self.init)
+        self.assertEqual(found["manba"], "sdk")
+        self.assertIsNotNone(wa.validate_init_data(found["value"], TOKEN))
+
+    def test_the_encoded_fragment_is_decoded_once_and_still_valid(self):
+        found = run_proof({"hash": self._fragment(quote(self.init, safe=""))})
+        self.assertEqual(found["manba"], "fragment")
+        self.assertEqual(found["value"], self.init)
+        verified = wa.validate_init_data(found["value"], TOKEN)
+        self.assertIsNotNone(verified)
+        self.assertEqual(verified["user"]["id"], OWNER)
+
+    def test_a_plain_fragment_is_accepted_too(self):
+        found = run_proof({"hash": self._fragment(self.init)})
+        self.assertEqual(found["manba"], "fragment")
+        verified = wa.validate_init_data(found["value"], TOKEN)
+        self.assertIsNotNone(verified)
+        self.assertEqual(verified["user"]["id"], OWNER)
+
+    def test_a_fragment_alone_is_enough(self):
+        found = run_proof({"hash": "#tgWebAppData=" + quote(self.init, safe="")})
+        self.assertEqual(found["manba"], "fragment")
+        self.assertIsNotNone(wa.validate_init_data(found["value"], TOKEN))
+
+    def test_a_tampered_fragment_still_fails_the_signature(self):
+        broken = self.init[:-1] + ("0" if self.init[-1] != "0" else "1")
+        found = run_proof({"hash": self._fragment(quote(broken, safe=""))})
+        self.assertIsNone(wa.validate_init_data(found["value"], TOKEN))
+
+    def test_the_rendered_value_is_the_last_resort(self):
+        self.assertEqual(run_proof({"init": self.init})["manba"], "sahifa")
+        self.assertEqual(run_proof({"init": self.init})["value"], self.init)
+
+    def test_without_anything_there_is_no_proof(self):
+        found = run_proof({})
+        self.assertEqual(found["value"], "")
+        self.assertEqual(found["manba"], "")
 
 
 @unittest.skipUnless(webhook, "install requirements.txt to test the Mini App")
@@ -458,13 +567,32 @@ class RouteTests(unittest.TestCase):
         self.client.post("/api/app", json={"initData": self._init(STRANGER)})
         self.assertIn("app_denied", [item["k"] for item in stats._pending["e"]])
 
-    def test_unsigned_and_broken_requests_are_refused(self):
+    def test_a_request_without_any_proof_is_refused_and_says_why(self):
+        """No proof at all means the page was not opened inside Telegram."""
+        for payload in ({}, {"initData": ""}):
+            body = self.client.post("/api/app", json=payload).json()
+            self.assertFalse(body["ok"], payload)
+            self.assertIn("bo‘sh", body["reason"])
+            self.assertEqual(body["manba"], "yo‘q")
+            self.assertEqual(body["uzunlik"], 0)
+
+    def test_broken_proofs_are_refused_and_their_source_is_echoed(self):
         good = self._init(OWNER)
-        for payload in ({}, {"initData": ""}, {"initData": "user=1&hash=x"},
-                        {"initData": good[:-1] + ("0" if good[-1] != "0" else "1")}):
+        broken = good[:-1] + ("0" if good[-1] != "0" else "1")
+        for payload in ({"initData": "user=1&hash=x", "manba": "sdk"},
+                        {"initData": broken, "manba": "fragment"}):
             body = self.client.post("/api/app", json=payload).json()
             self.assertFalse(body["ok"], payload)
             self.assertIn("imzosi", body["reason"])
+            self.assertEqual(body["manba"], payload["manba"])
+            self.assertGreater(body["uzunlik"], 0)
+
+    def test_a_refused_stranger_is_told_where_the_proof_came_from(self):
+        body = self.client.post("/api/app", json={"initData": self._init(STRANGER),
+                                                  "manba": "sdk"}).json()
+        self.assertFalse(body["ok"])
+        self.assertEqual(body["manba"], "sdk")
+        self.assertEqual(body["sizning_id"], STRANGER)
 
     def test_the_proof_can_also_arrive_in_the_address(self):
         body = self.client.get("/api/app?initData=" + quote(self._init(OWNER), safe="")).json()

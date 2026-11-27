@@ -2031,6 +2031,7 @@ async def app_page(request: Request):
 async def app_payload(request: Request) -> dict:
     """Verify who is asking, then answer with the dashboard (or a refusal)."""
     init_data = ""
+    source = ""
     if request.method == "POST":
         try:
             body = await request.json()
@@ -2038,13 +2039,23 @@ async def app_payload(request: Request) -> dict:
             body = None
         if isinstance(body, dict):
             init_data = str(body.get("initData") or body.get("init_data") or "")
+            source = str(body.get("manba") or "")
     if not init_data:
         init_data = str(request.query_params.get("initData")
                         or request.query_params.get("auth") or "")
     verified = wa.validate_init_data(init_data)
     if not verified:
-        return wa.denied("Telegram imzosi tekshirilmadi: initData yaroqsiz, eskirgan "
-                         "yoki bu sahifa Telegram ichida ochilmagan.")
+        # Saying *why* matters: an empty proof means the page was opened outside
+        # Telegram (or the client never handed over #tgWebAppData), a wrong one
+        # means the signature or its age failed. Both are refusals, not errors.
+        reason = ("initData bo‘sh: sahifa Telegram ichida ochilmagan. Bot menyusidagi "
+                  "«Statistika» tugmasidan oching." if not init_data else
+                  "Telegram imzosi tekshirilmadi: initData yaroqsiz yoki eskirgan "
+                  "(ZAKOVAT_APP_TTL).")
+        answer = wa.denied(reason)
+        answer["manba"] = source or "yo‘q"
+        answer["uzunlik"] = len(init_data)
+        return answer
     user = verified.get("user") or {}
     user_id = int(user.get("id") or 0)
     await stats.load_access()
@@ -2052,6 +2063,7 @@ async def app_payload(request: Request) -> dict:
         note("app_denied", user_id=user_id, chat_id=(verified.get("chat") or {}).get("id"),
              detail="mini app urinishi")
         answer = wa.denied()
+        answer["manba"] = source or "yo‘q"
         answer["sizning_id"] = user_id
         answer["yechim"] = f"Bot egasiga shu id ni yuboring, u /grant {user_id} Ism deb yozadi."
         return answer
