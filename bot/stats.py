@@ -334,8 +334,9 @@ async def _provision_jsonblob(client) -> tuple[str, dict]:
 
 
 async def _provision_kvdb(client) -> tuple[str, dict]:
-    response = await client.post("https://kvdb.io/", headers=_STORE_HEADERS,
-                                 follow_redirects=False)
+    # kvdb asks for a contact address before it hands out a bucket
+    response = await client.post(f"https://kvdb.io/?email={STORE_EMAIL}",
+                                 headers=_STORE_HEADERS, follow_redirects=False)
     bucket = response.text.strip()
     if response.status_code >= 400 or not bucket or len(bucket) > 64 or " " in bucket:
         return "", _detail(response)
@@ -356,7 +357,7 @@ async def _provision_extendsclass(client) -> tuple[str, dict]:
     return f"https://extendsclass.com/api/json-storage/{blob_id}", detail
 
 
-PANTRY_EMAIL = os.getenv("ZAKOVAT_STATS_EMAIL", "zakovat-agent@users.noreply.github.com")
+STORE_EMAIL = os.getenv("ZAKOVAT_STATS_EMAIL", "zakovat-agent@users.noreply.github.com")
 
 
 async def _provision_pantry(client) -> tuple[str, dict]:
@@ -365,7 +366,7 @@ async def _provision_pantry(client) -> tuple[str, dict]:
         "https://getpantry.cloud/apiv1/pantry/create",
         content=json.dumps({"name": "Zakovat Agent statistika",
                             "description": "Bot statistikasi uchun JSON hujjat",
-                            "contactEmail": PANTRY_EMAIL}),
+                            "contactEmail": STORE_EMAIL}),
         headers=_STORE_HEADERS, follow_redirects=False)
     detail = _detail(response)
     try:
@@ -394,11 +395,11 @@ async def _provision_npoint(client) -> tuple[str, dict]:
 
 
 PROVIDERS: tuple[tuple[str, object], ...] = (
-    ("kvdb", _provision_kvdb),
-    ("pantry", _provision_pantry),
-    ("extendsclass", _provision_extendsclass),
+    ("kvdb", _provision_kvdb),           # bepul, kalitsiz, GET/PUT xom matn
     ("npoint", _provision_npoint),
-    ("jsonblob", _provision_jsonblob),   # datacentre manzillarini rad etadi
+    ("jsonblob", _provision_jsonblob),   # datacentre manzillarini 403 bilan rad etadi
+    ("extendsclass", _provision_extendsclass),
+    ("pantry", _provision_pantry),       # captcha talab qiladi
 )
 
 
@@ -415,7 +416,7 @@ async def create_store(transport=None) -> dict:
              "user-agent": _STORE_HEADERS["user-agent"]}
     attempts: list[dict] = []
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(15.0, connect=6.0),
+        async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=4.0),
                                      follow_redirects=True, transport=transport) as client:
             for name, provision in PROVIDERS:
                 try:
