@@ -334,13 +334,25 @@ async def _provision_jsonblob(client) -> tuple[str, dict]:
 
 
 async def _provision_kvdb(client) -> tuple[str, dict]:
-    # kvdb asks for a contact address before it hands out a bucket
-    response = await client.post(f"https://kvdb.io/?email={STORE_EMAIL}",
-                                 headers=_STORE_HEADERS, follow_redirects=False)
+    """kvdb hands out a bucket for a contact address, sent as a form field."""
+    form = {**_STORE_HEADERS, "content-type": "application/x-www-form-urlencoded"}
+    response = await client.post("https://kvdb.io/", content=f"email={STORE_EMAIL}",
+                                 headers=form, follow_redirects=False)
+    detail = _detail(response, {"usul": "forma"})
     bucket = response.text.strip()
-    if response.status_code >= 400 or not bucket or len(bucket) > 64 or " " in bucket:
-        return "", _detail(response)
-    return f"https://kvdb.io/{bucket}/zakovat-stats", _detail(response, {"bucket": bucket})
+    if not _usable_bucket(response.status_code, bucket):
+        # some deployments take it as a query parameter instead
+        response = await client.post(f"https://kvdb.io/?email={STORE_EMAIL}",
+                                     headers=_STORE_HEADERS, follow_redirects=False)
+        detail = _detail(response, {"usul": "so‘rov"})
+        bucket = response.text.strip()
+    if not _usable_bucket(response.status_code, bucket):
+        return "", detail
+    return f"https://kvdb.io/{bucket}/zakovat-stats", detail
+
+
+def _usable_bucket(status: int, bucket: str) -> bool:
+    return status < 400 and bool(bucket) and len(bucket) <= 64 and " " not in bucket
 
 
 async def _provision_extendsclass(client) -> tuple[str, dict]:
