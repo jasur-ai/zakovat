@@ -127,7 +127,7 @@ def settings_keyboard(config: GameConfig):
         buttons = []
         for option in options:
             text = label(option)
-            mark = "✅ " if option == current else ""
+            mark = "● " if option == current else "○ "
             buttons.append(InlineKeyboardButton(
                 mark + text, callback_data=config.encode(action, str(option)),
             ))
@@ -136,11 +136,11 @@ def settings_keyboard(config: GameConfig):
     rows = [
         row(ACTION_ROUNDS, ROUNDS, config.rounds, lambda v: f"{v} raund"),
         row(ACTION_PER_ROUND, PER_ROUND, config.per_round, lambda v: "hammasi" if v == 0 else f"{v} savol"),
-        row(ACTION_TIMER, TIMERS, config.timer, lambda v: f"{v}s"),
+        row(ACTION_TIMER, TIMERS, config.timer, lambda v: f"{v} s"),
         [
-            InlineKeyboardButton("▶️ Boshlash", callback_data=config.encode(ACTION_START)),
-            InlineKeyboardButton("🎲 Boshqa paket", callback_data=config.encode(ACTION_SHUFFLE)),
-            InlineKeyboardButton("✖️ Bekor", callback_data=config.encode(ACTION_CANCEL)),
+            InlineKeyboardButton("Boshlash", callback_data=config.encode(ACTION_START)),
+            InlineKeyboardButton("Boshqa paket", callback_data=config.encode(ACTION_SHUFFLE)),
+            InlineKeyboardButton("Bekor qilish", callback_data=config.encode(ACTION_CANCEL)),
         ],
     ]
     return InlineKeyboardMarkup(rows)
@@ -150,11 +150,11 @@ def game_keyboard(admin: bool = True):
     """Buttons under every question message."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-    row = [InlineKeyboardButton("⏱ Vaqtni yangilash", callback_data=GAME_REFRESH)]
+    row = [InlineKeyboardButton("Vaqtni yangilash", callback_data=GAME_REFRESH)]
     if admin:
-        row.append(InlineKeyboardButton("⏭ O‘tkazish", callback_data=GAME_SKIP))
-    row.append(InlineKeyboardButton("📊 Hisob", callback_data=GAME_SCORE))
-    row.append(InlineKeyboardButton("⏹ To‘xtatish", callback_data=GAME_STOP))
+        row.append(InlineKeyboardButton("O‘tkazish", callback_data=GAME_SKIP))
+    row.append(InlineKeyboardButton("Hisob", callback_data=GAME_SCORE))
+    row.append(InlineKeyboardButton("To‘xtatish", callback_data=GAME_STOP))
     return InlineKeyboardMarkup([row])
 
 
@@ -165,9 +165,9 @@ def page_keyboard(page: int, pages: int, query: str = ""):
         return None
     row = []
     if page > 1:
-        row.append(InlineKeyboardButton("⏪", callback_data=page_data(1, query)))
-        row.append(InlineKeyboardButton("◀️", callback_data=page_data(page - 1, query)))
+        row.append(InlineKeyboardButton("|‹ Boshi", callback_data=page_data(1, query)))
+        row.append(InlineKeyboardButton("‹ Orqaga", callback_data=page_data(page - 1, query)))
     if page < pages:
-        row.append(InlineKeyboardButton("▶️", callback_data=page_data(page + 1, query)))
-        row.append(InlineKeyboardButton("⏩", callback_data=page_data(pages, query)))
+        row.append(InlineKeyboardButton("Oldinga ›", callback_data=page_data(page + 1, query)))
+        row.append(InlineKeyboardButton("Oxiri ›|", callback_data=page_data(pages, query)))
     return InlineKeyboardMarkup([row])

@@ -146,11 +146,14 @@ def _button(record: dict[str, Any], row: int, column: int) -> str | None:
 
 async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
     """Walk the whole user journey through the live handlers, offline."""
+    from . import webhook as wh
     from .webhook import ARCHIVE, unpack_state
 
     bot = RecordingBot(os.getenv("BOT_TOKEN") or FAKE_TOKEN)
     application = build_app(bot)
     await application.initialize()
+    ticks_saved = wh.TICKS_ENABLED
+    wh.TICKS_ENABLED = False          # no self-invocations during a dry run
     lines: list[str] = []
     step = 0
 
@@ -187,7 +190,7 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
         panel = await send("/solo 959")
         if not panel:
             return lines
-        started = await press(panel[0], -1, 0, "▶️ Boshlash")
+        started = await press(panel[0], -1, 0, "Boshlash")
         if not started:
             return lines
 
@@ -198,17 +201,24 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
         if state and state.get("q"):
             record = ARCHIVE.question(int(state["q"]))
             answer = str((record or {}).get("answer", ""))
-        answered = []
+        fresh = []
         if answer:
-            answered = await send(answer, reply_to=question["message"])
+            fresh = await send(answer, reply_to=question["message"])
         else:
             lines.append("javob sinovi o‘tkazib yuborildi: savol topilmadi")
 
-        fresh_control = next((item for item in reversed(answered) if _is_panel(item)), control)
-        if fresh_control:
-            await press(fresh_control, 0, 1, "⏭ O‘tkazish (admin)")
+        fresh_control = next((item for item in reversed(fresh) if _is_panel(item)), control)
+
+        # Three questions in a row without a single guess must stop the game.
+        for number in (1, 2, 3):
+            if not fresh_control:
+                lines.append(f"O‘tkazish {number} → panel topilmadi")
+                break
+            fresh = await press(fresh_control, 0, 1, f"O‘tkazish {number}")
+            fresh_control = next((item for item in reversed(fresh) if _is_panel(item)), None)
 
         await send("/rules", with_entities=False)
     finally:
+        wh.TICKS_ENABLED = ticks_saved
         await application.shutdown()
     return lines

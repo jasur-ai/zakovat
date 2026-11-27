@@ -36,7 +36,8 @@ ALIAS_FILE = os.getenv("ZAKOVAT_ALIAS_FILE", "data/answer_aliases.json")
 DEFAULT_TIMER = int(os.getenv("ZAKOVAT_TIMER_SECONDS", "60"))
 PER_PAGE = int(os.getenv("ZAKOVAT_PACKAGES_PER_PAGE", "12"))
 IMAGES = ROOT / "data" / "images"
-TICK_SECONDS = 10
+TICK_SECONDS = max(2, int(os.getenv("ZAKOVAT_TICK_SECONDS", "6")))
+IDLE_LIMIT = max(0, int(os.getenv("ZAKOVAT_IDLE_LIMIT", "3")))
 
 BOT_COMMANDS = [
     ("start", "Tanishtiruv"),
@@ -196,7 +197,7 @@ def _panel_text(context: ContextTypes.DEFAULT_TYPE, config: st.GameConfig) -> st
     text = msg.settings_panel(config.package_id, title, available, config.rounds,
                               config.per_round, config.timer, config.mode, total)
     if available and total > available:
-        text += f"\n\nℹ️ Bazada {available} savol bor — qolgan {total - available} savol takrorlanadi."
+        text += f"\n\nBazada {available} savol bor — qolgan {total - available} savol takrorlanadi."
     return text
 
 
@@ -226,7 +227,7 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if action == st.ACTION_CANCEL:
         await query.answer("Bekor qilindi")
         try:
-            await query.edit_message_text("❌ O‘yin bekor qilindi. <code>/solo</code> bilan qayta boshlang.",
+            await query.edit_message_text("O‘yin bekor qilindi. <code>/solo</code> bilan qayta boshlang.",
                                           parse_mode=ParseMode.HTML)
         except TelegramError:
             pass
@@ -250,7 +251,7 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
             pass
         return
 
-    await query.answer("O‘yin boshlandi!")
+    await query.answer("O‘yin boshlandi")
     await start_from_config(context, config, query.message.chat_id, query.from_user.id)
 
 
@@ -281,6 +282,7 @@ async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameC
         per_round=config.per_round or len(playlist),
         seed=config.seed,
     )
+    session.idle_limit = IDLE_LIMIT
     _sessions(context)[chat_id] = session
     label = "Yakka o‘yin" if config.mode == "solo" else "Guruh o‘yini"
     await context.bot.send_message(
@@ -319,7 +321,7 @@ async def _send_picture(context: ContextTypes.DEFAULT_TYPE, chat_id: int, questi
     urls = [a for a in (question.get("attachments") or []) if isinstance(a, str) and a.startswith("http")]
     if urls:
         try:
-            await context.bot.send_photo(chat_id=chat_id, photo=urls[0], caption="🖼 Savol rasmi")
+            await context.bot.send_photo(chat_id=chat_id, photo=urls[0], caption="Savol rasmi")
             return True
         except TelegramError:
             pass
@@ -327,7 +329,7 @@ async def _send_picture(context: ContextTypes.DEFAULT_TYPE, chat_id: int, questi
     if path:
         try:
             with path.open("rb") as handle:
-                await context.bot.send_photo(chat_id=chat_id, photo=InputFile(handle), caption="🖼 Savol rasmi")
+                await context.bot.send_photo(chat_id=chat_id, photo=InputFile(handle), caption="Savol rasmi")
             return True
         except (TelegramError, OSError):
             return False
@@ -335,24 +337,48 @@ async def _send_picture(context: ContextTypes.DEFAULT_TYPE, chat_id: int, questi
 
 
 def _strip_text(session: Session, remaining: int) -> str:
-    head = f"🎯 {session.number}/{session.total}-savol"
+    head = f"Savol {session.number} / {session.total}"
     if session.rounds > 1:
         head += f" · {session.current_round}-raund"
     return f"{head}\n{msg.timer_line(remaining, session.timer_seconds)}"
 
 
+def _percent(session: Session) -> int:
+    return round(session.correct * 100 / session.total) if session.total else 0
+
+
 async def _send_question(chat_id: int, context: ContextTypes.DEFAULT_TYPE, session: Session) -> None:
     question = session.question
     if question is None:
-        percent = round(session.correct * 100 / session.total) if session.total else 0
         await context.bot.send_message(
             chat_id=chat_id,
             text=msg.summary(session.package_title, session.total, session.correct, session.wrong,
-                             percent, session.rounds),
+                             _percent(session), session.rounds),
             parse_mode=ParseMode.HTML,
         )
         _sessions(context).pop(chat_id, None)
         return
+
+    if session.idle_limit_reached:
+        # Three questions in a row without a single guess: the game stops itself.
+        session.auto_stopped = True
+        session.finished = True
+        _jobs(context, session)
+        await _delete_control(context, session)
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=msg.auto_stop(session.idle_streak, session.package_title, session.index,
+                               session.correct, session.wrong, _percent(session), session.rounds),
+            parse_mode=ParseMode.HTML,
+        )
+        _sessions(context).pop(chat_id, None)
+        return
+
+    if session.idle_streak and session.idle_limit and session.idle_streak < session.idle_limit:
+        await context.bot.send_message(
+            chat_id=chat_id, text=msg.idle_warning(session.idle_streak, session.idle_limit),
+            parse_mode=ParseMode.HTML,
+        )
 
     timer = session.timer_seconds
     strip = await context.bot.send_message(
@@ -367,7 +393,7 @@ async def _send_question(chat_id: int, context: ContextTypes.DEFAULT_TYPE, sessi
     round_label = f"{session.current_round}-raund" if session.rounds > 1 else ""
     text = msg.question(
         session.number, session.total, session.package_title, question.get("text"),
-        timer, session.score_text(), note, round_label, timer,
+        timer, session.score_text(), note, round_label,
     )
     if picture:
         await _send_picture(context, chat_id, question)
@@ -425,9 +451,9 @@ async def _reveal(chat_id: int, context: ContextTypes.DEFAULT_TYPE, session: Ses
     pictures = [a for a in (question.get("answer_attachments") or []) if isinstance(a, str) and a.startswith("http")]
     if pictures:
         try:
-            await context.bot.send_photo(chat_id=chat_id, photo=pictures[0], caption="🖼 Javob rasmi")
+            await context.bot.send_photo(chat_id=chat_id, photo=pictures[0], caption="Javob rasmi")
         except TelegramError:
-            await context.bot.send_message(chat_id=chat_id, text=f"🖼 {_esc(pictures[0])}",
+            await context.bot.send_message(chat_id=chat_id, text=f"Rasm: {_esc(pictures[0])}",
                                            disable_web_page_preview=True)
 
 
@@ -456,7 +482,7 @@ async def _on_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
     if int(session.question["id"]) != int(data.get("question_id")) or session.number != data.get("issue"):
         return
     if session.resolve_unanswered():
-        await _advance(data["chat_id"], context, session, "⏰ Vaqt tugadi. Ochko Qarshi tarafga qo‘shildi.")
+        await _advance(data["chat_id"], context, session, "Vaqt tugadi. Ochko Qarshi tarafga.")
 
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -472,11 +498,11 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if result == FOREIGN:
         await update.message.reply_text("Bu yakka o‘yin — javobni faqat o‘yinni boshlagan kishi yozadi.")
     elif result == WRONG and session.mode == "solo":
-        await update.message.reply_text("❌ Noto‘g‘ri. Yana urinib ko‘ring yoki /skip qiling.")
+        await update.message.reply_text("Noto‘g‘ri. Yana urinib ko‘ring yoki /skip qiling.")
     elif result == CORRECT:
         await _advance(
             update.effective_chat.id, context, session,
-            f"🎉 To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.",
+            f"To‘g‘ri! {_esc(update.effective_user.first_name)} Bilimdonlar uchun ochko qozondi.",
         )
 
 
@@ -493,7 +519,7 @@ async def score(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def cmd_skip(context: ContextTypes.DEFAULT_TYPE, session: Session, chat_id: int) -> None:
     if session.resolve_unanswered():
-        await _advance(chat_id, context, session, "⏭ O‘tkazildi — hech kim javobni topmadi.")
+        await _advance(chat_id, context, session, "O‘tkazildi — hech kim javobni topmadi.")
 
 
 async def skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -521,7 +547,7 @@ async def accept(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     _checker(context).learn(int(session.question["id"]), answer)
     result = session.submit(user_id, answer, _checker(context))
     if result == CORRECT:
-        await _advance(update.effective_chat.id, context, session, "✅ Javob qabul qilindi va o‘rganildi.")
+        await _advance(update.effective_chat.id, context, session, "Javob qabul qilindi va o‘rganildi.")
     else:
         await update.effective_message.reply_text("Javob hali mos kelmadi; boshqa varianti yuboring.")
 
@@ -552,16 +578,16 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if action == "f":
         remaining = max(0, int(session.deadline) - int(time.time())) if session.deadline else session.timer_seconds
-        await query.answer(f"⏳ {remaining} sekund qoldi")
+        await query.answer(f"Qolgan vaqt: {remaining} s")
         if remaining <= 0 and not session.answered and session.resolve_unanswered():
-            await _advance(chat_id, context, session, "⏰ Vaqt tugadi. Ochko Qarshi tarafga qo‘shildi.")
+            await _advance(chat_id, context, session, "Vaqt tugadi. Ochko Qarshi tarafga.")
         return
 
     if action == "k":
         if not await is_admin(update, context, session):
-            await query.answer("⛔ O‘tkazish faqat admin uchun", show_alert=True)
+            await query.answer("O‘tkazish faqat admin uchun", show_alert=True)
             return
-        await query.answer("⏭ O‘tkazildi")
+        await query.answer("O‘tkazildi")
         if session.answered:
             await query.answer("Bu savol allaqachon yechilgan.", show_alert=True)
             return

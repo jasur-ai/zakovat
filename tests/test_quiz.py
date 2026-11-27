@@ -50,6 +50,61 @@ class QuizTests(unittest.TestCase):
         self.assertEqual(session.score(), (0, 1))
         self.assertFalse(session.submit(2, "1", self.checker) == CORRECT)
 
+    def test_idle_streak_grows_only_without_guesses(self):
+        session = self.session()
+        # a wrong guess is still activity: it must not grow the idle streak
+        self.assertEqual(session.submit(2, "not the answer", self.checker), "wrong")
+        self.assertTrue(session.resolve_unanswered())
+        self.assertEqual(session.attempts, 1)
+        self.assertEqual(session.idle_streak, 0)
+
+        session.index += 1
+        session.advance()
+        self.assertEqual(session.attempts, 0)
+        self.assertTrue(session.resolve_unanswered())
+        self.assertEqual(session.idle_streak, 1)
+        self.assertFalse(session.idle_limit_reached)
+
+    def test_correct_answer_resets_the_idle_streak(self):
+        session = self.session()
+        for _ in range(2):                      # two silent questions in a row
+            self.assertTrue(session.resolve_unanswered())
+            session.index += 1
+            session.advance()
+        self.assertEqual(session.idle_streak, 2)
+        self.assertEqual(session.submit(2, "3", self.checker), CORRECT)
+        self.assertEqual(session.idle_streak, 0)
+        self.assertEqual(session.attempts, 1)
+
+    def test_three_silent_questions_reach_the_idle_limit(self):
+        session = self.session()
+        for index in range(3):
+            self.assertTrue(session.resolve_unanswered())
+            self.assertEqual(session.idle_limit_reached, index == 2)
+            session.index += 1
+            session.advance()
+        self.assertEqual(session.idle_streak, 3)
+        self.assertTrue(session.idle_limit_reached)
+
+    def test_idle_limit_can_be_disabled(self):
+        session = self.session()
+        session.idle_limit = 0
+        for _ in range(4):
+            session.resolve_unanswered()
+            session.index += 1
+            session.advance()
+        self.assertFalse(session.idle_limit_reached)
+
+    def test_history_records_whether_anybody_guessed(self):
+        session = self.session()
+        session.submit(2, "wrong", self.checker)
+        session.resolve_unanswered()
+        session.index += 1
+        session.advance()
+        session.resolve_unanswered()
+        attempts = [entry.get("attempts") for entry in session.history]
+        self.assertEqual(attempts, [1, 0])
+
 
 if __name__ == "__main__":
     unittest.main()
