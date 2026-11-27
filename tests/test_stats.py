@@ -1,6 +1,8 @@
 import asyncio
+import httpx
 import json
 import unittest
+from unittest import mock
 
 try:
     from bot import messages as msg
@@ -232,6 +234,83 @@ class PanelTests(unittest.TestCase):
         for char in text:
             self.assertFalse(0x1F000 <= ord(char) <= 0x1FAFF or 0x2600 <= ord(char) <= 0x27BF,
                              f"emoji found: {char!r}")
+
+
+def _fake_store_transport(store: dict, *, fail_first: bool = False):
+    """An httpx transport standing in for the free JSON document services."""
+    calls = {"jsonblob": 0, "kvdb": 0}
+
+    def handler(request):
+        url = str(request.url)
+        body = request.content.decode("utf-8")
+        if url == "https://jsonblob.com/api/jsonBlob" and request.method == "POST":
+            calls["jsonblob"] += 1
+            if fail_first:
+                return httpx.Response(503, text="nope")
+            store["https://jsonblob.com/api/jsonBlob/990011"] = body
+            return httpx.Response(201, headers={"location": "/api/jsonBlob/990011"}, text="created")
+        if url == "https://kvdb.io/" and request.method == "POST":
+            calls["kvdb"] += 1
+            store["https://kvdb.io/bucket42/zakovat-stats"] = body
+            return httpx.Response(200, text="bucket42")
+        if url in store:
+            if request.method == "GET":
+                return httpx.Response(200, text=store[url])
+            store[url] = body
+            return httpx.Response(200, text="ok")
+        return httpx.Response(404, text="not found")
+
+    return httpx.MockTransport(handler), calls
+
+
+@unittest.skipUnless(stats, "install requirements.txt to test statistics")
+class StoreProvisioningTests(unittest.TestCase):
+    """The bot can create its own storage — nobody has to register anything."""
+
+    def test_creating_a_store_reports_a_working_address(self):
+        store: dict = {}
+        transport, calls = _fake_store_transport(store)
+        report = asyncio.run(stats.create_store(transport=transport))
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["xizmat"], "jsonblob")
+        self.assertEqual(report["manzil"], "https://jsonblob.com/api/jsonBlob/990011")
+        self.assertEqual(calls["jsonblob"], 1)
+        self.assertIn("init-", store[report["manzil"]])       # the document was seeded
+
+    def test_a_refusing_service_falls_through_to_the_next(self):
+        store: dict = {}
+        transport, calls = _fake_store_transport(store, fail_first=True)
+        report = asyncio.run(stats.create_store(transport=transport))
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["xizmat"], "kvdb")
+        self.assertEqual(report["manzil"], "https://kvdb.io/bucket42/zakovat-stats")
+        self.assertEqual(report["urinishlar"][0]["xizmat"], "jsonblob")
+
+    def test_a_dead_network_is_reported_not_raised(self):
+        def handler(request):
+            raise httpx.ConnectError("no route")
+
+        report = asyncio.run(stats.create_store(transport=httpx.MockTransport(handler)))
+        self.assertFalse(report["ok"])
+        self.assertTrue(report["urinishlar"] or report.get("xato"))
+
+    def test_the_check_keeps_what_is_already_stored(self):
+        url = "https://jsonblob.com/api/jsonBlob/990011"
+        stored = {"v": 1, "s": 1, "c": {"games_started": 7, "questions_asked": 40},
+                  "u": {"8004724563": 9}, "h": {}, "p": {"959": 3},
+                  "e": [{"t": 5, "k": "game_start", "x": "eski"}]}
+        store = {url: json.dumps(stored)}
+        transport, _ = _fake_store_transport(store)
+        with mock.patch.object(stats, "STORE_URL", url):
+            report = asyncio.run(stats.probe(transport=transport))
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["saqlangan_hisoblar"]["games_started"], 7)
+        after = json.loads(store[url])
+        self.assertEqual(after["c"]["games_started"], 7)      # history survived the check
+        self.assertEqual(after["c"]["questions_asked"], 40)
+        self.assertEqual(after["u"]["8004724563"], 9)
+        self.assertEqual(after["e"][-1]["x"], "eski")
+        self.assertTrue(any(event.get("k") == "probe" for event in after["e"]))
 
 
 if __name__ == "__main__":
