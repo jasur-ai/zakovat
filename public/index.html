@@ -3,61 +3,88 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zakovat Agent — Mini App</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>Zakovat Agent — Telegram bot</title>
+  <meta name="description" content="Zakovat savol-javob boti: raundlar, taymer, paketlar va ikki tomonlama hisob.">
   <style>
-    :root { color-scheme: dark; --accent: #7c5cff; --card: #1c1c26; }
+    :root { color-scheme: dark; --accent: #7c5cff; --card: #17171f; --line: #262633; }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 24px 18px 40px; background: #0e0e14; color: #f4f4f8;
-           font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.4px; }
-    .sub { opacity: .72; margin-bottom: 22px; }
-    .card { background: var(--card); border: 1px solid #2c2c3a; border-radius: 16px;
-            padding: 18px; margin-bottom: 14px; }
-    .card b { display: block; font-size: 17px; margin-bottom: 6px; }
-    .card p { margin: 0 0 12px; opacity: .82; font-size: 14px; }
-    button { width: 100%; border: 0; border-radius: 12px; padding: 13px 16px;
-             font-size: 15px; font-weight: 600; color: #fff; background: var(--accent); cursor: pointer; }
-    button.secondary { background: #2b2b3a; margin-top: 8px; }
-    code { background: #111118; padding: 2px 6px; border-radius: 6px; }
-    .rules { font-size: 13px; opacity: .7; padding: 0 4px; }
+    body { margin: 0; padding: 32px 18px 56px; background: #0b0b11; color: #f2f2f7;
+           font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 720px; margin: 0 auto; }
+    h1 { margin: 0 0 4px; font-size: 30px; letter-spacing: -.5px; }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+    .sub { opacity: .7; margin: 0 0 24px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+            padding: 18px 18px 6px; margin-bottom: 14px; }
+    .hero { padding-bottom: 18px; }
+    a.button { display: inline-block; width: 100%; text-align: center; text-decoration: none;
+               border-radius: 12px; padding: 13px 16px; font-weight: 650; color: #fff;
+               background: var(--accent); margin-bottom: 10px; }
+    a.ghost { background: #23232f; }
+    ul { margin: 0 0 12px; padding-left: 20px; }
+    li { margin-bottom: 6px; opacity: .9; }
+    code { background: #23232f; padding: 1px 6px; border-radius: 6px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 14.5px; }
+    td { padding: 7px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { white-space: nowrap; width: 130px; }
+    .muted { opacity: .6; font-size: 13.5px; }
+    .score { font-weight: 650; }
   </style>
 </head>
 <body>
+<main>
   <h1>🎯 Zakovat Agent</h1>
-  <div class="sub">Savollar arxivi bilan o‘yin — yakka yoki guruhda.</div>
+  <p class="sub">Telegram’dagi savol-javob boti — yakka yoki guruhda o‘ynaladi.</p>
 
-  <div class="card">
-    <b>Tanishtiruv</b>
-    <p>Menda 1266 paketdan 30853 savol arxivlangan. Maqsad — yopiq guruhda yoki shaxsiy chatda Zakovat o‘yinini o‘tkazish. To‘g‘ri javob <b>Bilimdonlar</b>ga, javob yo‘q yoki vaqt tugadi <b>Qarshi taraf</b>ga 1 ochko beradi.</p>
+  <div class="card hero">
+    <a class="button" href="https://t.me/Zakovat_agent">Botni ochish</a>
+    <a class="button ghost" href="https://t.me/Zakovat_agent?start">/start bilan boshlash</a>
+    <p class="muted">Bot arxivdagi 1266 paket va 30 853 savol bilan ishlaydi. AI kalit talab qilmaydi.</p>
   </div>
 
   <div class="card">
-    <b>Yakka o‘yin</b>
-    <p>Faqat siz javob yozasiz. Hisob: to‘g‘ri → Bilimdonlar, xato → Qarshi taraf.</p>
-    <button onclick="start('959')">959-paketni boshlash</button>
-    <button class="secondary" onclick="start('')">Tasodifiy paket</button>
+    <h2>O‘yin qanday boshlanadi</h2>
+    <ul>
+      <li><code>/solo</code> yoki <code>/duel</code> yozing.</li>
+      <li>Bot sozlamalarni so‘raydi: <b>necha raund</b>, <b>har raundda necha savol</b>, <b>har savolga necha sekund</b>.</li>
+      <li>Tugmalardan tanlab, <b>▶️ Boshlash</b> ni bosing.</li>
+      <li>Javobni savol xabariga <b>reply</b> qilib yozing.</li>
+    </ul>
   </div>
 
   <div class="card">
-    <b>Guruh o‘yini</b>
-    <p>Botga <code>/duel 959</code> yuboring va guruhga qo‘shing. Hamma javob yozadi.</p>
-    <button class="secondary" onclick="location.href='https://t.me/Zakovat_agent'">Botni ochish</button>
+    <h2>Hisob qoidasi</h2>
+    <ul>
+      <li>To‘g‘ri javob → <span class="score">Bilimdonlar +1</span></li>
+      <li>Javob yo‘q, vaqt tugadi yoki o‘tkazildi → <span class="score">Qarshi taraf +1</span></li>
+      <li>10 savoldan 4 tasiga javob berilsa hisob <span class="score">4–6</span> bo‘ladi.</li>
+    </ul>
   </div>
 
-  <div class="rules">
-    Qoida: 10 savoldan 4 tasiga javob berilsa hisob <b>4–6</b> bo‘ladi.
-    Savol xabariga <b>reply</b> qilib javob yozing.
+  <div class="card">
+    <h2>Buyruqlar</h2>
+    <table>
+      <tr><td><code>/start</code></td><td>Tanishtiruv</td></tr>
+      <tr><td><code>/help</code></td><td>Barcha buyruqlar</td></tr>
+      <tr><td><code>/rules</code></td><td>Qoidalar</td></tr>
+      <tr><td><code>/packages</code></td><td>Barcha paketlar — sahifalab</td></tr>
+      <tr><td><code>/solo</code>, <code>/duel</code></td><td>Yakka va guruh o‘yini</td></tr>
+      <tr><td><code>/score</code></td><td>Joriy hisob</td></tr>
+      <tr><td><code>/skip</code></td><td>Savolni o‘tkazish va javobini ko‘rsatish (faqat admin)</td></tr>
+      <tr><td><code>/accept</code></td><td>Javobni to‘g‘ri deb qabul qilish (faqat admin)</td></tr>
+      <tr><td><code>/stop</code></td><td>O‘yinni to‘xtatish va yakuniy hisob</td></tr>
+    </table>
+    <p class="muted">Savol ustidagi ⏱ tugmasi qolgan vaqtni yangilab ko‘rsatadi.</p>
   </div>
 
-  <script>
-    const WebApp = window.Telegram?.WebApp;
-    if (WebApp) { WebApp.ready(); WebApp.expand(); WebApp.setHeaderColor('#0e0e14'); }
-    function start(id) {
-      const data = 'start:' + id;
-      if (WebApp) { WebApp.sendData(data); WebApp.close(); }
-      else { location.href = 'https://t.me/Zakovat_agent?start=' + id; }
-    }
-  </script>
+  <div class="card">
+    <h2>Texnik holat</h2>
+    <ul>
+      <li><a href="/api/index">/api/index</a> — bot holati (webhook, arxiv, xatolar)</li>
+      <li><a href="/api/index?test=1">/api/index?test=1</a> — o‘z-o‘zini sinash</li>
+    </ul>
+  </div>
+</main>
 </body>
 </html>

@@ -14,16 +14,26 @@ except ImportError:  # fastapi / python-telegram-bot not installed yet
 class FakeBot:
     def __init__(self):
         self.sent = []
+        self.photos = []
+        self.deleted = []
 
     async def send_message(self, **kwargs):
         self.sent.append(kwargs)
         return SimpleNamespace(message_id=len(self.sent))
 
+    async def send_photo(self, **kwargs):
+        self.photos.append(kwargs)
+        return SimpleNamespace(message_id=len(self.sent) + len(self.photos))
+
+    async def delete_message(self, **kwargs):
+        self.deleted.append(kwargs.get("message_id"))
+
 
 class FakeMessage:
     def __init__(self, text="", reply=None):
         self.text = text
-        self.reply_to_message = SimpleNamespace(text=reply) if reply else None
+        self.caption = None
+        self.reply_to_message = SimpleNamespace(text=reply, caption=None) if reply else None
         self.replies = []
         self.from_user = SimpleNamespace(id=1, first_name="Aziz")
 
@@ -33,8 +43,9 @@ class FakeMessage:
 
 def update(message):
     return SimpleNamespace(
-        effective_message=message, message=message,
-        effective_chat=SimpleNamespace(id=-100), effective_user=message.from_user,
+        effective_message=message, message=message, callback_query=None,
+        effective_chat=SimpleNamespace(id=-100, type="private"),
+        effective_user=message.from_user,
     )
 
 
@@ -42,14 +53,24 @@ def update(message):
 class WebhookLogicTests(unittest.TestCase):
     def setUp(self):
         self.bot = FakeBot()
+        self.archive = Archive("data/all")
         self.context = SimpleNamespace(
-            application=SimpleNamespace(bot_data={"archive": Archive("data/all")}),
+            application=SimpleNamespace(bot_data={"archive": self.archive}),
             bot=self.bot, args=[],
         )
 
     def _start(self):
-        message = FakeMessage()
-        asyncio.run(webhook.start_game(update(message), self.context, "solo", "959"))
+        """Send the first question of a seeded 1×10 solo game and return its text."""
+        from bot.quiz import build_playlist
+
+        playlist = build_playlist(self.archive.questions(959), rounds=1, per_round=10, seed=7)
+        session = webhook.Session(
+            chat_id=-100, mode="solo", package_id=959, package_title="959", questions=playlist,
+            owner_id=1, timer_seconds=60, rounds=1, per_round=10, seed=7,
+        )
+        session.begin()
+        asyncio.run(webhook.send_question(self.bot, -100, session))
+        self.session = session
         return self.bot.sent[-1]["text"]
 
     def test_marker_roundtrip(self):
@@ -65,9 +86,21 @@ class WebhookLogicTests(unittest.TestCase):
         answer = self.context.application.bot_data["archive"].question(state["q"])["answer"]
         self.bot.sent.clear()
         asyncio.run(webhook.on_text(update(FakeMessage(answer, question_text)), self.context))
-        self.assertEqual(len(self.bot.sent), 2)
+        # reveal + countdown strip + next question
+        self.assertEqual(len(self.bot.sent), 3)
         self.assertIn("To‘g‘ri", self.bot.sent[0]["text"])
         self.assertIsNotNone(webhook.unpack_state(self.bot.sent[1]["text"]))
+        self.assertIsNotNone(webhook.unpack_state(self.bot.sent[2]["text"]))
+        # the answered question's countdown strip is removed
+        self.assertTrue(self.bot.deleted)
+
+    def test_question_carries_round_and_timer(self):
+        question_text = self._start()
+        self.assertIn("⏳", question_text)
+        state = webhook.unpack_state(question_text)
+        self.assertEqual(int(state["r"]), 1)
+        self.assertEqual(int(state["n"]), 10)
+        self.assertEqual(int(state["t"]), 60)
 
     def test_wrong_answer_then_accept(self):
         question_text = self._start()
@@ -141,9 +174,14 @@ class CommandFallbackTests(unittest.TestCase):
         lines = asyncio.run(run())
         joined = "\n".join(lines)
         self.assertIn("/start → 1 xabar", joined)
+        self.assertIn("/help → 1 xabar", joined)
         self.assertIn("/rules → 1 xabar", joined)
-        self.assertIn("/solo 959 → 2 xabar", joined)
-        self.assertIn("javob", joined)
+        self.assertIn("/packages → 1 xabar", joined)
+        self.assertIn("/solo 959 → 1 xabar", joined)          # sozlamalar paneli
+        self.assertIn("▶️ Boshlash → ", joined)                 # o‘yin boshlandi
+        self.assertIn("javob", joined)                          # to‘g‘ri javob tekshirildi
+        self.assertIn("O‘tkazish", joined)                      # admin skip
+        self.assertNotIn("Sinov xatoligi", joined)
 
 
 if __name__ == "__main__":

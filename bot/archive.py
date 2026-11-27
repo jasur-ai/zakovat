@@ -83,6 +83,28 @@ class Archive:
                 result.append(package)
         return result
 
+    def package_info(self, package_id: int) -> dict | None:
+        """Manifest entry only — no shard loading, so it is fast on serverless."""
+        info = self.packages.get(int(package_id))
+        return dict(info) if info else None
+
+    def list_packages(self, query: str = "", page: int = 1, per_page: int = 12) -> dict:
+        """Every package (newest first), one page at a time.
+
+        Uses the manifest counts, so it never has to load the question shards —
+        important on serverless where the archive is 27 MB.
+        """
+        needle = (query or "").strip().casefold()
+        ids = sorted(self.packages, reverse=True)
+        if needle:
+            ids = [pid for pid in ids if needle in (self.packages[pid].get("title") or "").casefold()]
+        per_page = max(1, int(per_page))
+        pages = max(1, -(-len(ids) // per_page))
+        page = min(max(1, int(page)), pages)
+        start = (page - 1) * per_page
+        items = [self.packages[pid] for pid in ids[start:start + per_page]]
+        return {"page": page, "pages": pages, "count": len(ids), "items": items, "start": start}
+
     def random_package_id(self) -> int:
         """Pick a package that actually has questions."""
         available = [pid for pid, info in self.packages.items() if info.get("questions", 0)]

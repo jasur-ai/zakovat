@@ -1,6 +1,7 @@
 """Pure game-state logic: two-sided scoring, no Telegram dependency."""
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -13,6 +14,30 @@ LEFT_LABEL = "Bilimdonlar"
 RIGHT_LABEL = "Qarshi taraf"
 
 
+def build_playlist(questions: list[dict[str, Any]], rounds: int = 1, per_round: int = 0,
+                   seed: int = 0) -> list[dict[str, Any]]:
+    """Deterministic order of `rounds × per_round` questions drawn from a package.
+
+    `per_round <= 0` means "every question of the package, one round". The same
+    seed always gives the same playlist, which is what lets a stateless webhook
+    continue a game from a marker inside the question message.
+    """
+    if not questions:
+        return []
+    rounds = max(1, int(rounds or 1))
+    per_round = int(per_round or 0)
+    if per_round <= 0:
+        rounds, per_round = 1, len(questions)
+    rng = random.Random(seed)
+    playlist: list[dict[str, Any]] = []
+    total = rounds * per_round
+    while len(playlist) < total:
+        batch = list(questions)
+        rng.shuffle(batch)
+        playlist.extend(batch)
+    return playlist[:total]
+
+
 @dataclass
 class Session:
     chat_id: int
@@ -22,6 +47,9 @@ class Session:
     questions: list[dict[str, Any]]
     owner_id: int
     timer_seconds: int = 60
+    rounds: int = 1
+    per_round: int = 0
+    seed: int = 0
     index: int = 0
     question: dict[str, Any] | None = None
     answered: bool = False
@@ -30,6 +58,8 @@ class Session:
     latest_answer: str | None = None
     latest_user: int | None = None
     job_name: str | None = None
+    control_message_id: int | None = None
+    deadline: int = 0
     finished: bool = False
     history: list[dict[str, Any]] = field(default_factory=list)
 
@@ -40,6 +70,21 @@ class Session:
     @property
     def number(self) -> int:
         return self.index + 1
+
+    @property
+    def round_size(self) -> int:
+        """Questions in one round; 0 means the whole package is a single round."""
+        return self.per_round or self.total
+
+    @property
+    def current_round(self) -> int:
+        size = self.round_size
+        return (self.index // size) + 1 if size else 1
+
+    @property
+    def round_position(self) -> int:
+        size = self.round_size
+        return (self.index % size) + 1 if size else 1
 
     def begin(self) -> dict[str, Any] | None:
         return self.advance()
