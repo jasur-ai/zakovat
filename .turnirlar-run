@@ -5,5 +5,6 @@
   "workers": 6,
   "source": "all",
   "commit": true,
-  "release": true
+  "release": true,
+  "run": "tekshiruv: 20 to‘plam, 2 sahifa"
 }
