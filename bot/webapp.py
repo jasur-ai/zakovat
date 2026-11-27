@@ -211,6 +211,27 @@ async def payload(user: dict, archive=None, count: bool = True, flush=None) -> d
                  "questions": int(row["questions"])}
                 for row in ((data.get("archive") or {}).get("sections") or [])]
     archive_block = data.get("archive") or {}
+    # stats.archive_stats describes the local export; the totals cover both bases
+    # (zakovatklubi.uz on disk, turnirlar.uz in the Release).
+    sources = []
+    total_packages = int(archive_block.get("packages") or 0)
+    total_questions = int(archive_block.get("questions") or 0)
+    if archive is not None and hasattr(archive, "source_counts"):
+        labels = (("zakovatklubi", "zakovatklubi.uz"), ("turnirlar", "turnirlar.uz"))
+        counts = archive.source_counts()
+        for key, name in labels:
+            entry = counts.get(key)
+            if not entry:
+                continue
+            sources.append({"name": name, "packages": int(entry.get("packages") or 0),
+                            "questions": int(entry.get("questions") or 0),
+                            "shards": int(entry.get("shards") or 0),
+                            "stored": str(entry.get("stored") or ""),
+                            "exported_at": str(entry.get("exported_at") or "")})
+        try:
+            total_packages, total_questions = archive.counts()
+        except Exception:                                        # noqa: BLE001
+            logging.getLogger(__name__).debug("archive totals failed", exc_info=True)
     return {
         "ok": True,
         "owner": user_id == int(stats.OWNER_ID),
@@ -236,6 +257,9 @@ async def payload(user: dict, archive=None, count: bool = True, flush=None) -> d
             "average": archive_block.get("average", 0),
             "biggest": archive_block.get("biggest", {"title": "", "questions": 0}),
             "exported_at": archive_block.get("exported_at", ""),
+            "sources": sources,
+            "total_packages": total_packages,
+            "total_questions": total_questions,
         },
         "instance": data.get("instance", {}),
         "access": access_report(),

@@ -413,13 +413,21 @@ function viewMain(){
 
   var archive = data.archive || {};
   var biggest = archive.biggest || {};
+  var sources = archive.sources || [];
   html += '<h2>Arxiv</h2><div class="card">' +
-    fact("Paketlar", "eksport " + esc(archive.exported_at || "—"), num(archive.packages)) +
-    fact("Savollar", "o‘rtacha " + num(archive.average) + " ta paketda", num(archive.questions)) +
+    fact("Jami paketlar", sources.length + " ta manba", num(archive.total_packages || archive.packages)) +
+    fact("Jami savollar", "o‘rtacha " + num(archive.average) + " ta paketda", num(archive.total_questions || archive.questions)) +
     fact("Bo‘limlar", num(archive.section_count) + " ta liga va turnirlar", "") +
     fact("Rasmlar", num(archive.cyrillic) + " ta paket kirillchada", num(archive.pictures)) +
-    fact("Eng katta paket", esc(biggest.title || "—"), num(biggest.questions) + " savol") +
-    '</div>';
+    fact("Eng katta paket", esc(biggest.title || "—"), num(biggest.questions) + " savol");
+  sources.forEach(function(item){
+    html += fact(esc(item.name),
+      item.stored === "release"
+        ? (num(item.shards) + " shard · kerak bo‘lganda yuklanadi")
+        : ("deploy bilan birga" + (item.exported_at ? " · " + esc(item.exported_at) : "")),
+      num(item.packages) + " paket · " + num(item.questions) + " savol");
+  });
+  html += '</div>';
 
   var storage = data.storage || {};
   var instance = data.instance || {};

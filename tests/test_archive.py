@@ -207,7 +207,9 @@ class MergedCatalogueTest(TempArchiveCase):
 
     def test_source_counts_report_each_base(self):
         sources = self.archive.source_counts()
-        self.assertEqual(sources["zakovatklubi"], {"packages": 1, "questions": 2, "stored": "local"})
+        self.assertEqual(sources["zakovatklubi"],
+                         {"packages": 1, "questions": 2, "stored": "local",
+                          "exported_at": "2026-11-26T12:15:54+00:00"})
         self.assertEqual(sources["turnirlar"]["packages"], 4)
         self.assertEqual(sources["turnirlar"]["questions"], 12)
         self.assertEqual(sources["turnirlar"]["shards"], 2)

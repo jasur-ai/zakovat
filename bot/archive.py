@@ -359,6 +359,7 @@ class Archive:
         local_packages, local_questions = self.local_counts()
         result = {
             "zakovatklubi": {"packages": int(local_packages), "questions": int(local_questions),
+                             "exported_at": self.manifest.get("exported_at") or "",
                              "stored": "local"},
         }
         if self.remote_manifest or self.remote_packages:

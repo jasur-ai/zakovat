@@ -531,7 +531,8 @@ class StatsAccessTests(unittest.TestCase):
         record = message.reply_records[-1]
         self.assertIn("STATISTIKA", record["text"])
         self.assertIn("ARXIV", record["text"])
-        self.assertIn("Turkumlar (paketlar): 1266", record["text"])
+        packages, _ = self.archive.local_counts()
+        self.assertIn(f"Turkumlar (paketlar): {packages}", record["text"])
         labels = [button.text for button in record["reply_markup"].inline_keyboard[0]]
         self.assertEqual(labels, ["Yangilash", "Bo‘limlar", "O‘yinlar"])
 
