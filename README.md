@@ -1,16 +1,18 @@
 # Zakovat savollar arxivi + Telegram bot
 
-`zakovatklubi.uz` va `turnirlar.uz` savollar bazalari JSON ko‘rinishda GitHub’da saqlangan va yopiq Telegram guruhida / shaxsiy chatda o‘yin o‘tkazadigan bot mavjud. Jami **~560 000 savol**. Bot **tashqi AI API va API kalitisiz** ishlaydi.
+`zakovatklubi.uz` va `turnirlar.uz` savollar bazalari JSON ko‘rinishda GitHub’da saqlangan va yopiq Telegram guruhida / shaxsiy chatda o‘yin o‘tkazadigan bot mavjud. Jami **~419 000 savol** (8 670 to‘plam). Bot **tashqi AI API va API kalitisiz** ishlaydi.
 
 ## Arxiv holati
 
 Bot **ikki manbani** bitta interfeys orqali o‘qiydi (`bot/archive.py`):
 
 - `data/all/manifest.json` — **zakovatklubi.uz**: 1266 paket, **30853 savol**. Shardlari (`data/all/questions/questions-0001.json … 0007.json`) deploy bilan birga ketadi, shuning uchun diskdan o‘qiladi;
-- `data/turnirlar/manifest.json` — **turnirlar.uz**: ~6800 paket, **~530 000 savol**. Shardlari (~160 MB gzip) GitHub Release [`savollar-bazasi`](https://github.com/jasur-ai/zakovat/releases/tag/savollar-bazasi) da turadi va **kerak bo‘lganda** yuklanadi: `data/turnirlar/shards` `.gitignore` va `.vercelignore` ichida, ya’ni na repo, na deploy og‘irlashadi. Xotirada bir vaqtda 2 shard ushlab turiladi, qolgani `/tmp` keshida; shard yuklanmasa o‘yin buzilmaydi — bot mahalliy baza bilan ishlashni davom ettiradi;
+- `data/turnirlar/manifest.json` — **turnirlar.uz**: 7404 paket, **388 388 savol** (eng kattasi 1678 savolli). Shardlari (50 fayl, ~112 MB gzip, har biri ~2.3 MB) GitHub Release [`savollar-bazasi`](https://github.com/jasur-ai/zakovat/releases/tag/savollar-bazasi) da turadi va **kerak bo‘lganda** yuklanadi: `data/turnirlar/shards` `.gitignore` va `.vercelignore` ichida, ya’ni na repo, na deploy og‘irlashadi. Xotirada bir vaqtda 2 shard ushlab turiladi, qolgani `/tmp` keshida; shard yuklanmasa o‘yin buzilmaydi — bot mahalliy baza bilan ishlashni davom ettiradi;
 - `data/zakovat-959.json`, `data/zakovat-959.flat.json` — sinov uchun 54 savollik 959-paket (2024-yil 19–20 dekabr).
 
 Paket id’lari to‘qnashmaydi: turnirlar.uz paketlari `900000+`, savollari `900000000+` siljish bilan saqlanadi (7800-paket → `907800`).
+
+Katalog'dagi 7 798 to‘plamning barchasi o‘qilgan: 7 404 tasi saqlangan, 394 tasining hamma savoli `data/all`’da allaqachon bor edi. Sayt sarlavhasidagi «559 214 savol» butun korpusni sanaydi (to‘plamga kirmagan savollarni ham) — `--mode verify` katalog bo‘ylab olingan namunada har to‘plamning o‘zi e’lon qilgan savollarining **100%** ini topadi (hisob `data/turnirlar/probe/digest.txt` da).
 
 **Katta baza bilan o‘ynash.** `/solo katta` (yoki `butun`, `hamma`) — ikki manbadan tasodifiy to‘plam; `/solo 907785` — aniq to‘plam; `/packages` ro‘yxatida katta bazadagi qatorlar `*` bilan belgilanadi. To‘plam nomi bo‘yicha qidiruv (`/packages liga`) ikkala bazani qamrab oladi.
 
