@@ -22,7 +22,7 @@ python3 run_bot.py
 
 ## Vercel ga deploy qilish (webhook)
 
-`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/timer` — jonli soat oynasi (Mini App), `/api/now` — server vaqti. O‘yin Telegram ichida o‘ynaladi; Mini App faqat hisoblagich uchun ishlatiladi. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
+`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/timer` — jonli soat oynasi (Mini App), `/api/now` — server vaqti, `/app` — statistika paneli (Mini App, faqat ega va `/grant` olganlar), `/api/app` — shu panelning ma’lumotlari (imzo tekshiriladi). O‘yin Telegram ichida o‘ynaladi; Mini App hisoblagich va panel uchun ishlatiladi. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
 
 **Eng oddiy usul — repo’ni Vercel’ga qo‘shish kifoya:** Vercel dashboard → *Add New → Project* → shu reponi tanlang → *Deploy*. `vercel.json`, `.python-version` va `requirements.txt` tayyor, build buyrug‘i kerak emas. Keyingi `push` lar avtomatik deploy bo‘ladi.
 
@@ -50,6 +50,7 @@ Ixtiyoriy: `ZAKOVAT_ROUNDS`, `ZAKOVAT_PER_ROUND`, `ZAKOVAT_TIMER_SECONDS`, `ZAKO
 - `.../api/index?statsprobe=1` — statistika saqlashini tekshiradi: mavjud hisoblarni saqlab, sinov belgisini yozadi va qayta o‘qiydi (`ZAKOVAT_STATS_URL` berilmagan bo‘lsa, shuni aytadi);
 - `.../api/index?statsprobe=1&create=1` — bepul JSON saqlashni o‘zi yaratishga urinadi va har bir xizmatning javobini ko‘rsatadi;
 - `.../api/index?statsprobe=1&tg=1` — Telegram’ni saqlagich sifatida sinaydi: xabar yuboradi, pinlaydi, qayta o‘qiydi, o‘chiradi;
+- `.../api/index?appprobe=1` — Mini App panelini tekshiradi: `initData` imzosi to‘rt xil sinovdan o‘tkaziladi (to‘g‘ri, buzilgan, eskirgan, begona token), keyin ruxsat darvozasi (ega kiradi, begona kirmaydi) va panel ma’lumotlari tekshiriladi. Hammasi `stats.freeze()` ichida bo‘lgani uchun **bitta haqiqiy hisob ham siljimaydi**. `&menu=1` qo‘shilsa, ega va ruxsat olganlarning chat menyusidagi tugma qayta o‘rnatiladi;
 - `.../api/index?bgprobe=1` — platforma javob yuborilgandan **keyin** ham ish bajarishiga ruxsat berishini o‘zi tekshiradi: o‘ziga bir necha sekundlik fon ishi buyuradi, ichki javob qancha tez qaytganini o‘lchaydi va ish bajarildimi — ko‘radi. `xulosa` maydoni `bg` rejimi ishlaydimi yoki `ZAKOVAT_TICK_MODE=sleep` qo‘yish kerakligini aytadi. Jonli taymer aynan shu mexanizmga tayanadi.
 
 `scripts/set_webhook.py` — qo‘lda bajarish uchun yana bir zaxira usul.
@@ -128,7 +129,7 @@ BO‘LIMLAR
 …
 ```
 
-Panel ostidagi tugmalar: **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **O‘yinlar** (oxirgi harakatlar). `/stats` buyrug‘i faqat eganing buyruq menyusida ko‘rinadi.
+Panel ostidagi tugmalar: **Mini App — to‘liq panel** (ochiq manzil bo‘lsa), **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **O‘yinlar** (oxirgi harakatlar). `/stats` buyrug‘i faqat eganing buyruq menyusida ko‘rinadi; kengaytirilgan panel quyida, «Mini App paneli» bo‘limida.
 
 Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda saqlanadi. Qaysi saqlagich ishlayotganini `stats.backend()` aytadi; ustunlik tartibi shunday:
 
@@ -140,6 +141,36 @@ Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda s
 Yozuvlar `ZAKOVAT_STATS_FLUSH` (standart 20) sekundda bir to‘planib, **javob yuborilgandan keyin** yoziladi — o‘yin sekinlashmaydi; o‘yin boshlanishi, yakuni, avto-to‘xtash va to‘xtatish darhol yoziladi. Har qanday xato yutiladi: saqlash ishlamasa ham o‘yin davom etadi. Ikki nusxa bir vaqtda yozsa, bir nechta hisob yo‘qolishi mumkin — dashboard uchun bu arzimas. Arxiv bo‘limi (turkumlar, bo‘limlar, savollar, rasmlar) saqlashni talab qilmaydi — u manifestdan hisoblanadi.
 
 Tekshirish: `.../api/index?statsprobe=1` — amaldagi saqlagichni hujjatni **buzmasdan** (mavjud hisoblarni saqlab) sinaydi, `rejim` ni ko‘rsatadi; `"ok": true` bo‘lsa saqlash ishlaydi. `.../api/index?statsprobe=1&tg=1` — Telegram saqlagichini majburan sinaydi: pinlangan xabarni o‘qiydi, yozadi, qayta o‘qiydi (xabar o‘chirilmaydi, chunki u saqlagichning o‘zi).
+
+**Mini App paneli (ega va u ruxsat berganlar).** `/stats` panelining katta versiyasi Telegram ichida ochiladigan oynada: `https://<loyihangiz>.vercel.app/app`. Sahifa butunlay o‘zi bilan yetarli (bitta HTML, ichida CSS va JS, tashqi kutubxona yo‘q — faqat Telegram’ning o‘z SDK’si), ko‘rinishi Telegram’niki bilan bir xil: yorug‘ rejimda yumshoq oq fon (`#eff1f4`) va oq kartochkalar, qora rejimda **qop-qora emas** — chuqur ko‘mirrang (`#15191d`) fon va `#1d2329` kartochkalar. Mavzu `Telegram.WebApp.colorScheme` va `themeParams` dan olinadi, brauzerda ochilsa tizim mavzusiga qaraydi.
+
+To‘rt bo‘lim: **Umumiy** (hisoblagichlar, aniqlik, odamlar, ko‘p o‘ynalgan paketlar, arxiv, tizim holati), **Bo‘limlar** (13 liga ulushi bilan), **O‘yinlar** (oxirgi harakatlar tasmari), **Ruxsatlar** (faqat egada ko‘rinadi).
+
+Kirish ikki qavatdan iborat:
+
+1. **Tugma faqat ruxsat olganlarning chatida.** Bot `setChatMenuButton` bilan eganing va `/grant` orqali qo‘shilgan har bir foydalanuvchining shaxsiy chat menyusiga «Statistika» tugmasini qo‘yadi; ruxsat olinganda menyu oddiy holatiga qaytadi. Tugmasi yo‘q odam oynani Telegram’dan ocholmaydi.
+2. **Server har bir so‘rovda imzoni tekshiradi.** Manzilni kimdir ulashib yuborishi mumkin, shuning uchun sahifa `WebApp.initData` ni yuboradi va `bot/webapp.py` uni Bot API hujjatidagidek tekshiradi: `HMAC-SHA256`, kalit `hmac(b"WebAppData", BOT_TOKEN)`, imzolangan qator — `hash` dan boshqa barcha maydonlarning kalit bo‘yicha saralangan `key=value` ro‘yxati. Imzo, `auth_date` yoshi (`ZAKOVAT_APP_TTL`, standart bir kun) va `user.id` mos kelmasa — javob `ok: false`. Keyin `stats.allowed(id)` qaralaydi: ega yoki `/grant` olgan id bo‘lsa raqamlar beriladi, aks holda rad javobi va o‘z `id` si qaytadi (uni egaga yuborish uchun).
+
+Ruxsat ro‘yxati statistik hujjatning `"a"` maydonida saqlanadi (chegara 60 ta id), shuning uchun server qayta ishga tushsa ham yo‘qolmaydi; ro‘yxat to‘lganda eng eski ruxsat chiqarib yuboriladi, yangisi tushib qolmaydi.
+
+Ega buyruqlari (faqat eganing menyusida ko‘rinadi):
+
+```
+/access                     — kimlar ruxsat olganini ko‘rish
+/grant 123456789 Ism        — ruxsat berish (ism berilmasa Telegram’dan so‘raladi)
+/revoke 123456789           — ruxsatni olish va menyuni qaytarish
+```
+
+Boshqa hech kim bu buyruqlarni ishlatolmaydi; begona urinishlar `app_denied` yozuvi bilan qayd etiladi. Foydalanuvchi o‘z `id` sini bilishi oson: `/stats` yoki Mini App ga urinib ko‘rsa, rad javobida `id` si chiqadi va uni egaga yuboradi.
+
+Lokal ko‘rish uchun (Telegram’siz, brauzerda):
+
+```bash
+pip install -r requirements.txt uvicorn
+ZAKOVAT_APP_DEMO=1 python3 scripts/preview_app.py      # http://127.0.0.1:8080/app
+```
+
+Skript bir nechta sinov hisobini oldindan to‘ldiradi va sahifani eganing imzolangan `initData` si bilan ochadi. `ZAKOVAT_APP_DEMO` faqat `VERCEL_ENV` bo‘lmaganda ishlaydi — Vercel’da bu rejim hech qachon yoqilmaydi.
 
 **Ko‘rinmas holat.** Serverless xotirasiz, shuning uchun o‘yin holati (paket, savol, hisob, deadline, javobsizlik seriyasi) xabar ichida nol kenglikli belgilar ketma-ketligi sifatida yuradi: sentinel va nazorat yig‘indisi bilan tekshiriladi, buzilgan bo‘lsa e’tiborsiz qoldiriladi, xabar 4096 belgi chegarasidan oshmaydi. Ekranda na matn, na ochib o‘qiladigan spoiler qoladi; eski `#ZS`/`#ZS2` ko‘rinishidagi xabarlar ham o‘qilaveradi. Kerak bo‘lsa `ZAKOVAT_HIDDEN_STATE=spoiler` bilan eski usulga qaytish mumkin.
 
@@ -186,6 +217,8 @@ Hech qanday LLM, token yoki tashqi xizmat chaqirilmaydi.
 | `bot/messages.py` | barcha matnlar (emojisiz): tanishtiruv, yordam, qoidalar, hisoblagich, avto-to‘xtatish, statistika paneli |
 | `bot/stats.py` | statistika: hisoblagichlar, tashqi JSON saqlash, arxiv bo‘limlari |
 | `bot/clock.py` | Mini App soat sahifasi: yoy, mil, raqamlar — qurilmada chiziladi |
+| `bot/webapp.py` | Mini App paneli: `initData` imzosini tekshirish, ruxsat darvozasi, panel ma’lumotlari |
+| `bot/dashboard.py` | Mini App sahifasining o‘zi (bitta HTML: Telegram ko‘rinishi, yorug‘/qora mavzu) |
 | `bot/answers.py` | javob normalizatsiyasi, moslik va o‘rganish |
 | `bot/webhook.py` | Vercel serverless webhook: handlerlar, jonli taymer (`tick`), diagnostika, self-test |
 | `bot/selftest.py` | Telegram’ga chiqmasdan butun o‘yin oqimini sinash |
@@ -195,6 +228,7 @@ Hech qanday LLM, token yoki tashqi xizmat chaqirilmaydi.
 | `data/images/` | rasmli savollar uchun zaxira tasvirlar |
 | `run_bot.py` | polling kirish nuqtasi |
 | `scripts/export_all.py` | butun bazani API’dan eksport qilish |
+| `scripts/preview_app.py` | Mini App panelini brauzerda ko‘rish (Telegram’siz, sinov hisoblari bilan) |
 
 ## Sinov
 

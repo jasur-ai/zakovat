@@ -299,12 +299,79 @@ EVENT_LABELS = {
     "skip": "o‘tkazildi",
     "refresh": "vaqt yangilandi",
     "clock_opened": "jonli soat ochildi",
+    "app_opened": "mini app ochildi",
+    "app_denied": "ruxsatsiz urinish",
+    "grant": "ruxsat berildi",
+    "revoke": "ruxsat bekor qilindi",
+    "probe": "saqlash tekshiruvi",
     "command": "buyruq",
 }
 
 
-def stats_denied() -> str:
-    return "Bu bo‘lim faqat bot egasi uchun."
+def stats_denied(user_id: int | None = None) -> str:
+    """Refusal copy; it carries the asker's id so the owner can grant it."""
+    lines = [
+        "<b>KIRISH YO‘Q</b>",
+        "Bu bo‘lim faqat bot egasi va u ruxsat bergan foydalanuvchilar uchun.",
+        "Urinish qayd etildi.",
+    ]
+    if user_id:
+        lines.append("")
+        lines.append(f"Sizning id: <code>{int(user_id)}</code>")
+        lines.append("Uni bot egasiga yuboring — u /grant bilan ruxsat beradi.")
+    return "\n".join(lines)
+
+
+def access_usage() -> str:
+    """How the owner hands out Mini App access."""
+    return "\n".join([
+        "<b>MINI APP RUXSATLARI</b>",
+        "• /grant 123456789 Ism — ruxsat berish",
+        "• /revoke 123456789 — ruxsatni olish",
+        "• /access — kimlar ruxsat olganini ko‘rish",
+        "",
+        "Foydalanuvchi id sini bilish oson: u botga istalgan xabar yozsa, rad javobida "
+        "o‘z id sini ko‘radi va sizga yuboradi.",
+    ])
+
+
+def access_list(rows: list, app_url: str = "") -> str:
+    """Who may open the Mini App right now."""
+    lines = ["<b>MINI APP RUXSATLARI</b>"]
+    if app_url:
+        lines.append(f"Manzil: {esc(app_url)}")
+        lines.append("Egada va ruxsat olganlarda chat menyusida «Statistika» tugmasi bor.")
+    lines.append("")
+    if not rows:
+        lines.append("Hozircha hech kimga ruxsat berilmagan.")
+        lines.append("Qo‘shish: /grant 123456789 Ism")
+        return "\n".join(lines)
+    lines.append(f"• Ruxsat olganlar: {len(rows)}")
+    for row in rows[:20]:
+        name = esc(str(row.get("name") or ""))
+        stamp = _stamp(row.get("since"))
+        lines.append(f"• {row.get('id')}{f' — {name}' if name else ''} · {stamp}")
+    if len(rows) > 20:
+        lines.append(f"• … yana {len(rows) - 20} ta")
+    lines.append("")
+    lines.append("Bekor qilish: /revoke 123456789")
+    return "\n".join(lines)
+
+
+def access_changed(target: int, name: str, granted: bool, saved: bool, menu: str) -> str:
+    """Confirmation after a grant or a revoke."""
+    label = f"{target} — {esc(name)}" if name else str(target)
+    lines = [f"<b>{'RUXSAT BERILDI' if granted else 'RUXSAT BEKOR QILINDI'}</b>",
+             f"• {label}",
+             f"• Saqlash: {'yozildi' if saved else 'yozilmadi — saqlagich bilan bog‘lanish yo‘q'}",
+             f"• Menyu tugmasi: {esc(menu)}",
+             ""]
+    if granted:
+        lines.append("Foydalanuvchi bot bilan chatini ochsa, pastdagi menyuda «Statistika» "
+                     "tugmasini ko‘radi.")
+    else:
+        lines.append("Foydalanuvchining menyusi oddiy holatga qaytdi va Mini App unga yopildi.")
+    return "\n".join(lines)
 
 
 def _stamp(seconds: object) -> str:
@@ -349,6 +416,8 @@ def stats_panel(data: dict) -> str:
     lines.append(f"• O‘tkazishlar: {counters.get('skips', 0)} · "
                  f"Yangilash bosishlari: {counters.get('refreshes', 0)}")
     lines.append(f"• Jonli soat oynasi: {counters.get('clock_opened', 0)} marta")
+    lines.append(f"• Mini App ochildi: {counters.get('app_opened', 0)} marta · "
+                 f"ruxsat olganlar: {len(data.get('access') or {})} · /access")
     lines.append(f"• Buyruqlar: {counters.get('commands', 0)}")
     lines.append("")
 
