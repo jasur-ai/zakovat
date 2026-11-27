@@ -22,16 +22,19 @@ Saytning JSON API’si yo‘q (faqat PDF/DOCX yuklab olish bor), shuning uchun `
 
 - `/savollar/paketlar?page=N` — 30 ta `article.zk-catalog-card`: id, sarlavha, savol/tur soni, sana, toifa, mualliflar, manba;
 - `/savollar/paket/<id>` — `section#tur-N` ichida `article#savol-N`; savol matni `p.zk-question-text`, javob bloki `Javob: Qabul: Izoh: Manba(lar): Muallif(lar): Muharrir:` yorliqlari bilan, rasm `figure.zk-material-block` ichida (havolalar mutlaq qilinadi), `Blits`/`Duplet`/`Rasmli` nishonlari ham olinadi;
+- **60 savoldan katta to‘plam bir sahifaga sig‘maydi**: sayt uni turma-tur ko‘rsatadi va sahifa oxirida «Keyingi tur: 2-tur →» havolasi (`?tur=2`) qoldiradi. Parser sahifadagi `Savollar soni` ga yetgunicha shu havolalardan yuradi (`fetch_package`), savollarni sayt tartibida (`savol-N` raqami turlar bo‘ylab davom etadi) joylaydi va takrorlangan savolni bir marta saqlaydi;
 - Next.js flight payload butun sahifani `<script>` ichida takrorlaydi — parser uni kesib tashlaydi.
 
 Yig‘ish **GitHub Actions**’da ishlaydi (`.github/workflows/turnirlar-import.yml`), chunki ishlab chiqish muhitidan saytga chiqib bo‘lmaydi:
 
 - ishga tushirish: `.turnirlar-run` faylini o‘zgartirib push qilish — yoki Actions → *Import turnirlar.uz question base* → *Run workflow*;
-- variantlar: `source` (`all` / `zakovat-klubi` / `boshqa`), `start_page`, `pages`, `max_packages`, `workers`, `polite`, `commit`, `release`;
+- variantlar: `source` (`all` / `zakovat-klubi` / `boshqa`), `start_page`, `pages`, `max_packages`, `workers`, `polite`, `dedupe`, `fresh`, `commit`, `release`;
+- `fresh: true` saqlangan shardlarni tiklamay, bazani noldan yig‘adi — parser ko‘proq savol topadigan bo‘lganda (yuqoridagi tur sahifalari kabi) kerak;
 - yig‘ish **davom etadigan**: Release’dagi shardlar avval qaytarib olinadi, saqlangan paketlar o‘tkazib yuboriladi; diskda yo‘q shard manifest’dan olib tashlanadi, ya’ni «saqlangan» deb hech narsa hisoblanmaydi;
 - sayt yozuvi (`ö ç ş ğ ı`) standart o‘zbek lotiniga o‘tkaziladi (`o‘ ch sh g‘ i`); katta harfli so‘zlarda `Ş→SH`, bosh harfda `Ş→Sh`;
 - `data/all`’da bor savollar takrorlanmaydi (matnning ortografiyaga befarq barmoq izi bo‘yicha) — saytning 1238 ta «Zakovat klubi» to‘plami asosan shu sabab tushib qoladi;
-- `--mode probe` sahifa tuzilishini tekshiradi va hisobotni branchga commit qiladi (`.github/workflows/export-turnirlar.yml`), `--mode check` yuklab olingan fayllarni **tarmoqsiz** tahlil qiladi — parserlar shunday yozilgan.
+- `--mode probe` sahifa tuzilishini tekshiradi va hisobotni branchga commit qiladi (`.github/workflows/export-turnirlar.yml`), `--mode check` yuklab olingan fayllarni **tarmoqsiz** tahlil qiladi — parserlar shunday yozilgan;
+- `--mode verify` katalog bo‘ylab tarqatilgan sahifalardan namuna oladi va har to‘plamda sayt aytgan son bilan parser qaytargan sonni solishtiradi: `short` nol bo‘lmasa, biror sahifa qisman o‘qilgan. Hisob `data/turnirlar/probe/digest.txt` da saqlanadi.
 
 zakovatklubi.uz eksporti esa `.github/workflows/export-all.yml` orqali yangilanadi (`workflow_dispatch`, `repository_dispatch archive-zakovat` yoki har kuni 03:17).
 

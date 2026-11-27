@@ -502,3 +502,107 @@ class VerifyModeTest(unittest.TestCase):
         self.assertEqual(stats["failed"], 2)
         self.assertEqual(problems, [])
 
+
+def _tour_page(number: int, first_index: int, first_ref: int) -> str:
+    """A package page as the site renders one tour of a big package."""
+    page = PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                f"<dt>Savollar soni</dt><dd>6</dd>", 1)
+    page = page.replace('<section id="tur-1" class="zk-tour">',
+                        f'<section id="tur-{number}" class="zk-tour">', 1)
+    page = page.replace('<h2 class="zk-tour-title">1-tur</h2>',
+                        f'<h2 class="zk-tour-title">{number}-tur</h2>', 1)
+    for offset in range(3, 0, -1):
+        page = page.replace(f'id="savol-{offset}"', f'id="savol-{first_index + offset - 1}"')
+        page = page.replace(f'data-panel-ref="{559880 + (offset - 1) * 25 if offset < 3 else 559920}"',
+                            f'data-panel-ref="{first_ref + offset - 1}"')
+        page = page.replace(f'href="/savollar/savol/{559880 + (offset - 1) * 25 if offset < 3 else 559920}"',
+                            f'href="/savollar/savol/{first_ref + offset - 1}"')
+    return page
+
+
+class TourPaginationTest(unittest.TestCase):
+    """A package over 60 questions is rendered one tour per page."""
+
+    LINK = ('<a class="zk-tour-next" href="/savollar/paket/7800?tur=2">'
+            'Keyingi tur: 2-tur →</a>')
+
+    def test_tour_links_are_read_from_the_page(self):
+        self.assertEqual(ex.tour_links(PACKAGE_PAGE + self.LINK), [2])
+        self.assertEqual(ex.tour_links(PACKAGE_PAGE), [])
+        self.assertEqual(ex.tour_links('<a href="https://turnirlar.uz/savollar/paket/9?tur=7">7</a>'), [7])
+        # the flight payload repeats the page inside <script>: it must not count
+        scripted = '<script>self.__next_f.push([1,"href=\\\"?tur=5\\\""])</script>'
+        self.assertEqual(ex.tour_links(scripted), [])
+
+    def test_a_package_that_fits_on_one_page_is_read_once(self):
+        calls: list[str] = []
+
+        def fetch(url: str, *args, **kwargs):
+            calls.append(url)
+            return 200, PACKAGE_PAGE
+
+        with mock.patch.object(ex, "fetch", fetch):
+            _package, meta, questions = ex.fetch_package(7800, {"source_id": 7800})
+        self.assertEqual(len(calls), 1)                    # the site says 3, we have 3
+        self.assertEqual(len(questions), 3)
+        self.assertEqual(meta["announced"], 3)
+        self.assertEqual(meta["tours"], 1)
+
+    def test_the_tour_pages_are_followed_until_the_count_is_reached(self):
+        calls: list[str] = []
+
+        def fetch(url: str, *args, **kwargs):
+            calls.append(url)
+            if "tur=2" in url:
+                return 200, _tour_page(2, 4, 559930)
+            return 200, PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                             "<dt>Savollar soni</dt><dd>6</dd>", 1) + self.LINK
+
+        with mock.patch.object(ex, "fetch", fetch):
+            _package, meta, questions = ex.fetch_package(7800, {"source_id": 7800})
+        self.assertEqual(calls, [f"{ex.SITE}/paket/7800", f"{ex.SITE}/paket/7800?tur=2"])
+        self.assertEqual(len(questions), 6)
+        self.assertEqual([row["index"] for row in questions], [1, 2, 3, 4, 5, 6])
+        self.assertEqual(sorted({row["round"] for row in questions}), [1, 2])
+        self.assertEqual(len({row["question_id"] for row in questions}), 6)
+        self.assertEqual(meta["tours"], 2)
+        self.assertEqual(meta["announced"], 6)
+
+    def test_a_tour_that_repeats_a_question_is_not_counted_twice(self):
+        def fetch(url: str, *args, **kwargs):
+            if "tur=2" in url:
+                return 200, PACKAGE_PAGE          # the same three questions again
+            return 200, PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                             "<dt>Savollar soni</dt><dd>9</dd>", 1) + self.LINK
+
+        with mock.patch.object(ex, "fetch", fetch):
+            _package, meta, questions = ex.fetch_package(7800, {"source_id": 7800})
+        self.assertEqual(len(questions), 3)
+        self.assertEqual(meta["tours"], 2)        # it tried, and stopped there
+
+    def test_a_tour_page_that_refuses_leaves_the_rest_intact(self):
+        def fetch(url: str, *args, **kwargs):
+            if "tur=2" in url:
+                return 500, ""
+            return 200, PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                             "<dt>Savollar soni</dt><dd>6</dd>", 1) + self.LINK
+
+        with mock.patch.object(ex, "fetch", fetch):
+            _package, meta, questions = ex.fetch_package(7800, {"source_id": 7800})
+        self.assertEqual(len(questions), 3)
+        self.assertEqual(meta["tour_failed"], 2)
+
+    def test_the_walk_stops_when_the_page_offers_no_further_tour(self):
+        calls: list[str] = []
+
+        def fetch(url: str, *args, **kwargs):
+            calls.append(url)
+            return 200, PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                             "<dt>Savollar soni</dt><dd>60</dd>", 1)
+
+        with mock.patch.object(ex, "fetch", fetch):
+            _package, meta, questions = ex.fetch_package(7800, {"source_id": 7800})
+        self.assertEqual(len(calls), 1)           # nothing to follow
+        self.assertEqual(len(questions), 3)
+        self.assertEqual(meta["announced"], 60)
+

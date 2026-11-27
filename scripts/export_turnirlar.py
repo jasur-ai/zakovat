@@ -411,6 +411,9 @@ ARTICLE_START_RE = re.compile(r'<article id="savol-')
 ART_OPEN_RE = re.compile(r'<article id="savol-(\d+)"([^>]*)>')
 PANEL_REF_RE = re.compile(r'data-panel-ref="(\d+)"')
 QNUMBER_RE = re.compile(r'<a class="zk-question-number"[^>]*href="/savollar/savol/(\d+)"', re.S)
+# A package of more than 60 questions is rendered one tour at a time: the page
+# ends with "Keyingi tur: 2-tur →" linking to ?tur=2, and that page links on.
+TUR_LINK_RE = re.compile(r'href="[^"]*[?&]tur=(\d+)"')
 QTEXT_RE = re.compile(r'<p class="zk-question-text">(.*?)</p>', re.S)
 MATERIAL_RE = re.compile(r'<figure class="zk-material-block">(.*?)</figure>', re.S)
 MATERIAL_TEXT_RE = re.compile(r'<p class="zk-material-text">(.*?)</p>', re.S)
@@ -608,6 +611,62 @@ def parse_package(markup: str, package: dict) -> tuple[dict, list[dict]]:
         if row:
             questions.append(row)
     return meta, questions
+
+
+def _digits(value: object) -> int:
+    """``"36 savol"`` → 36 (0 when the page does not say)."""
+    return int(re.sub(r"\D", "", str(value or "")) or 0)
+
+
+def tour_links(markup: str) -> list[int]:
+    """The tour numbers a package page links to, in order."""
+    return sorted({int(number) for number in TUR_LINK_RE.findall(markup)})
+
+
+def fetch_package(source_id: int, package: dict, max_tours: int = 80) -> tuple[dict, dict, list[dict]]:
+    """Every question of one package, following the tour pages when needed.
+
+    ``Savollar soni`` on the package page is the site's own count, so it decides
+    when to stop: a package that fits on one page is read once, a bigger one is
+    read tour by tour until the count is reached. Questions are kept in the
+    site's own order (``article#savol-N`` numbers run across tours) and a
+    question that shows up twice is kept once.
+    """
+    status, markup = fetch(f"{SITE}/paket/{source_id}")
+    if status != 200:
+        return package, {"http": status}, []
+    meta, questions = parse_package(markup, package)
+    body = strip_scripts(markup)
+    announced = _digits(meta.get("Savollar soni"))
+    seen = {row["question_id"] for row in questions}
+    read = {1}                                   # the plain page is the first tour
+    while announced and len(questions) < announced and len(read) < max_tours:
+        pending = [tour for tour in tour_links(body) if tour not in read]
+        if not pending:
+            break
+        tour = pending[0]
+        read.add(tour)
+        try:
+            status, markup = fetch(f"{SITE}/paket/{source_id}?" + urlencode({"tur": tour}))
+        except RuntimeError as exc:
+            print(f"[import] package {source_id}: tour {tour}: {exc}", file=sys.stderr)
+            meta["tour_failed"] = tour
+            break
+        if status != 200:
+            print(f"[import] package {source_id}: tour {tour}: HTTP {status}", file=sys.stderr)
+            meta["tour_failed"] = tour
+            break
+        body = strip_scripts(markup)
+        _tour_meta, more = parse_package(markup, package)
+        for row in more:
+            if row["question_id"] in seen:
+                continue
+            seen.add(row["question_id"])
+            questions.append(row)
+    meta["announced"] = announced
+    meta["tours"] = len(read)
+    questions.sort(key=lambda row: (row["index"], row["question_id"]))
+    return package, meta, questions
 
 
 # -------------------------------------------------------------------- output
@@ -846,11 +905,7 @@ def import_packages(rows: list[dict], out_dir: Path, workers: int, compress: boo
             "origin": row.get("origin") or "",
             "url": f"{SITE}/paket/{source_id}",
         }
-        status, markup = fetch(f"{SITE}/paket/{source_id}")
-        if status != 200:
-            return package, {"http": status}, []
-        meta, questions = parse_package(markup, package)
-        return package, meta, questions
+        return fetch_package(source_id, package)
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {}
@@ -927,11 +982,6 @@ def import_packages(rows: list[dict], out_dir: Path, workers: int, compress: boo
     return dict(stats), sample
 
 
-def _digits(value: object) -> int:
-    """``"36 savol"`` → 36 (0 when the page does not say)."""
-    return int(re.sub(r"\D", "", str(value or "")) or 0)
-
-
 def verify(sample_pages: int, per_page: int, source: str, workers: int,
            polite: float, start_page: int = 1) -> tuple[dict, list[dict]]:
     """Does the parser return every question the site says a package has?
@@ -981,22 +1031,20 @@ def verify(sample_pages: int, per_page: int, source: str, workers: int,
         print(f"[verify] list page {page}: {len(cards)} of {per_page} cards")
         rows.extend(cards)
 
-    stats = {"checked": 0, "failed": 0, "empty": 0, "short": 0,
+    stats = {"checked": 0, "failed": 0, "empty": 0, "short": 0, "multi_tour": 0,
              "announced": 0, "parsed": 0, "card_mismatch": 0}
     problems: list[dict] = []
 
     def one(row: dict) -> dict:
         source_id = int(row["source_id"])
-        url = f"{SITE}/paket/{source_id}"
-        status, markup = fetch(url)
         result = {"source_id": source_id, "card": _digits(row.get("questions")),
-                  "page": 0, "parsed": 0, "http": status}
-        if status != 200:
-            return result
-        meta, questions = parse_package(markup, {"id": ID_OFFSET + source_id,
-                                                 "source_id": source_id})
+                  "page": 0, "parsed": 0, "tours": 1, "http": 200}
+        _package, meta, questions = fetch_package(source_id, {"id": ID_OFFSET + source_id,
+                                                              "source_id": source_id})
+        result["http"] = int(meta.get("http") or 200)
         result["page"] = _digits(meta.get("Savollar soni"))
         result["parsed"] = len(questions)
+        result["tours"] = int(meta.get("tours") or 1)
         return result
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -1022,18 +1070,22 @@ def verify(sample_pages: int, per_page: int, source: str, workers: int,
             stats["parsed"] += found["parsed"]
             if found["page"] and found["card"] and found["page"] != found["card"]:
                 stats["card_mismatch"] += 1
+            if found["tours"] > 1:
+                stats["multi_tour"] += 1
             if not found["parsed"]:
                 stats["empty"] += 1
             if found["parsed"] < announced:
                 stats["short"] += 1
                 problems.append(found)
                 print(f"[verify] package {found['source_id']}: the site says {announced} "
-                      f"questions, the parser returned {found['parsed']}", file=sys.stderr)
+                      f"questions, {found['tours']} tour page(s) returned {found['parsed']}",
+                      file=sys.stderr)
 
     print(f"[verify] checked {stats['checked']} packages · announced {stats['announced']} "
           f"questions · parsed {stats['parsed']} · short {stats['short']} · "
           f"empty {stats['empty']} · failed {stats['failed']} · "
-          f"card/page disagreement {stats['card_mismatch']}")
+          f"card/page disagreement {stats['card_mismatch']} · "
+          f"read over several tour pages {stats['multi_tour']}")
     if stats["checked"] and stats["announced"]:
         ratio = stats["parsed"] / stats["announced"]
         print(f"[verify] the parser keeps {ratio:.1%} of what those pages announce; "

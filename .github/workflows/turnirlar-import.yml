@@ -43,6 +43,10 @@ on:
         description: "data/all’da bor savollarni tashlab yuborish"
         type: boolean
         default: true
+      fresh:
+        description: "Saqlangan shardlarni tiklamasdan noldan yig‘ish"
+        type: boolean
+        default: false
       commit:
         description: "Manifest va namunani shu branch ga commit qilish"
         type: boolean
@@ -90,7 +94,7 @@ jobs:
         # workflow_dispatch inputs; a scheduled run has only the file.
         env:
           PAYLOAD: ${{ toJSON(github.event.client_payload) }}
-          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};start_page=${{ inputs.start_page }};polite=${{ inputs.polite }};workers=${{ inputs.workers }};source=${{ inputs.source }};dedupe=${{ inputs.dedupe }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
+          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};start_page=${{ inputs.start_page }};polite=${{ inputs.polite }};workers=${{ inputs.workers }};source=${{ inputs.source }};dedupe=${{ inputs.dedupe }};fresh=${{ inputs.fresh }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
         run: |
           python3 - <<'PY' | tee -a "$GITHUB_OUTPUT"
           import json, os, pathlib
@@ -129,12 +133,25 @@ jobs:
           for key, default in (("max_packages", 0), ("pages", 0), ("start_page", 1),
                                ("polite", 0.4), ("workers", 8), ("source", "all")):
               print(f"{key}={merged.get(key, default)}")
-          for key, default in (("dedupe", "true"), ("commit", "true"), ("release", "true")):
+          for key, default in (("dedupe", "true"), ("fresh", "false"),
+                               ("commit", "true"), ("release", "true")):
               value = str(merged.get(key, default)).lower()
               print(f"{key}={'true' if value in ('true', '1', 'yes') else 'false'}")
           PY
 
+      # A parser change that finds more questions (a tour page, say) has to be
+      # able to rebuild the base: skip the restore and throw the stored state
+      # away, so every package is fetched again from the site.
+      - name: Start from an empty archive
+        if: steps.opts.outputs.fresh == 'true'
+        run: |
+          rm -rf data/turnirlar/shards
+          rm -f data/turnirlar/manifest.json data/turnirlar/sample.json
+          mkdir -p data/turnirlar/shards
+          echo "fresh build: the stored shards and manifest are gone"
+
       - name: Restore the shards that are already stored
+        if: steps.opts.outputs.fresh != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -149,7 +166,7 @@ jobs:
       - name: Import
         run: |
           set -o pipefail
-          echo "options: source=${{ steps.opts.outputs.source }} start_page=${{ steps.opts.outputs.start_page }} pages=${{ steps.opts.outputs.pages }} max_packages=${{ steps.opts.outputs.max_packages }} workers=${{ steps.opts.outputs.workers }} polite=${{ steps.opts.outputs.polite }} dedupe=${{ steps.opts.outputs.dedupe }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
+          echo "options: source=${{ steps.opts.outputs.source }} start_page=${{ steps.opts.outputs.start_page }} pages=${{ steps.opts.outputs.pages }} max_packages=${{ steps.opts.outputs.max_packages }} workers=${{ steps.opts.outputs.workers }} polite=${{ steps.opts.outputs.polite }} dedupe=${{ steps.opts.outputs.dedupe }} fresh=${{ steps.opts.outputs.fresh }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
           extra=""
           if [ "${{ steps.opts.outputs.dedupe }}" = "false" ]; then
             extra="--no-dedupe"     # keep every package exactly as the site has it
