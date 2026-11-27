@@ -1,204 +1,202 @@
 {
- "generated_at": "2026-11-27T19:00:31+00:00",
+ "generated_at": "2026-11-27T19:28:40+00:00",
  "listed_packages": [
   {
-   "source_id": 7800,
-   "title": "O‘zbekiston chempionati 2025 savollari",
-   "questions": 60,
-   "rounds": 4,
-   "date": "16.11.2025",
-   "section": "",
-   "authors": [
-    "Saidakrom Rasulev Farxadovich"
-   ],
-   "origin": "Foydalanuvchilar yuborgan savollar"
-  },
-  {
-   "source_id": 6559,
-   "title": "«MIFI kubogi 2025» intellektual o‘yinlar festivali",
-   "questions": 75,
-   "rounds": 7,
-   "date": "07.12.2025",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6558,
-   "title": "Odamlar o‘ynaydigan harflar II",
-   "questions": 36,
-   "rounds": 3,
-   "date": "18.01.2026",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6557,
-   "title": "Oq otlar kubogi",
-   "questions": 35,
-   "rounds": 3,
-   "date": "10.05.2021",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6556,
-   "title": "O‘n to‘rtinchi qahraton",
-   "questions": 36,
-   "rounds": 3,
-   "date": "23.02.2025",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6555,
-   "title": "Kub-1. Sentyabr (2023/2024)",
-   "questions": 36,
-   "rounds": 3,
-   "date": "30.09.2023",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6554,
-   "title": "Sims To Be. Vol. 7",
-   "questions": 36,
-   "rounds": 3,
-   "date": "30.05.2025",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6553,
-   "title": "Kub-1. Sentyabr (2022/2023)",
-   "questions": 36,
-   "rounds": 3,
-   "date": "30.09.2022",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6552,
-   "title": "StudChR-2025. Falstartsiz tezlikka jamoaviy o‘yin",
-   "questions": 104,
-   "rounds": 19,
-   "date": "20.04.2025",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6551,
-   "title": "Yuriy Mironovich xotirasiga bag‘ishlangan turnir – 2024",
-   "questions": 36,
-   "rounds": 3,
-   "date": "04.01.2025",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6550,
-   "title": "Nesterka",
-   "questions": 55,
+   "source_id": 6547,
+   "title": "Brest chempionati",
+   "questions": 90,
    "rounds": 6,
-   "date": "29.10.2023",
+   "date": "13.04.2003",
    "section": "",
    "authors": [],
    "origin": "Got Questions"
   },
   {
-   "source_id": 6549,
-   "title": "Samarium. Do‘stlik kubogi.",
+   "source_id": 6546,
+   "title": "Belovejskaya zima – Intellektual gibrid",
+   "questions": 10,
+   "rounds": 1,
+   "date": "27.11.2005",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6536,
+   "title": "Kobrin maktab chempionati",
    "questions": 36,
-   "rounds": 3,
-   "date": "06.02.2026",
+   "rounds": 1,
+   "date": "24.02.2013",
    "section": "",
    "authors": [],
    "origin": "Got Questions"
   },
   {
-   "source_id": 6548,
-   "title": "O‘ylash uchun bir.. beriladi",
-   "questions": 36,
-   "rounds": 3,
-   "date": "01.02.2026",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6545,
-   "title": "Cheksizlik orolchasi: mart",
-   "questions": 36,
-   "rounds": 3,
-   "date": "12.04.2025",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6544,
-   "title": "Guldurab qaynovchi kubok",
-   "questions": 36,
-   "rounds": 3,
-   "date": "31.01.2021",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6543,
-   "title": "OVSCH. 4-bosqich",
-   "questions": 36,
-   "rounds": 3,
-   "date": "23.03.2026",
-   "section": "",
-   "authors": [],
-   "origin": "Got Questions"
-  },
-  {
-   "source_id": 6542,
-   "title": "Gyombyots-8",
-   "questions": 54,
+   "source_id": 6520,
+   "title": "Maktab o‘quvchilarining Olimpiya o‘yinlari (Baranka kubogi №0)",
+   "questions": 46,
    "rounds": 4,
-   "date": "28.01.2026",
+   "date": "08.04.2012",
    "section": "",
    "authors": [],
    "origin": "Got Questions"
   },
   {
-   "source_id": 6541,
-   "title": "Meva: guava",
+   "source_id": 6481,
+   "title": "«Belovejskaya zima» – «Elitarno-Kolomenskoye ozareniye»",
+   "questions": 10,
+   "rounds": 1,
+   "date": "27.11.2005",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6478,
+   "title": "Brest olimpiya kubogi",
+   "questions": 26,
+   "rounds": 4,
+   "date": "19.05.2007",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6476,
+   "title": "Brest chempionati",
+   "questions": 30,
+   "rounds": 2,
+   "date": "07.02.2013",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6474,
+   "title": "Kobrin maktab chempionati",
+   "questions": 37,
+   "rounds": 1,
+   "date": "24.02.2012",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6469,
+   "title": "Kobrin chempionati – 1-bosqich",
+   "questions": 40,
+   "rounds": 1,
+   "date": "25.10.2007",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6452,
+   "title": "Kobrin PTUZlari jamoalari o‘rtasidagi chempionat",
    "questions": 36,
-   "rounds": 3,
-   "date": "08.03.2026",
+   "rounds": 1,
+   "date": "17.02.2005",
    "section": "",
    "authors": [],
    "origin": "Got Questions"
   },
   {
-   "source_id": 6540,
-   "title": "Borisfen 11: Irkley",
-   "questions": 35,
-   "rounds": 3,
-   "date": "16.11.2025",
+   "source_id": 6450,
+   "title": "Kobrin yuvenal chempionati – 2-bosqich",
+   "questions": 30,
+   "rounds": 1,
+   "date": "19.11.2011",
    "section": "",
    "authors": [],
    "origin": "Got Questions"
   },
   {
-   "source_id": 6539,
-   "title": "Balkanfest — 2025",
-   "questions": 94,
-   "rounds": 6,
-   "date": "23.11.2025",
+   "source_id": 6438,
+   "title": "Kobrin tumani chempionati",
+   "questions": 39,
+   "rounds": 1,
+   "date": "06.10.2009",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6436,
+   "title": "Brest chempionati – 2-tur",
+   "questions": 10,
+   "rounds": 1,
+   "date": "28.11.2003",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6429,
+   "title": "Kobrin chempionati – 2-bosqich",
+   "questions": 40,
+   "rounds": 1,
+   "date": "06.12.2007",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6425,
+   "title": "Maktab o‘quvchilarining Olimpiya o‘yinlari (Baranka kubogi №0) – Xet-trik",
+   "questions": 40,
+   "rounds": 8,
+   "date": "08.04.2012",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6420,
+   "title": "Brest chempionati",
+   "questions": 99,
+   "rounds": 10,
+   "date": "28.05.2006",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6418,
+   "title": "Kobrin chempionati – 3-bosqich",
+   "questions": 40,
+   "rounds": 1,
+   "date": "13.03.2008",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6415,
+   "title": "Kobrin yuvenal chempionati – 1-bosqich",
+   "questions": 26,
+   "rounds": 1,
+   "date": "17.09.2011",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6411,
+   "title": "Brest chempionati",
+   "questions": 194,
+   "rounds": 13,
+   "date": "14.05.2007",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6408,
+   "title": "Brest chempionati – 1-tur",
+   "questions": 12,
+   "rounds": 1,
+   "date": "28.11.2004",
    "section": "",
    "authors": [],
    "origin": "Got Questions"
@@ -206,295 +204,304 @@
  ],
  "questions": [
   {
-   "id": 900332584,
-   "question_id": 332584,
-   "package_id": 906457,
+   "id": 900486938,
+   "question_id": 486938,
+   "package_id": 904683,
    "index": 1,
    "round": 1,
-   "text": "BUNI eshitgan serial qahramoni rohibaga: «Menda aniqroq», deydi. BUNI nomlang.",
-   "answer": "Cherkov qo‘ng‘irog‘i jarangi / Qo‘ng‘iroq jarangi; Qo‘ng‘iroq ovozi; Qo‘ng‘iroq chalinishi; Qo‘ng‘iroq",
-   "comment": "Qo‘ng‘iroq jarangi bilan an’anaviy ravishda yangi soat kirgani bildiriladi, ammo bu safar qo‘ng‘iroqxonada olti daqiqaga kechikishadi. Rohiba buni oqlash uchun ilgari rohibalar o‘z vaqtida chalar edilar, keyin esa uni mexanik moslama o‘rnatishga ko‘ndirishgani va shundan beri hamma narsa buzilganini aytadi.",
+   "text": "Xyu Molliganning hajviy hikoyasida UNING tarjimai holining noan’anaviy versiyasi keltiriladi. Emishki, U aslida muvaffaqiyatsiz operatsiyani amalga oshirib, xususiy amaliyot bilan shug‘ullanish huquqidan mahrum qilingan. Rivyerada bekorchi bo‘lib yurganida, U o‘yin avtomatlari dastasini tortib, yelkasini chiqarib oladi. U tez orada Angliya kasalxonasida uchratgan insonni nomlang.",
+   "answer": "Xolms / Sherlok Xolms",
+   "comment": "Hikoyada professor Moriartining evarasi doktor Vatsonning «haqiqiy» tarixini so‘zlab beradi va Sherlok Xolms doktorning o‘tmishi haqida mutlaqo noto‘g‘ri xulosalar chiqarganini ta’kidlaydi.",
    "accepted": [
-    "Qo‘ng‘iroq jarangi; Qo‘ng‘iroq ovozi; Qo‘ng‘iroq chalinishi; Qo‘ng‘iroq"
+    "Sherlok Xolms"
    ],
    "sources": [
-    "Monsieur Spade S01E01",
-    "https://gotquestions.online/packs/6795/1"
+    "Хью А. Моллиген. Разоблачение великого детектива. // Вокруг света, N 6/1982. — С. 63.",
+    "https://db.chgk.info/question/949804",
+    "https://gotquestions.online/packs/4823/1"
    ],
    "authors": [
-    "Aleksandr Korobeynikov"
+    "Dmitriy Gevel"
    ],
    "badges": [
     "AI tarjima"
    ],
-   "created_at": 1713225600
+   "created_at": 1209254400
   },
   {
-   "id": 900410581,
-   "question_id": 410581,
-   "package_id": 906146,
+   "id": 900435459,
+   "question_id": 435459,
+   "package_id": 904485,
    "index": 1,
    "round": 1,
-   "text": "Kunning birida Filipp Farbax repeticiyaga boshqa kuni kelib qoladi, lekin uni bekor qilmay, qo‘l ostidagilarga qo‘ng‘iroq qiladi va birinchi imkoniyat tug‘ilishi bilanoq boshlash umidida kuta boshlaydi. Keyingi voqealarni tasvirlar ekan, savol muallifi QARSHILASH SIMFONIYASINI tilga oldi. QARSHILASH SIMFONIYASINI nomlang.",
-   "answer": "qarshilash simfoniyasi / kutib olish simfoniyasi; qabul qilish simfoniyasi",
-   "comment": "Muzikantlar birin-ketin qaytib kelganlarida sozlarini olib, repeticiyaga qo‘shilishgan — teskarisiga bo‘lgan «Xayrlashuv simfoniyasi» hosil bo‘lgan. E’tiborlisi, Farbaxning o‘zida ham ushbu asarning variatsiyasi — ijrochilari namoyish davomida sahnani tark etadigan «Muzikantlar g‘aloyoni» hazil-asari bor.",
+   "text": "Demak, boshladik! Bernar Verberning romanidagi chumolilar izohli lug‘atida ushbu so‘z bilan «juda yosh chumoli» atalgan. Ushbu so‘zni nomlang.",
+   "answer": "Tuxum / Œuf",
+   "comment": "Mana shunday «ab ovo»!:-)",
    "accepted": [
-    "kutib olish simfoniyasi; qabul qilish simfoniyasi"
+    "Œuf"
    ],
    "sources": [
-    "https://archive.org/stream/musicallaughs007238mbp/musicallaughs007238mb…",
-    "https://www.windrep.org/Musician's_Strike",
-    "https://gotquestions.online/packs/6236/1",
-    "https://iqga.me/base/2182/"
+    "Б. Вербер. Муравьи ( http://www.aboutwerber.com/read/ants/page36.htm ).",
+    "https://db.chgk.info/question/1059172",
+    "https://gotquestions.online/packs/4511/1",
+    "http://www.aboutwerber.com/read/ants/page36.htm"
    ],
    "authors": [
-    "Pavel Parfianovich (Cherven)"
+    "Artyom Matuxno"
    ],
    "badges": [
     "AI tarjima"
    ],
-   "created_at": 1740268800
+   "created_at": 1239408000
   },
   {
-   "id": 900361876,
-   "question_id": 361876,
-   "package_id": 906529,
+   "id": 900236925,
+   "question_id": 236925,
+   "package_id": 904603,
    "index": 1,
    "round": 1,
-   "text": "Tashkillashtirilgan taxminlardan biriga ko‘ra, UNING kelib chiqishi seriallardan birida stolga urilgan ikki zarba bilan bog‘liq. Toddy Yelinning aytishicha, ko‘rib chiqilgan variantlar orasida mashhur raqibga parodiya sifatidagi echki ma’rashi ham bor edi. Atoqli otdan foydalangan holda UNI nomlang.",
-   "answer": "Netflix kirish vaqtidagi intro ovozi / Netflix zastavkasi; Netflix introsi; tudum; Netflix sadosi",
-   "comment": "Kompaniya esda qoladigan tovush topishga harakat qilgan. Hosil bo‘lgan zastavka hattoki «tudum» nomini olgan va ba’zilarning fikricha, «Karta uychasi» serialida Frenk Andervudning stolga urgan zarbalaridan kelib chiqqan.",
+   "text": "Zaliznyakning 2003-yilgi Grammatik lug‘atiga kiritilgan eng uzun undov so‘z yozilishiga qarab 14 yoki 15 ta harfdan iborat. Bu qaysi so‘z?",
+   "answer": "Fizkult-privet / Fizkultprivet",
+   "comment": "Savol rus tili grammatik lug‘atidagi aniq ruscha so‘z «Физкульт-привет» hajidagidir.",
    "accepted": [
-    "Netflix zastavkasi; Netflix introsi; tudum; Netflix sadosi"
+    "Fizkultprivet"
    ],
    "sources": [
-    "https://www.20k.org/episodes/netflix?rq=netflix – 08:52–09:00",
-    "https://economictimes.indiatimes.com/magazines/panache/netflix-mystery-…",
-    "https://gotquestions.online/packs/6683/1",
-    "https://www.20k.org/episodes/netflix?rq=netflix"
+    "http://ru.wikipedia.org/wiki/Самое_длинное_слово_русского_языка",
+    "https://db.chgk.info/question/780642",
+    "https://gotquestions.online/packs/4779/1"
    ],
    "authors": [
-    "Aleksey Sheredega"
+    "Aleksandr Ponomaryov"
    ],
    "badges": [
     "AI tarjima"
    ],
-   "created_at": 1771286400
+   "created_at": 1194739200
   },
   {
-   "id": 900313031,
-   "question_id": 313031,
-   "package_id": 906177,
+   "id": 900199518,
+   "question_id": 199518,
+   "package_id": 904484,
    "index": 1,
    "round": 1,
-   "text": "Pirot gilami — xizmat qilish muddati uzaytirilgan yorqin gilam. Serbiyada ushbu gilamlar ULARGA ega deyishadi. Qaysi Rim xudosi ULAR bilan tasvirlangan?",
-   "answer": "Yanus",
-   "comment": "ULAR — ikki yuz (ikki bet). Pirot gilamida iplar asosni ikki tomondan ham qoplagani uchun ularning ikki yuzi bor deyiladi, shuning uchun ular ikki barobar uzoq xizmat qiladi. Ikki yuzli Rim xudosi — Yanus.",
-   "sources": [
-    "https://44serbia.ru/kovryi-iz-pirota-govoryashhie-ornamentyi/",
-    "https://gotquestions.online/packs/6389/1"
-   ],
-   "authors": [
-    "Mixail Naugolnov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1751846400
-  },
-  {
-   "id": 900521087,
-   "question_id": 521087,
-   "package_id": 906397,
-   "index": 1,
-   "round": 0,
-   "text": "Mashhur rassom o‘z xalqining milliy o‘zligiga katta e’tibor qaratgan. Shuning uchun, taxminlardan biriga ko‘ra, mashhur kartinada nisbatan to‘qroq terili va an’anaviy libosda rassom yaxshi ko‘radigan U tasvirlangan. UNI nomlang.",
-   "answer": "Frida Kalo / Kalo",
-   "comment": "Savolda gapirilgan rassom — Diyego Rivera, lekin kartinani u chizmagan. Gap Frida Kaloning navbatdagi xiyonati sababli ajrashish oldidan chizilgan qo‘sh avtoportreti haqida bormoqda. Bir talqinga ko‘ra, meksikalikga ko‘proq o‘xshash Frida — bu Diyego sevadigan Frida, ikkinchisi — yevropacha libosdagi va nisbatan oqroq terili Frida — Diyego tashlab ketgan Frida: shuning uchun u yuragidan oqayotgan qonni to‘xtatishga urinmoqda.",
+   "text": "Davlat rejalashtirish qo‘mitasining 1925-yildagi rezolyutsiyalaridan birida shunday ta’kidlangan edi: «Yettisuv, Semipalatinsk viloyatlari hamda Uzak Sharqda hozircha yagona daromadli qishloq xo‘jaligi ekin turi bu... piyozdir». Savol matnida qaysi so‘z «piyoz» so‘zi bilan almashtirilgan?",
+   "answer": "Ko‘knori / Mak",
+   "comment": "Piyoz kabi ko‘knori ham qishloq xo‘jaligida yetishtirilgan. Gap ko‘knori haqida ketgan edi.",
    "accepted": [
-    "Kalo"
+    "Mak"
    ],
    "sources": [
-    "https://www.kahlo.org/two-fridas/",
-    "Frida Kahlo‘s ‘The Two Fridas‘: Great Art Explained ( https://www.youtube.com/watch?v=rxKR2cHmlPY )",
-    "https://gotquestions.online/packs/6524/91",
-    "https://www.youtube.com/watch?v=rxKR2cHmlPY"
-   ],
-   "authors": [
-    "Mixail Ivanov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1712448000
-  },
-  {
-   "id": 900495481,
-   "question_id": 495481,
-   "package_id": 906244,
-   "index": 1,
-   "round": 1,
-   "text": "Turnirimizni boshlaymiz. Mashhur sprinter Jessi Ouens hatto otlar bilan poygada ham g‘olib chiqqan. Keyinchalik otlar UNING ovozi sababli yutqazgani isbotlangan. Uni ikki so‘z bilan nomlang.",
-   "answer": "start o‘qi / start o‘q uzilishi; start to‘pponchasi",
-   "comment": "Otlar start o‘qi uzilgan ovozdan qo‘rqib ketgan va darhol tezlik ololmagan, sprinter esa allaqachon marra sari yugurib ketgan edi.",
-   "accepted": [
-    "start o‘q uzilishi; start to‘pponchasi"
-   ],
-   "sources": [
-    "https://newrunners.ru/mag/razrushaem-mify-loshad-vs-chelovek/",
-    "https://gotquestions.online/packs/6484/1"
-   ],
-   "authors": [
-    "Valeriy Semyonov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1711670400
-  },
-  {
-   "id": 900348996,
-   "question_id": 348996,
-   "package_id": 906156,
-   "index": 1,
-   "round": 1,
-   "text": "«Odin» [Bir] — matematikning o‘g‘li Mixail Savvateyevning UNIDIR. Ushbu savol haqida ham xuddi shu gapni aytish mumkin. U nima?",
-   "answer": "birinchi so‘z / dastlabki so‘z",
-   "comment": "Matematikning o‘g‘li aytgan eng birinchi so‘z birinchi son — «bir» («odin») bo‘lgan. Ushbu savolning ham birinchi so‘zi «Odin» hisoblanadi.",
-   "accepted": [
-    "dastlabki so‘z"
-   ],
-   "sources": [
-    "https://youtu.be/6jxQG7YVnmI?si=ueE0E2Im1cAlbIIo+(01%3A47)",
-    "https://gotquestions.online/packs/6174/1",
-    "https://youtu.be/6jxQG7YVnmI?si=ueE0E2Im1cAlbIIo+%2801%3A47%29"
-   ],
-   "authors": [
-    "Ilya Orlov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1719705600
-  },
-  {
-   "id": 900353166,
-   "question_id": 353166,
-   "package_id": 906328,
-   "index": 1,
-   "round": 1,
-   "text": "Poda boquvchi itning sarguzashtlari haqidagi «U» filmining nomi mashhur kinotrilogiya nomidan biroz farq qiladi. Ikki so‘z bilan javob bering, U kim?",
-   "answer": "qo‘ylar hukmdori",
-   "comment": "Okko onlayn-kinoteatri itlar uchun «Dogumentalki» umumiy nomi ostida maxsus filmlar to‘plamini chiqardi. Savolda tilga olingan, podani boqayotgan korgi haqidagi film nomi mashhur «Uukuklar hukmdori» («Властелин колец») trilogiyasiga ishora qiladi.",
-   "sources": [
-    "https://okko.tv/serial/dogumentalki",
-    "https://gotquestions.online/packs/6499/1"
-   ],
-   "authors": [
-    "Pavel Stolyarov"
-   ],
-   "badges": [
-    "AI tarjima"
-   ],
-   "created_at": 1759708800
-  },
-  {
-   "id": 900472413,
-   "question_id": 472413,
-   "package_id": 906335,
-   "index": 1,
-   "round": 1,
-   "text": "1924-yilda birinchi poytaxtga aylangan kurort shaharchasida vaqtida IKS o‘rniga ot va uzun arqondan foydalanishgan, bu bir martada bir nechta kishiga xizmat ko‘rsatish imkonini bergan. IKSni nomlang.",
-   "answer": "Ko‘targich / Funikulyor; Bugel; Osma yo‘l",
-   "comment": "Ushbu shahar — Qishki Olimpiya o‘yinlarining birinchi poytaxti bo‘lmish Alp tog‘laridagi Shamonidir. O‘sha paytlarda chang‘ichilar uchun mexanik ko‘targich bo‘lmagan, chang‘ichilarni ot arqon yordamida tepalikka tortib chiqargan.",
-   "accepted": [
-    "Funikulyor; Bugel; Osma yo‘l"
-   ],
-   "sources": [
-    "https://ru.wikipedia.org/wiki/Шамони-Мон-Блан",
-    "https://t.me/SM_ART_HISTORY/2463",
-    "https://gotquestions.online/packs/6544/1"
+    "http://ru.zib.com.ua/article/1150978828422/",
+    "https://db.chgk.info/question/755030",
+    "https://gotquestions.online/packs/4490/1"
    ],
    "authors": [
     "Aleksandr Kudryavtsev"
    ],
    "badges": [
-    "AI tarjima",
-    "Izohda rasm"
+    "AI tarjima"
    ],
-   "created_at": 1745107200
+   "created_at": 1164412800
   },
   {
-   "id": 900200272,
-   "question_id": 200272,
-   "package_id": 906360,
+   "id": 900190483,
+   "question_id": 190483,
+   "package_id": 904684,
    "index": 1,
    "round": 1,
-   "text": "Keling, boshlaymiz. Eduard Bezuglov ozishni istab, BU ISHNI QILIShga qaror qildi. Biz ham ushbu turda BU ISHNI QILIShga qaror qildik. BU ISHNI QILISH birikmasidagi hafta kuni nomini yozib bering.",
-   "answer": "Dushanba / Dushanbadan",
-   "comment": "Bezuglov vazn yo‘qotmoqchi bo‘lib, ko‘pchilik kabi ruhiy jihatdan qiyin jarayonni keyinga surgan holda ozishni dushanbadan boshlashga qaror qildi. Biz ham turimizni dushanba kuni boshlamoqdamiz.",
+   "text": "Dastlab bu rolga Oleg Strijenov taklif qilingan edi, lekin u «boshli qahramonlarni o‘ynashga o‘rganganman» deb rad etgan. Natijada bu rolni Oleg Vidov o‘ynagan. Ushbu qahramonni nomlang.",
+   "answer": "Moris Jerald / Moris Jerald («Boshsiz chavandoz» filmi); Boshsiz chavandoz",
+   "comment": "Gap Mayn Rid romani asosida suratga olingan «Boshsiz chavandoz» filmi haqida bormoqda. Strijenov hazillashib rad etgan, natijada Moris Jerald rolini Oleg Vidov ijro etgan.",
    "accepted": [
-    "Dushanbadan"
+    "Moris Jerald («Boshsiz chavandoz» filmi); Boshsiz chavandoz"
    ],
    "sources": [
-    "https://www.sports.ru/health/blogs/3335287.htm",
-    "https://gotquestions.online/packs/6412/1"
+    "\"TV-Парк\", N 39/2002. — С. 6.",
+    "https://db.chgk.info/question/875311",
+    "https://gotquestions.online/packs/4723/1"
    ],
    "authors": [
-    "Vyacheslav Garanovich"
+    "Aleksandra Indritsan"
    ],
    "badges": [
     "AI tarjima"
    ],
-   "created_at": 1753574400
+   "created_at": 1160179200
   },
   {
-   "id": 900278030,
-   "question_id": 278030,
-   "package_id": 906355,
+   "id": 900553708,
+   "question_id": 553708,
+   "package_id": 904778,
    "index": 1,
    "round": 1,
-   "text": "1930-yillarda mavjud bo‘lgan Ivanovo Sanoat viloyati bir qancha zamonaviy subyektlarni o‘z ichiga olgan. Lyudmila Chernix ushbu viloyatda tug‘ilgan, shuning uchun u kashf etgan «asosiy halqa» turkumidagi asteroid U nomini olgan. Uni nomlang.",
-   "answer": "Yaroslavl",
-   "comment": "Lyudmila Ivanovna kashf etgan ko‘plab asteroidlardan birini o‘zining tug‘ilib o‘sgan Shuya shahridan unchalik uzoq bo‘lmagan shahar sharafiga nomlagan, halqaning eslatib o‘tilishi esa mashhur turistik marshrut («Oltin halqa») haqida o‘ylashga undashi mumkin edi.",
+   "text": "M. Bulgakovning «Oq gvardiya» romanidan kichik parchani tinglang: «Shaharning I, Yo‘lovchilar stansiyasida poyezd turibdi — xuddi boshsiz [tushirib qoldirilgan so‘z] kabi hali parovozsiz». Tushirib qoldirilgan so‘z go‘zal metamorfozga uchrashi mumkin. Ushbu metamorfozni tasvirlab bering.",
+   "answer": "Qurt kapalakka aylanadi / Qurtning kapalakka aylanishi; Kapalakka aylanish",
+   "comment": "Tushirib qoldirilgan so‘z — «qurt» (гусеница). Qurt metamorfoz natijasida kapalakka aylanadi.",
+   "accepted": [
+    "Qurtning kapalakka aylanishi; Kapalakka aylanish"
+   ],
    "sources": [
-    "https://ru.wikipedia.org/wiki/(15212)_Ярославль",
-    "https://ru.wikipedia.org/wiki/Черных,_Людмила_Ивановна",
-    "https://gotquestions.online/packs/6621/1"
+    "М. Булгаков \"Белая гвардия\"",
+    "https://gotquestions.online/packs/4713/1"
    ],
    "authors": [
-    "Igor Demyantsev"
+    "Vaan Kalayjyan"
    ],
    "badges": [
     "AI tarjima"
    ],
-   "created_at": 1746057600
+   "created_at": 1191110400
   },
   {
-   "id": 900463444,
-   "question_id": 463444,
-   "package_id": 906202,
+   "id": 900085722,
+   "question_id": 85722,
+   "package_id": 904514,
+   "index": 1,
+   "round": 1,
+   "text": "Chak Palanikning qisqa hikoyasida qahramon basseyn tubida qolib ketadi va suv betiga arang yetib oladi. Hikoyachi tinglovchilardan hikoyani boshlashdan oldin BU ISHNI QILIShni so‘raydi. Bu nima ish ekanligini nomlang.",
+   "answer": "Nafas olish / Nafas rostlash; Chuqur nafas olish; Nafasni ushlab turish",
+   "comment": "Hikoyachi tinglovchilardan nafas olib, uni oxirigacha chiqarib yubormaslikni so‘raydi.",
+   "accepted": [
+    "Nafas rostlash; Chuqur nafas olish; Nafasni ushlab turish"
+   ],
+   "sources": [
+    "Паланик Ч. Призраки. — М.: АСТ: АСТ МОСКВА: ХРАНИТЕЛЬ, 2006. — С. 19.",
+    "https://db.chgk.info/question/1138212",
+    "https://gotquestions.online/packs/4673/1"
+   ],
+   "authors": [
+    "Boris Monosov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1174694400
+  },
+  {
+   "id": 900425800,
+   "question_id": 425800,
+   "package_id": 904492,
    "index": 1,
    "round": 0,
-   "text": "Aytishlaricha, ilgari ba’zi IKSlar raqobatchilarini ortda qoldirish uchun atayin radio-bozorlarga borishgan. Boshqa bir «IKS» esa Kongress kutubxonasi tomonidan muhim deb e’tirof etilgan. IKSni nomlang.",
-   "answer": "taksichi / taksi haydovchisi; taksist",
-   "comment": "Ilgari taksichilar buyurtmalarni ratsiya orqali olishgan va uzatgich kuchaytirgichlarini sotib olib raqobatchilarning ovozini bosib ketishgan. Ikkinchi holatda gap Martin Skorsezening «Taksichi» («Taxi Driver») filmi haqida bormoqda.",
+   "text": "«Absurdopediya» maqolalaridan birida ta’kidlanishicha, uning tanasi mutlaq qora, u ideal gazdan nafas oladi, harakat trayektoriyasi esa sikloidani tashkil etadi. Uni nomlang.",
+   "answer": "Vakuumdagi sferik ot / vakuumdagi sferik ot...",
+   "comment": "Fizikadagi mavhum va hayotiy bo‘lmagan modellarga nisbatan qo‘llaniladigan mashhur «vakuumdagi sferik ot» iborasiga Absurdopediyada berilgan parodiyaviy ta’rif.",
    "accepted": [
-    "taksi haydovchisi; taksist"
+    "vakuumdagi sferik ot..."
    ],
    "sources": [
-    "Как менялось такси от СССР до нулевых; https://youtu.be/TGvuA6x2ja8?t=1188",
-    "https://ru.wikipedia.org/wiki/Таксист_(фильм,_1976)",
-    "https://gotquestions.online/packs/6552/61",
-    "https://youtu.be/TGvuA6x2ja8?t=1188"
+    "http://absurdopedia.wikia.com/wiki/Сферический_конь_в_вакууме",
+    "https://db.chgk.info/question/696341",
+    "https://gotquestions.online/packs/4640/1"
    ],
    "authors": [
-    "Andrey Skirenko"
+    "Mixail Podgorbunskix"
    ],
    "badges": [
     "AI tarjima"
    ],
-   "created_at": 1750982400
+   "created_at": 1176508800
+  },
+  {
+   "id": 900367692,
+   "question_id": 367692,
+   "package_id": 904640,
+   "index": 1,
+   "round": 1,
+   "text": "«Ofis-samurayi yo‘li» qo‘llanmasiga ko‘ra, U ham qo‘lingdagi qilich, ham butun dunyoga kamtarona topshiradigan ipingdir (bo‘ynig‘ingdir). Shuningdek, UNI stol ustiga qo‘yish odabsizlik ekani ta’kidlanadi, chunki kalbi mutlaq soflik va tin tiniqlikka erishgan odamlar bunday qo‘pol namoyishga muhtoj emaslar. U nima?",
+   "answer": "Mobil telefon / Mobil telefon",
+   "comment": "O‘yin davomida mobil telefonlarni o‘chirib qo‘yish kerakligini yana bir bor eslatib o‘tamiz.",
+   "accepted": [
+    "Mobil telefon"
+   ],
+   "sources": [
+    "http://www.getnew.biz/2006/04/13/dzaybattsu-do-put-ofis-samuraya/",
+    "https://db.chgk.info/question/950650",
+    "https://gotquestions.online/packs/4844/1"
+   ],
+   "authors": [
+    "Aleksandr Smerdov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1203465600
+  },
+  {
+   "id": 900146393,
+   "question_id": 146393,
+   "package_id": 904773,
+   "index": 1,
+   "round": 1,
+   "text": "«Sobinbank»ning har qanday mijozi ish kuni davomida atigi 500 rubl evaziga BU ISHNI QILISHI mumkin. Bi-bi-si yangiliklar saytiga ko‘ra, «Portsmut» tarbiyalanuvchisi Mark Barrous BU ISHNI bor-yo‘g‘i 2 soniyada amalga oshirib, eng tezkoriga aylangan. BU ISHNI QILISH nima ekanligini aytsangiz, siz BU ISHNI QILGAN bo‘lasiz.",
+   "answer": "Hisobni ochish / Hisob ochish",
+   "comment": "«Sobinbank»da hisob-kitob varag‘i (hisob) ochish mumkin, futbolchi Mark Barrous esa 2-soniyada hisobni ochib, eng tezkor gol muallifiga aylangan. Savolga to‘g‘ri javob bersangiz, siz ham o‘yinda hisobni ochasiz.",
+   "accepted": [
+    "Hisob ochish"
+   ],
+   "sources": [
+    "http://news.bbc.co.uk/hi/russian/sport/newsid_3608000/3608419.stm",
+    "https://db.chgk.info/question/917151",
+    "https://gotquestions.online/packs/4855/1"
+   ],
+   "authors": [
+    "Olga Neumivakina , Yevgeniy Yarkov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1197072000
+  },
+  {
+   "id": 900038803,
+   "question_id": 38803,
+   "package_id": 904515,
+   "index": 1,
+   "round": 1,
+   "text": "Birinchi savolni tinglang.\n1859-yilda mashhur amerikalik jurnalist va siyosatchi Xoras Grili \"Brigam Yang bilan ikki soat\" sarlavhali maqolasini chop etadi. Endi esa ayting-chi: mashhur bo‘lib ketgan ushbu maqola nima deb hisoblanadi?",
+   "answer": "birinchi intervyu / birinchi chop etilgan intervyu",
+   "comment": "Ushbu maqola jurnalistika tarixiga birinchi intervyu sifatida kirgan.",
+   "accepted": [
+    "birinchi chop etilgan intervyu"
+   ],
+   "sources": [
+    "S. Kvale, \"Dominance Through Interviews and Dialogues,\" Qualitative Inquiry, 2006, 12(3), p. 480-500.",
+    "http://encarta.msn.com/sidebar_762504227/two_hours_with_brigham_young.h…",
+    "https://db.chgk.info/question/877816",
+    "https://gotquestions.online/packs/4607/1"
+   ],
+   "authors": [
+    "Yevgeniy Finkel"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1228608000
+  },
+  {
+   "id": 900144443,
+   "question_id": 144443,
+   "package_id": 904779,
+   "index": 1,
+   "round": 1,
+   "text": "1999-yildan 2008-yilgacha AQSH zarbxonasi o‘z shtatlarining diqqatga sazovor joylariga bag‘ishlangan 25 sentlik tangalar seriyasini zarb etdi. Ushbu seriyadagi birinchi tanga Delaver shtatining «chertvertak»i edi. Siz esa ushbu tanganing reversidagi yozuvni tiklashingiz kerak.",
+   "answer": "«Birinchi shtat» / Birinchi shtat; First State",
+   "accepted": [
+    "Birinchi shtat; First State"
+   ],
+   "sources": [
+    "http://ru.wikipedia.org/wiki/Двадцатипятицентовики_пятидесяти_штатов",
+    "https://db.chgk.info/question/679281",
+    "https://gotquestions.online/packs/4726/1"
+   ],
+   "authors": [
+    "Georgiy Jarkov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1210464000
   }
  ],
  "fields": [
@@ -513,5 +520,5 @@
   "sources",
   "text"
  ],
- "average_bytes": 922
+ "average_bytes": 885
 }
