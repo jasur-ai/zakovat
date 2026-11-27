@@ -38,11 +38,12 @@ from telegram.ext import (
     CommandHandler, ContextTypes, MessageHandler, filters,
 )
 
-from . import clock as clock_page
 from . import dashboard
+from . import hidden
 from . import messages as msg
 from . import settings as st
 from . import stats
+from . import tournament as tn
 from . import webapp as wa
 from .answers import AnswerChecker, normalize
 from .archive import Archive
@@ -63,12 +64,14 @@ _bg_tasks: "contextvars.ContextVar[list]" = contextvars.ContextVar("bg_tasks", d
 _bg_probe_log: list[str] = []
 
 # The game state rides along inside the message, but nobody should see it:
-# ZWNJ/ZWJ are kept verbatim by Telegram (real scripts depend on them) and are
-# zero-width, so unlike a spoiler there is nothing on screen to tap open.
-ZW0 = "\u200c"
-ZW1 = "\u200d"
-INVISIBLE = (ZW0, ZW1)
-SENTINEL = 0xA5
+# zero-width characters are kept verbatim by Telegram (real scripts depend on
+# them), so unlike a spoiler there is nothing on screen to tap open. Two
+# densities live in `bot/hidden.py`: the short pipe state of an ordinary game
+# and the compressed state of a tournament (rosters, selections, finals).
+ZW0 = hidden.ZW0
+ZW1 = hidden.ZW1
+INVISIBLE = hidden.INVISIBLE
+SENTINEL = hidden.SENTINEL_V2
 HIDDEN_MODE = os.getenv("ZAKOVAT_HIDDEN_STATE", "invisible")   # or "spoiler"
 OWNER_ID = stats.OWNER_ID       # the only chat that sees /stats
 PER_PAGE = int(os.getenv("ZAKOVAT_PACKAGES_PER_PAGE", "12"))
@@ -120,57 +123,34 @@ def pack_state(session: Session, deadline: int, latest: str | None = None, alias
 
 def encode_invisible(body: str) -> str:
     """Write the state as a run of zero-width characters (one bit each)."""
-    data = body.encode("utf-8")
-    payload = bytes([SENTINEL]) + data + bytes([sum(data) & 0xFF])
-    return "".join(ZW1 if bit == "1" else ZW0 for byte in payload for bit in f"{byte:08b}")
+    return hidden.encode_legacy(body)
 
 
 def _decode_run(run: list[str]) -> str | None:
     """Turn one zero-width run back into text, checking sentinel and checksum."""
-    if len(run) < 24 or len(run) % 8:
-        return None
-    payload = bytearray(
-        int("".join("1" if c == ZW1 else "0" for c in run[i:i + 8]), 2)
-        for i in range(0, len(run), 8)
-    )
-    if payload[0] != SENTINEL:
-        return None
-    data, checksum = bytes(payload[1:-1]), payload[-1]
-    if not data or (sum(data) & 0xFF) != checksum:
-        return None
-    try:
-        return data.decode("utf-8")
-    except UnicodeDecodeError:
-        return None
+    return hidden.decode_run(run)
 
 
 def decode_invisible(text: str) -> str | None:
-    """Read the zero-width state back out of a message, wherever it sits.
+    """Read the zero-width state back out of a message, whichever density it is.
 
-    Any run qualifies only with both the sentinel byte and the checksum, so text
-    that happens to contain zero-width characters of its own is ignored. The
-    longest valid run wins.
+    A run only counts when its sentinel and checksum match, so text that happens
+    to contain zero-width characters of its own is ignored. The longest valid
+    run wins.
     """
-    found: str | None = None
-    longest = 0
-    run: list[str] = []
-    for char in str(text or "") + " ":          # the tail flushes the last run
-        if char in INVISIBLE:
-            run.append(char)
-            continue
-        if run:
-            body = _decode_run(run)
-            if body is not None and len(run) > longest:
-                found, longest = body, len(run)
-            run = []
-    return found
+    return hidden.decode(text)
 
 
 def hide_state(body: str) -> str:
-    """Invisible by default; ZAKOVAT_HIDDEN_STATE=spoiler keeps the old look."""
+    """Invisible by default; ZAKOVAT_HIDDEN_STATE=spoiler keeps the old look.
+
+    Short bodies keep the old one-bit density, so a game that is already running
+    when a new version is deployed still decodes. A tournament state (teams,
+    selections, finals) is compressed instead: it would not fit otherwise.
+    """
     if HIDDEN_MODE == "spoiler":
         return f'<span class="tg-spoiler">{html.escape(MARKER + body)}</span>'
-    return encode_invisible(body)
+    return hidden.encode(body)
 
 
 def utf16_length(text: str) -> int:
@@ -221,12 +201,28 @@ def parse_body(body: str) -> dict | None:
     return payload
 
 
+def unpack_tournament(text: str | None) -> tn.Tournament | None:
+    """Read a tournament state out of a message (card or countdown strip).
+
+    The question texts are not in the state — they come from the archive, so
+    ``tn.rebuild`` is called by whoever has one.
+    """
+    if not text:
+        return None
+    body = decode_invisible(text)
+    if body is None:
+        return None
+    return tn.Tournament.from_body(body)
+
+
 def unpack_state(text: str | None) -> dict | None:
     """Read the state: invisible run first, then the older visible markers."""
     if not text:
         return None
     body = decode_invisible(text)
     if body is not None:
+        if str(body).startswith(tn.STATE_PREFIX):
+            return None                      # a tournament, not an ordinary game
         return parse_body(body)
     token = MARKER.strip()
     legacy = LEGACY_MARKER.strip()
@@ -274,20 +270,13 @@ def close_question(session: Session, kind: str = "unanswered") -> bool:
 
 
 def clock_url(session: Session, deadline: int, remaining: int) -> str:
-    """Mini App clock for this question; empty when there is no public address."""
-    base = public_base_url()
-    if not base:
-        return ""
-    query = urlencode({
-        "d": int(deadline),
-        "l": max(0, int(remaining)),
-        "tm": session.timer_seconds or TIMER,
-        "n": session.number,
-        "t": session.total,
-        "r": session.current_round if session.rounds > 1 else 0,
-        "p": (session.package_title or "")[:60],
-    })
-    return f"{base}/api/timer?{query}"
+    """The Mini App clock is gone; kept as a stub so old callers get "".
+
+    It opened a second window inside Telegram, and while that window was open
+    the question itself was not on screen. The countdown now lives in the strip
+    text — digits plus a twenty-segment bar, repainted while the question runs.
+    """
+    return ""
 
 
 def checker_for(aliases: list[str]):
@@ -487,28 +476,12 @@ def is_webapp_error(exc: Exception) -> bool:
 
 async def paint_strip(bot, chat_id: int, session: Session, remaining: int, deadline: int,
                       aliases: list[str] | None = None) -> None:
-    """Rewrite the countdown strip, giving up the clock button if Telegram refuses it.
-
-    An old client or a rejected Web App URL must never cost the player the
-    countdown, so the same strip is offered once more without the Mini App row.
-    """
+    """Rewrite the countdown strip: the digits and the bar move, the state stays hidden."""
     text = strip_text(session, remaining, deadline, aliases)
-    plain = st.game_keyboard(clock=msg.clock(remaining))
-    try:
-        await bot.edit_message_text(
-            chat_id=chat_id, message_id=int(session.control_message_id), text=text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=st.game_keyboard(clock=msg.clock(remaining),
-                                          clock_url=clock_url(session, deadline, remaining)),
-        )
-    except TelegramError as exc:
-        if not is_webapp_error(exc):
-            raise
-        logging.getLogger(__name__).warning("Mini App button refused: %s", exc)
-        await bot.edit_message_text(
-            chat_id=chat_id, message_id=int(session.control_message_id), text=text,
-            parse_mode=ParseMode.HTML, reply_markup=plain,
-        )
+    await bot.edit_message_text(
+        chat_id=chat_id, message_id=int(session.control_message_id), text=text,
+        parse_mode=ParseMode.HTML, reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
+    )
 
 
 async def detect_can_delete(bot, chat_id: int, chat_type: str) -> bool:
@@ -626,18 +599,16 @@ async def send_control(bot, chat_id: int, session: Session, deadline: int,
     try:
         message = await bot.send_message(
             chat_id=chat_id, text=text, parse_mode=ParseMode.HTML,
-            reply_markup=st.game_keyboard(clock=msg.clock(remaining),
-                                          clock_url=clock_url(session, deadline, remaining)),
+            reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
             disable_web_page_preview=True,
         )
     except TelegramError as exc:
         if not is_webapp_error(exc):
             raise
-        logging.getLogger(__name__).warning("Mini App button refused: %s", exc)
+        logging.getLogger(__name__).warning("Keyboard refused: %s", exc)
         message = await bot.send_message(
             chat_id=chat_id, text=text, parse_mode=ParseMode.HTML,
-            reply_markup=st.game_keyboard(clock=msg.clock(remaining)),
-            disable_web_page_preview=True,
+            reply_markup=None, disable_web_page_preview=True,
         )
     session.control_message_id = getattr(message, "message_id", None)
 
@@ -770,6 +741,8 @@ async def tick_work(body: str, chat_id: int) -> dict:
     """One hop of the live countdown: repaint, resolve or chain again."""
     global _ticks_seen, _ticks_painted, _ticks_resolved, _ticks_stopped
     _ticks_seen += 1
+    if str(body or "").lstrip().startswith(tn.STATE_PREFIX):
+        return await tour_tick_work(body, chat_id)
     state = body if body.lstrip().startswith(MARKER.strip()) else MARKER + body
     data = unpack_state(state)
     if not data or not chat_id:
@@ -1046,6 +1019,8 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if await tour_group_text(update, context):
+        return
     restored = restore(update, context)
     if not restored:
         reply = msg.small_talk(update.message.text)
@@ -1216,6 +1191,1577 @@ async def cmd_accept(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
                             "Javob qabul qilindi va o‘rganildi.", aliases)
     else:
         await update.effective_message.reply_text("Bu javob hali mos kelmadi.")
+
+
+# --------------------------------------------------------------------- turnir
+# Ko‘p jamoali turnir: kurator savollarni tanlaydi, jamoalar ro‘yxatdan o‘tadi,
+# har savolga har jamoa bitta yakuniy javob beradi va oxirida jadval chiqadi.
+#
+# Serverless xotirasiz: turnir holati ham xabar ichida ko‘rinmas belgilar bilan
+# yuradi (roster, tanlov, ochkolar). Ikki nusxa saqlanadi — pinlangan karta va
+# savol tasmasi. Karta pinlangan bo‘lsa, u **asosiy** manba hisoblanadi: /yakuniy
+# javoblar shu yerga yoziladi, shuning uchun kechikkan taymer qadamida ham
+# javoblar yo‘qolmaydi.
+TOUR_DEFAULT_TITLE = "Zakovat turniri"
+TOUR_PICK_PER_PAGE = 8          # savol tanlash oynasida bir sahifadagi savollar
+TOUR_PIN_TTL = 20               # sekund: pinlangan kartani har xabarda qayta o‘qimaslik
+
+
+def tour_bank(archive: Archive, tour: tn.Tournament) -> list[dict]:
+    """Tanlovda qolgan savollar (include/exclude hisobga olingan holda)."""
+    return tour.bank(archive.questions(tour.package_id))
+
+
+def tour_bank_size(archive: Archive, tour: tn.Tournament) -> int:
+    return len(tour_bank(archive, tour))
+
+
+def tour_total(archive: Archive, tour: tn.Tournament) -> int:
+    """Nechta savol o‘ynaladi: raundlar × har raunddagi savol."""
+    bank = tour_bank_size(archive, tour)
+    if not bank:
+        return 0
+    per_round = int(tour.per_round or 0) or bank
+    wanted = max(1, int(tour.rounds or 1)) * per_round
+    return max(1, min(wanted, bank))            # a question is never repeated
+
+
+def tour_round_label(tour: tn.Tournament) -> str:
+    return f"{tour.current_round}-raund" if int(tour.rounds or 1) > 1 else ""
+
+
+def tour_teams_view(tour: tn.Tournament) -> list[dict]:
+    """Roster, matn va klaviatura uchun oddiy lug‘atlar ko‘rinishida."""
+    return [{"name": team.name, "captain": int(team.captain),
+             "members": [{"id": int(person.user_id), "name": person.label(),
+                          "username": person.username, "ready": bool(person.ready)}
+                         for person in team.members]}
+            for team in tour.teams]
+
+
+def tour_standings_line(tour: tn.Tournament) -> str:
+    """Bir qatorlik joriy hisob: «Bilimdonlar 4 · Zakovat 3»."""
+    rows = tour.standings()
+    if not rows:
+        return ""
+    parts = [f"{row['name']} {row['score']}" for row in rows[:6]]
+    line = "HISOB: " + " · ".join(parts)
+    if len(rows) > 6:
+        line += f" · yana {len(rows) - 6} jamoa"
+    return line
+
+
+def tour_final_count(tour: tn.Tournament) -> int:
+    return sum(1 for team in tour.teams if team.final)
+
+
+def tour_card_text(archive: Archive, tour: tn.Tournament, curator: bool = False) -> str:
+    """Pinlangan kartaning ko‘rinadigan matni — turnirning oynasi."""
+    sizes = tn.sizes()
+    teams = tour_teams_view(tour)
+    info = archive.package_info(tour.package_id) or {}
+    package_title = info.get("title") or f"paket {tour.package_id}"
+    bank = tour_bank_size(archive, tour)
+    if tour.phase == tn.PHASE_REGISTER:
+        total = tour_total(archive, tour)
+        per_round = int(tour.per_round or 0) or bank
+        text = msg.tour_intro(tour.title, package_title, int(tour.rounds or 1), per_round,
+                              int(tour.timer), total, sizes)
+        text += "\n" + msg.tour_teams(teams, tour.phase, sizes)
+        problems = tour.missing(bank)
+        text += "\n\n" + (msg.tour_ready(total, tour.people, len(tour.teams)) if not problems
+                            else msg.tour_missing(problems))
+        if curator:
+            text += "\n\nKurator: «Sozlamalar» — raund, savol soni, vaqt; " \
+                    "«Savol tanlash» — aniq savollarni olish yoki chiqarish."
+        return text
+    if tour.phase == tn.PHASE_PLAY:
+        return msg.tour_card_play(tour.title, tour.number, tour.total, tour_round_label(tour),
+                                  msg.tour_standings(tour.standings(), heading="JADVAL"),
+                                  tour_final_count(tour), len(tour.teams), int(tour.timer))
+    return msg.tour_over(tour.title, tour.standings(), tour.asked, int(tour.rounds or 1))
+
+
+def tour_card_keyboard(archive: Archive, tour: tn.Tournament, curator: bool):
+    sizes = tn.sizes()
+    if tour.phase == tn.PHASE_REGISTER:
+        return st.tour_keyboard(tour_teams_view(tour), tour.phase, tour.ready_to_start(
+            tour_bank_size(archive, tour)), curator, sizes)
+    if tour.phase == tn.PHASE_PLAY:
+        return st.tour_play_keyboard(curator, msg.clock(
+            max(0, int(tour.deadline) - int(time.time()))))
+    return None
+
+
+def tour_state_text(visible: str, tour: tn.Tournament) -> str:
+    """Visible text plus the tournament state, shrunk until it fits one message.
+
+    The roster survives every level; the directory, the question history and an
+    over-long selection are given up first, so a full tournament still fits
+    inside Telegram's 4096-character limit. The visible part is cut at a line
+    boundary and only when the tag count stays balanced — a message cut through
+    an HTML tag is rejected by Telegram, and losing the card would lose the
+    tournament with it.
+    """
+    for level in range(tn.TRIM_LEVELS):
+        body = tour.body(level)
+        if utf16_length(hidden.encode(body)) + 24 > 4096:
+            continue                        # this level cannot fit at all
+        text = visible
+        while True:
+            candidate = with_state(text, body)
+            if utf16_length(candidate) <= 4096 and hidden.decode(candidate) == body:
+                return candidate
+            if "\n" in text:
+                head = text.rsplit("\n", 1)[0]     # cut whole lines: no half tags
+                if head and head != text:
+                    text = head
+                    continue
+            shorter = text[:max(0, len(text) - 80)]
+            if not shorter or shorter == text:
+                break
+            text = shorter
+    return with_state("", tour.body(tn.TRIM_LEVELS - 1))
+
+
+async def tour_persist(bot, archive: Archive, tour: tn.Tournament,
+                       merge_finals: bool = False) -> None:
+    """Write the tournament back into its card — the copy that outlives a strip.
+
+    The card is pinned when Telegram allows it, because a pinned message can be
+    read back with getChat: that is how /yakuniy finds the tournament when
+    nobody replied to the strip, and how a countdown hop picks up finals that
+    were submitted after it was scheduled.
+
+    ``merge_finals`` is for the paths where members race each other (a final
+    answer, taking one back): the card is read once more and any answer another
+    request wrote a moment ago is kept instead of overwritten.
+    """
+    curator = bool(tour.creator)
+    if merge_finals and tour.card_message_id and tour.phase == tn.PHASE_PLAY:
+        current = await tour_from_pin(bot, archive, tour.chat_id)
+        # ``rev`` is no help here: two requests that read the same card end up
+        # with the same number. The timestamps decide — a final written a moment
+        # ago by the other request is newer than this copy's, and is kept.
+        if tour.take_finals(current):
+            tour.rev = max(int(tour.rev), int(getattr(current, "rev", 0) or 0) + 1)
+    if tour.card_message_id is None:
+        # The card is meant to be pinned: say so before it is written, so the
+        # state inside it already knows where the tournament lives.
+        tour.can_pin = True
+    text = tour_card_text(archive, tour, curator)[:4000]
+    keyboard = tour_card_keyboard(archive, tour, curator)
+    body_text = tour_state_text(text, tour)
+    if tour.card_message_id:
+        try:
+            await bot.edit_message_text(chat_id=tour.chat_id, message_id=int(tour.card_message_id),
+                                        text=body_text, parse_mode=ParseMode.HTML,
+                                        reply_markup=keyboard, disable_web_page_preview=True)
+            return
+        except TelegramError:
+            tour.card_message_id = None      # karta o‘chirilgan — yangisini yuboramiz
+    try:
+        message = await bot.send_message(chat_id=tour.chat_id, text=body_text,
+                                         parse_mode=ParseMode.HTML, reply_markup=keyboard,
+                                         disable_web_page_preview=True)
+    except TelegramError:
+        logging.getLogger(__name__).warning("tournament card rejected", exc_info=True)
+        return
+    tour.card_message_id = getattr(message, "message_id", None)
+    _tour_probe.pop(int(tour.chat_id), None)      # the cached answer is stale now
+    if tour.card_message_id:
+        try:
+            await bot.pin_chat_message(chat_id=tour.chat_id, message_id=int(tour.card_message_id),
+                                       disable_notification=True)
+            tour.can_pin = True
+        except TelegramError:
+            tour.can_pin = False
+        # The state inside the card must carry its own message id, or the next
+        # change would send a second card instead of rewriting this one.
+        retry = tour_state_text(text, tour)
+        try:
+            await bot.edit_message_text(chat_id=tour.chat_id,
+                                        message_id=int(tour.card_message_id), text=retry,
+                                        parse_mode=ParseMode.HTML, reply_markup=keyboard,
+                                        disable_web_page_preview=True)
+        except TelegramError:
+            logging.getLogger(__name__).debug("tournament card could not be rewritten",
+                                              exc_info=True)
+
+
+def tour_attach(archive: Archive, tour: tn.Tournament) -> tn.Tournament:
+    """Give a tournament read back from a message its question texts."""
+    return tn.rebuild(tour, archive.questions(tour.package_id))
+
+
+async def tour_from_pin(bot, archive: Archive, chat_id: int) -> tn.Tournament | None:
+    """Read the tournament from the chat's pinned card, if there is one."""
+    try:
+        chat = await bot.get_chat(chat_id)
+    except TelegramError:
+        return None
+    pinned = getattr(chat, "pinned_message", None)
+    if pinned is None:
+        return None
+    tour = unpack_tournament(getattr(pinned, "text", None) or getattr(pinned, "caption", None))
+    if tour is None:
+        return None
+    tour.can_pin = True
+    return tn.rebuild(tour, archive.questions(tour.package_id))
+
+
+async def tour_state(update: Update, context: ContextTypes.DEFAULT_TYPE) -> tn.Tournament | None:
+    """Find the tournament this update belongs to.
+
+    Reply to the strip or a button on the card is exact; without one the pinned
+    card is read, so /yakuniy works even when nobody quoted anything. The newer
+    of the two wins (``rev``), which keeps a stale copy from overwriting finals.
+    """
+    archive = _archive_of(context)
+    chat_id = update.effective_chat.id if update.effective_chat else 0
+    candidates: list[tn.Tournament] = []
+    message = update.effective_message
+    callback = getattr(update, "callback_query", None)
+    source = None
+    if callback is not None and callback.message is not None:
+        source = callback.message
+    elif message is not None and message.reply_to_message is not None:
+        source = message.reply_to_message
+    if chat_id:
+        pinned = await tour_from_pin(context.bot, archive, chat_id)
+        if pinned is not None:
+            candidates.append(pinned)
+    if source is not None:
+        found = unpack_tournament(getattr(source, "text", None) or getattr(source, "caption", None))
+        if found is not None:
+            candidates.append(tn.rebuild(found, archive.questions(found.package_id)))
+    if not candidates:
+        return None
+    playing = [item for item in candidates if item.phase == tn.PHASE_PLAY]
+    pool = playing or candidates
+    # Ties go to the pinned card (it is first in the list): every final answer is
+    # written there at once, while a strip may still carry an older copy.
+    return max(pool, key=lambda item: (int(item.rev), int(item.asked), int(item.index)))
+
+
+async def tour_curator(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                       tour: tn.Tournament | None) -> bool:
+    """May this user run the tournament? Admin, owner, creator or appointed."""
+    user = update.effective_user
+    if not user:
+        return False
+    if is_owner(update):
+        return True
+    if tour is not None:
+        if int(user.id) in (int(tour.creator),):
+            return True
+        if tour.is_curator(user.id):
+            return True
+    return await is_admin(update, context, None)
+
+
+def tour_sender(user) -> str:
+    first = getattr(user, "full_name", "") or getattr(user, "first_name", "") or ""
+    username = getattr(user, "username", "") or ""
+    return (first or username or f"id {getattr(user, 'id', 0)}").strip()
+
+
+async def tour_delete(bot, chat_id: int, message_id: int | None, allowed: bool) -> bool:
+    """Remove a message from the group when the bot is allowed to.
+
+    Team answers and whispers must not stay readable by the other teams, so the
+    bot deletes them; without that right the copy warns the group once.
+    """
+    if not message_id or not allowed:
+        return False
+    try:
+        await bot.delete_message(chat_id=chat_id, message_id=int(message_id))
+        return True
+    except TelegramError:
+        return False
+
+
+async def tour_private(bot, targets: list, text: str) -> tuple[int, int]:
+    """Send one text to several users in private; returns (delivered, failed)."""
+    delivered = failed = 0
+    for person in targets:
+        user_id = int(getattr(person, "user_id", 0) or (person.get("id") if isinstance(person, dict) else 0))
+        if not user_id:
+            continue
+        try:
+            await bot.send_message(chat_id=user_id, text=text[:4090], parse_mode=ParseMode.HTML,
+                                   disable_web_page_preview=True)
+            delivered += 1
+        except TelegramError:
+            failed += 1
+    return delivered, failed
+
+
+async def tour_team_note(bot, tour: tn.Tournament, team, text: str) -> tuple[int, int]:
+    """One line to every member of a team — nobody else in the group sees it."""
+    return await tour_private(bot, list(team.members), text)
+
+
+def tour_strip_text(tour: tn.Tournament, remaining: int) -> str:
+    """The tournament countdown strip: position, finals so far, live clock."""
+    visible = msg.tour_strip(tour.number, tour.total, tour_round_label(tour),
+                             tour_final_count(tour), len(tour.teams),
+                             msg.countdown(remaining, int(tour.timer)))
+    return tour_state_text(visible, tour)
+
+
+async def send_tour_strip(bot, chat_id: int, tour: tn.Tournament, deadline: int) -> None:
+    remaining = max(0, int(deadline) - int(time.time()))
+    try:
+        message = await bot.send_message(
+            chat_id=chat_id, text=tour_strip_text(tour, remaining), parse_mode=ParseMode.HTML,
+            reply_markup=st.question_strip_keyboard(False, msg.clock(remaining)),
+            disable_web_page_preview=True)
+        tour.control_message_id = getattr(message, "message_id", None)
+    except TelegramError:
+        tour.control_message_id = None
+
+
+async def paint_tour_strip(bot, chat_id: int, tour: tn.Tournament, remaining: int) -> None:
+    await bot.edit_message_text(
+        chat_id=chat_id, message_id=int(tour.control_message_id),
+        text=tour_strip_text(tour, remaining), parse_mode=ParseMode.HTML,
+        reply_markup=st.question_strip_keyboard(False, msg.clock(remaining)),
+        disable_web_page_preview=True)
+
+
+async def tour_claim_strip(bot, chat_id: int, tour: tn.Tournament) -> bool:
+    """Take ownership of the strip before resolving: the first caller wins."""
+    if not tour.control_message_id:
+        return True
+    message_id = int(tour.control_message_id)
+    try:
+        await bot.delete_message(chat_id=chat_id, message_id=message_id)
+        tour.control_message_id = None
+        return True
+    except (TelegramError, ValueError, TypeError):
+        pass
+    try:
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                    text=f"• Savol {tour.number} / {tour.total} — yakunlandi",
+                                    reply_markup=None)
+        tour.control_message_id = None
+        return True
+    except (TelegramError, ValueError, TypeError):
+        tour.control_message_id = None
+        return False
+
+
+async def send_tour_question(bot, archive: Archive, chat_id: int,
+                             tour: tn.Tournament) -> None:
+    """One tournament question: strip with the clock, then the question itself."""
+    question = tour.question
+    if question is None:
+        return
+    timer = int(tour.timer or TIMER)
+    deadline = int(time.time()) + timer
+    tour.deadline = deadline
+    tour.bump()
+    await send_tour_strip(bot, chat_id, tour, deadline)
+    await tour_persist(bot, archive, tour)      # the card now carries the strip id too
+    note("question", chat_id=chat_id, package_id=tour.package_id, questions_asked=1,
+         detail=f"turnir · savol {tour.number}/{tour.total}", log=False)
+
+    picture = has_picture(question)
+    attachments = [a for a in (question.get("attachments") or []) if isinstance(a, str)]
+    link = "" if picture else (attachments[0] if attachments else "")
+    info = archive.package_info(tour.package_id) or {}
+    text = msg.tour_question(tour.number, tour.total, tour_round_label(tour),
+                             info.get("title") or "", question.get("text") or "", timer, link,
+                             tour_standings_line(tour))
+    if picture:
+        await send_photo_safely(bot, chat_id, question, caption="Savol rasmi")
+    await bot.send_message(chat_id=chat_id, text=tour_state_text(text, tour)[:4096],
+                           parse_mode=ParseMode.HTML, disable_web_page_preview=True,
+                           reply_markup=ForceReply(
+                               input_field_placeholder="/yakuniy javobingiz"))
+    await schedule_tour_tick(tour, deadline)
+
+
+async def tour_resolve(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> None:
+    """Close the open question: score every final answer, then move on."""
+    checker = checker_for([])
+    now = int(time.time())
+    result = tour.close(checker, now)
+    tour.bump()
+    await tour_claim_strip(bot, chat_id, tour)
+    if not result.get("asked"):
+        return
+    question = archive.question(int(result.get("question_id") or 0)) or {}
+    for team_name in result.get("winners") or []:
+        note("correct", chat_id=chat_id, package_id=tour.package_id, answers_correct=1,
+             detail=f"turnir · {team_name} · savol {tour.number}", log=False)
+    if not result.get("winners"):
+        note("unanswered", chat_id=chat_id, package_id=tour.package_id, unanswered=1,
+             detail=f"turnir · savol {tour.number}", log=False)
+    finals = [{"team": row.get("team"), "answer": row.get("answer"),
+               "correct": bool(row.get("correct"))} for row in result.get("finals") or []]
+    text = msg.tour_result(tour.number, tour.total, str(result.get("answer") or ""),
+                           str(question.get("comment") or ""), list(result.get("winners") or []),
+                           finals, tour_standings_line(tour))
+    await bot.send_message(chat_id=chat_id, text=text[:4090], parse_mode=ParseMode.HTML,
+                           disable_web_page_preview=True)
+    pictures = [a for a in (question.get("answer_attachments") or [])
+                if isinstance(a, str) and a.startswith("http")]
+    if pictures:
+        try:
+            await bot.send_photo(chat_id=chat_id, photo=pictures[0], caption="Javob rasmi")
+        except TelegramError:
+            pass
+
+    previous_round = tour.current_round
+    if tour.advance(now) is None:
+        tour.phase = tn.PHASE_DONE
+        tour.finished = True
+        tour.bump()
+        await tour_persist(bot, archive, tour)
+        note("game_end", chat_id=chat_id, package_id=tour.package_id, games_finished=1,
+             detail=f"turnir · {tour.title} · {tour.asked} savol · {tour.leader()}")
+        await bot.send_message(chat_id=chat_id,
+                               text=msg.tour_over(tour.title, tour.standings(), tour.asked,
+                                                  int(tour.rounds or 1))[:4090],
+                               parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        return
+    if int(tour.rounds or 1) > 1 and tour.current_round != previous_round:
+        await bot.send_message(chat_id=chat_id,
+                               text=msg.tour_round_banner(tour.current_round, int(tour.rounds or 1),
+                                                          tour_standings_line(tour)),
+                               parse_mode=ParseMode.HTML)
+    await send_tour_question(bot, archive, chat_id, tour)
+
+
+async def tour_start(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> bool:
+    """Registration is over: build the playlist and open the first question."""
+    bank = tour_bank(archive, tour)
+    problems = tour.missing(len(bank))
+    if problems:
+        return False
+    chat_type = "supergroup"
+    tour.can_delete = await detect_can_delete(bot, chat_id, chat_type)
+    tour.open_mode = not tour.can_delete
+    tour.questions = tour.playlist(bank)
+    tour.phase = tn.PHASE_PLAY
+    tour.index = 0
+    tour.bump()
+    note("game_start", chat_id=chat_id, package_id=tour.package_id, games_started=1,
+         detail=(f"turnir · {tour.title} · {len(tour.teams)} jamoa · {tour.people} kishi · "
+                 f"{tour.total} savol"))
+    first = tour.open_question(0)
+    await bot.send_message(
+        chat_id=chat_id,
+        text=(msg.tour_started(tour.title, tour_teams_view(tour), tour.total, int(tour.timer),
+                               not tour.open_mode) + msg.tour_started_private(tour.open_mode))[:4090],
+        parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    if first is None:
+        return False
+    await send_tour_question(bot, archive, chat_id, tour)
+    return True
+
+
+async def tour_stop(bot, archive: Archive, chat_id: int, tour: tn.Tournament,
+                    headline: str) -> None:
+    """Stop the tournament and publish the table."""
+    await tour_claim_strip(bot, chat_id, tour)
+    tour.phase = tn.PHASE_DONE
+    tour.finished = True
+    tour.bump()
+    note("stopped", chat_id=chat_id, package_id=tour.package_id, games_stopped=1,
+         games_finished=1, detail=f"turnir · {tour.title} · {tour.leader()}")
+    await tour_persist(bot, archive, tour)
+    text = f"<b>{_esc(headline)}</b>\n\n" + msg.tour_stopped(
+        tour.title, tour.asked, tour.total, tour.standings())
+    await bot.send_message(chat_id=chat_id, text=text[:4090], parse_mode=ParseMode.HTML,
+                           disable_web_page_preview=True)
+
+
+async def schedule_tour_tick(tour: tn.Tournament, deadline: int) -> None:
+    """Keep the tournament countdown moving, hop by hop, like the ordinary game."""
+    if not TICKS_ENABLED or not tour.control_message_id or not tour.can_delete:
+        return
+    remaining = int(deadline) - int(time.time())
+    if remaining <= 0:
+        return
+    step = max(1, min(int(TICK_SECONDS), remaining, 50))
+    body = tour.body()
+    chat_id = tour.chat_id
+    if TICK_MODE == "bg" and bg_add(lambda: tour_tick_after_wait(body, chat_id, step)):
+        return
+    await post_tick(body, chat_id, step)
+
+
+async def tour_tick_after_wait(body: str, chat_id: int, wait: int) -> None:
+    if wait:
+        await asyncio.sleep(wait)
+    try:
+        await tour_tick_work(body, chat_id)
+    except Exception:
+        logging.getLogger(__name__).warning("tournament tick failed", exc_info=True)
+
+
+async def tour_tick_work(body: str, chat_id: int) -> dict:
+    """One hop of a tournament countdown: repaint, resolve or chain again."""
+    global _ticks_seen, _ticks_painted, _ticks_resolved, _ticks_stopped
+    _ticks_seen += 1
+    tour = tn.Tournament.from_body(body)
+    if tour is None or not chat_id:
+        return {"ok": False, "reason": "no tournament"}
+    application = get_application()
+    await application.initialize()
+    try:
+        bot = application.bot
+        archive: Archive = application.bot_data.get("archive") or ARCHIVE
+        tour = tn.rebuild(tour, archive.questions(tour.package_id))
+        # The pinned card knows about finals submitted after this hop was queued.
+        pinned = await tour_from_pin(bot, archive, chat_id)
+        if pinned is not None and pinned.question_id == tour.question_id \
+                and int(pinned.rev) >= int(tour.rev):
+            if pinned.control_message_id is None and tour.control_message_id:
+                pinned.control_message_id = tour.control_message_id
+            tour = pinned
+        if tour.phase != tn.PHASE_PLAY:
+            _ticks_stopped += 1
+            return {"ok": True, "stopped": "not playing"}
+        deadline = int(tour.deadline or 0)
+        if deadline - int(time.time()) > MAX_TICK_HORIZON:
+            return {"ok": False, "reason": "deadline too far ahead"}
+        remaining = deadline - int(time.time())
+        if remaining > 0:
+            if not tour.control_message_id:
+                _ticks_stopped += 1
+                return {"ok": True, "stopped": "no strip"}
+            try:
+                await paint_tour_strip(bot, chat_id, tour, remaining)
+            except TelegramError as exc:
+                text = str(exc).lower()
+                if "not modified" in text:
+                    pass
+                elif isinstance(exc, RetryAfter) or "flood" in text:
+                    pause = int(getattr(exc, "retry_after", 0) or 0) + TICK_SECONDS * 2
+                    await schedule_tour_tick(tour, deadline)
+                    return {"ok": True, "throttled": pause}
+                else:
+                    _ticks_stopped += 1
+                    return {"ok": True, "stopped": "strip closed"}
+            _ticks_painted += 1
+            await schedule_tour_tick(tour, deadline)
+            return {"ok": True, "remaining": remaining}
+        if not await tour_claim_strip(bot, chat_id, tour):
+            _ticks_stopped += 1
+            return {"ok": True, "stopped": "already resolved"}
+        _ticks_resolved += 1
+        await tour_resolve(bot, archive, chat_id, tour)
+        return {"ok": True, "resolved": True}
+    finally:
+        await application.shutdown()
+
+
+def tour_pick_page(archive: Archive, tour: tn.Tournament) -> tuple[list[dict], int, int]:
+    """One page of the curator's question picker."""
+    pool = archive.questions(tour.package_id)
+    needle = (tour.query or "").strip().casefold()
+    if needle:
+        pool = [item for item in pool if needle in str(item.get("text") or "").casefold()]
+    pages = max(1, -(-len(pool) // TOUR_PICK_PER_PAGE))
+    page = min(max(1, int(tour.page or 1)), pages)
+    start = (page - 1) * TOUR_PICK_PER_PAGE
+    chosen = {int(item) for item in tour.include}
+    dropped = {int(item) for item in tour.exclude}
+    rows = [{"id": int(item["id"]), "text": str(item.get("text") or ""),
+             "included": int(item["id"]) in chosen, "excluded": int(item["id"]) in dropped}
+            for item in pool[start:start + TOUR_PICK_PER_PAGE]]
+    return rows, page, pages
+
+
+async def tour_render_picker(context: ContextTypes.DEFAULT_TYPE, bot, tour: tn.Tournament,
+                             query=None, message=None, allow_edit: bool = True) -> None:
+    """Show (or rewrite) the include/exclude picker.
+
+    ``allow_edit`` is False when the button that opened it sits on the pinned
+    card: that message belongs to the tournament itself and must stay the card.
+    """
+    archive = _archive_of(context)
+    rows, page, pages = tour_pick_page(archive, tour)
+    tour.page = page
+    info = archive.package_info(tour.package_id) or {}
+    chosen = {int(item["id"]) for item in rows if item["included"]}
+    dropped = {int(item["id"]) for item in rows if item["excluded"]}
+    text = msg.tour_picker(rows, tour.query, page, pages, len(tour.include), len(tour.exclude),
+                           tour_bank_size(archive, tour), info.get("title") or "")[:4000]
+    keyboard = st.selection_keyboard(page, pages, rows, chosen, dropped, tour.query)
+    body = tour_state_text(text, tour)
+    if query is not None and allow_edit:
+        try:
+            await query.edit_message_text(text=body, parse_mode=ParseMode.HTML,
+                                          reply_markup=keyboard,
+                                          disable_web_page_preview=True)
+            return
+        except TelegramError:
+            pass
+    await bot.send_message(chat_id=tour.chat_id, text=body, parse_mode=ParseMode.HTML,
+                           reply_markup=keyboard, disable_web_page_preview=True)
+
+
+async def tour_render_curator_panel(context: ContextTypes.DEFAULT_TYPE, bot,
+                                    tour: tn.Tournament, query=None, message=None,
+                                    allow_edit: bool = True) -> None:
+    archive = _archive_of(context)
+    info = archive.package_info(tour.package_id) or {}
+    bank = tour_bank_size(archive, tour)
+    text = msg.tour_curator_panel(tour.title, tour.package_id, info.get("title") or "", bank,
+                                  int(tour.rounds or 1), int(tour.per_round or 0),
+                                  int(tour.timer), tour_total(archive, tour), int(tour.seed),
+                                  len(tour.include), len(tour.exclude),
+                                  len(tour.curators))[:4000]
+    keyboard = st.curator_keyboard(int(tour.rounds or 1), int(tour.per_round or 0),
+                                   int(tour.timer), int(tour.package_id), int(tour.seed), bank,
+                                   tour_total(archive, tour))
+    body = tour_state_text(text, tour)
+    if query is not None and allow_edit:
+        try:
+            await query.edit_message_text(text=body, parse_mode=ParseMode.HTML,
+                                          reply_markup=keyboard,
+                                          disable_web_page_preview=True)
+            return
+        except TelegramError:
+            pass
+    await bot.send_message(chat_id=tour.chat_id, text=body, parse_mode=ParseMode.HTML,
+                           reply_markup=keyboard, disable_web_page_preview=True)
+
+
+async def tour_new(bot, archive: Archive, chat_id: int, user_id: int, argument: str,
+                   chat=None) -> tn.Tournament:
+    """A fresh tournament: package resolved like /solo, structure at defaults."""
+    package_id = 0
+    title = TOUR_DEFAULT_TITLE
+    argument = (argument or "").strip()
+    if argument:
+        digits = argument.split()[0]
+        if digits.isdigit() and archive.package_info(int(digits)):
+            package_id = int(digits)
+        else:
+            found = archive.search(argument, limit=1)
+            if found:
+                package_id = int(found[0]["id"])
+    if not package_id:
+        package_id = archive.random_package_id()
+    info = archive.package_info(package_id) or {}
+    tour = tn.Tournament(chat_id=chat_id, title=(info.get("title") or title)[:40],
+                         package_id=package_id, creator=int(user_id), timer=TIMER,
+                         rounds=1, per_round=10, seed=random.randrange(1, 999999))
+    tour.can_delete = await detect_can_delete(bot, chat_id,
+                                              getattr(chat, "type", "supergroup") or "supergroup")
+    return tour
+
+
+async def cmd_tour(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/turnir — open the tournament card (admin, owner or an appointed curator)."""
+    chat = update.effective_chat
+    if chat is None or getattr(chat, "type", "private") == "private":
+        await update.effective_message.reply_text(
+            "Turnir faqat guruhda o‘tkaziladi. Botni guruhga qo‘shing va u yerda "
+            "<code>/turnir</code> deb yozing.", parse_mode=ParseMode.HTML)
+        return
+    argument = " ".join(context.args or []).strip()
+    if argument.casefold() in {"qoidalar", "rules"}:
+        await update.effective_message.reply_text(msg.tour_rules_text(tn.sizes()),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    if argument.casefold() in {"yordam", "help", "?"}:
+        await update.effective_message.reply_text(msg.tour_help(), parse_mode=ParseMode.HTML)
+        return
+    existing = await tour_state(update, context)
+    if existing is not None and not argument:
+        # Turnir allaqachon ochilgan: kartani yangilab, buyruqlarni eslatamiz.
+        await tour_persist(context.bot, _archive_of(context), existing)
+        await update.effective_message.reply_text(
+            "Bu guruhda turnir allaqachon ochilgan — karta yangilandi.\n"
+            "• Holat: <code>/jadval</code> · qoidalar: <code>/turnir qoidalar</code>\n"
+            "• Yangi turnir: <code>/turnir 959</code> (paket bilan)",
+            parse_mode=ParseMode.HTML)
+        return
+    if not await tour_curator(update, context, existing):
+        await update.effective_message.reply_text(
+            msg.tour_denied_action("turnir ochish"), parse_mode=ParseMode.HTML)
+        return
+    archive = _archive_of(context)
+    tour = await tour_new(context.bot, archive, chat.id, update.effective_user.id,
+                          argument, chat)
+    note("command", user_id=update.effective_user.id, chat_id=chat.id,
+         detail=f"turnir · {tour.package_id}", log=False)
+    await tour_persist(context.bot, archive, tour)
+    await update.effective_message.reply_text(
+        "Turnir ochildi: ro‘yxat xabari yuborildi va mahkamlandi (pin).\n"
+        "• Jamoa yaratish: <code>/jamoa nom</code> yoki «Yangi jamoa» tugmasi\n"
+        "• Sozlamalar va savol tanlash: kartadagi tugmalar (faqat kurator)\n"
+        "• Qoidalar: <code>/turnir qoidalar</code>", parse_mode=ParseMode.HTML)
+
+
+async def cmd_team(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/jamoa <nom> — create a team; /jamoa alone shows your own team."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    archive = _archive_of(context)
+    user = update.effective_user
+    name = " ".join(context.args or []).strip()
+    if not name:
+        mine = tour.team_of(user.id)
+        if mine is None:
+            await update.effective_message.reply_text(msg.tour_not_registered())
+            return
+        ready = mine.ready_count
+        await update.effective_message.reply_text(
+            f"Sizning jamoangiz: <b>{msg.esc(mine.name)}</b> · {mine.size} kishi · "
+            f"{ready} tayyor", parse_mode=ParseMode.HTML)
+        return
+    if tour.phase != tn.PHASE_REGISTER:
+        await update.effective_message.reply_text(
+            "Turnir boshlangan — yangi jamoa qo‘shib bo‘lmaydi.", parse_mode=ParseMode.HTML)
+        return
+    tour.see(user.id, tour_sender(user), getattr(user, "username", "") or "")
+    team, problem = tour.add_team(name, user.id, tour_sender(user),
+                                  getattr(user, "username", "") or "")
+    if problem:
+        await update.effective_message.reply_text(problem)
+        return
+    tour.naming = 0
+    tour.bump()
+    await tour_persist(context.bot, archive, tour)
+    await update.effective_message.reply_text(
+        msg.tour_team_created(team.name, tour_sender(user), tn.sizes()),
+        parse_mode=ParseMode.HTML)
+
+
+async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/qoshil <nom yoki raqam> — join a team."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    user = update.effective_user
+    argument = " ".join(context.args or []).strip()
+    position = -1
+    if argument.isdigit():
+        position = int(argument) - 1
+    elif argument:
+        team = tour.team(argument)
+        position = tour.index_of(team)
+    else:
+        mine = tour.team_of(user.id)
+        position = tour.index_of(mine)
+    if position < 0:
+        names = " · ".join(f"{index + 1}. {team.name}" for index, team in enumerate(tour.teams))
+        await update.effective_message.reply_text(
+            "Jamoa topilmadi. Ro‘yxat: " + (names or "(bo‘sh)") +
+            "\nQo‘shilish: <code>/qoshil 2</code> yoki <code>/qoshil Zakovat</code>",
+            parse_mode=ParseMode.HTML)
+        return
+    tour.see(user.id, tour_sender(user), getattr(user, "username", "") or "")
+    team, problem = tour.join(position, user.id, tour_sender(user),
+                              getattr(user, "username", "") or "", ready=False)
+    if team is None:
+        await update.effective_message.reply_text(problem or "Qo‘shilib bo‘lmadi.")
+        return
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
+    if problem:
+        await update.effective_message.reply_text(problem)
+        return
+    sizes = tn.sizes()
+    await update.effective_message.reply_text(
+        msg.tour_joined(team.name, tour_sender(user), team.size, team.ready_count, sizes),
+        parse_mode=ParseMode.HTML)
+    if team.size >= sizes["min_members"] and team.ready_count < sizes["min_ready"]:
+        await update.effective_message.reply_text(
+            f"Endi kamida {sizes['min_ready']} kishi «Men tayyorman» tugmasini bosishi "
+            "yoki <code>/tayyor</code> deb yozishi kerak.", parse_mode=ParseMode.HTML)
+
+
+async def cmd_ready(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/tayyor — «Men tayyorman»."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    user = update.effective_user
+    team = tour.team_of(user.id)
+    if team is None:
+        await update.effective_message.reply_text(msg.tour_not_registered())
+        return
+    problem = team.set_ready(user.id, True)
+    if problem:
+        await update.effective_message.reply_text(problem)
+        return
+    tour.see(user.id, tour_sender(user), getattr(user, "username", "") or "")
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
+    sizes = tn.sizes()
+    line = (f"<b>MEN TAYYORMAN</b> · {msg.esc(team.name)}\n"
+            f"• Jamoada {team.size} kishi · {team.ready_count} tayyor")
+    if team.size < sizes["min_members"]:
+        line += f"\n• Yana {sizes['min_members'] - team.size} kishi kerak"
+    elif team.ready_count < sizes["min_ready"]:
+        line += f"\n• Yana {sizes['min_ready'] - team.ready_count} kishi tayyorligini aytsin"
+    else:
+        line += "\n• Jamoa tayyor"
+    await update.effective_message.reply_text(line, parse_mode=ParseMode.HTML)
+
+
+async def cmd_leave(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/chiqish — leave your team."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    user = update.effective_user
+    team = tour.team_of(user.id)
+    name = team.name if team is not None else ""
+    result, problem = tour.leave(user.id)
+    if problem and result is None and team is None:
+        await update.effective_message.reply_text(problem)
+        return
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
+    dropped = result is None
+    await update.effective_message.reply_text(
+        msg.tour_left(name, tour_sender(user), dropped), parse_mode=ParseMode.HTML)
+
+
+async def tour_group_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Keep a team's chat inside the team while a tournament question is open.
+
+    Anything a registered member types in the group is removed from the group
+    (when the bot may delete) and delivered privately to that member's own team,
+    matched by id and username — the others see nothing at all. True when the
+    message was handled, so the ordinary game logic does not touch it.
+    """
+    message = update.effective_message
+    user = update.effective_user
+    chat = update.effective_chat
+    if message is None or user is None or chat is None:
+        return False
+    if getattr(chat, "type", "private") == "private":
+        return False
+    archive = _archive_of(context)
+    if not await tour_active(context.bot, archive, chat.id):
+        return False
+    tour = await tour_state(update, context)
+    if tour is None or tour.phase != tn.PHASE_PLAY:
+        return False
+    team = tour.team_of(int(user.id))
+    if team is None:
+        return False
+    text = (message.text or message.caption or "").strip()
+    if not text or text.startswith("/"):
+        return False
+    tour.see(int(user.id), tour_sender(user), getattr(user, "username", "") or "")
+    tour.bump()
+    removed = await tour_delete(context.bot, chat.id, message.message_id, tour.can_delete)
+    delivered, failed = await tour_private(
+        context.bot, [person for person in team.members if int(person.user_id) != int(user.id)],
+        msg.tour_private_note(team.name, f"{tour_sender(user)}: {text}"))
+    remaining = max(0, int(tour.deadline or 0) - int(time.time()))
+    hint = ("Yakuniy javob uchun: tasmaga reply qilib <code>/yakuniy javob</code>."
+            if remaining > 0 else msg.tour_final_deadline())
+    await context.bot.send_message(
+        chat_id=int(user.id),
+        text=(msg.tour_private_note(team.name, text) + "\n\n" + hint +
+              f"\nYuborildi: {delivered} a’zoga" + (f" · yetib bormadi: {failed}" if failed else "")
+              + ("" if removed else "\nGuruhdan o‘chirib bo‘lmadi: botda huquq yo‘q.")),
+        parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    await tour_persist(context.bot, archive, tour)
+    return True
+
+
+_tour_probe: dict[int, tuple[float, bool]] = {}
+TOUR_PROBE_TTL = 45        # sekund: oddiy guruh xabari har safar getChat qilmasin
+
+
+async def tour_active(bot, archive: Archive, chat_id: int) -> bool:
+    """Is a tournament running in this chat? Cached — a chat without one must not
+    pay a Telegram call for every message somebody types."""
+    now = time.time()
+    hit = _tour_probe.get(int(chat_id))
+    if hit is not None and now - hit[0] < TOUR_PROBE_TTL:
+        return hit[1]
+    found = await tour_from_pin(bot, archive, chat_id)
+    active = bool(found is not None and found.phase in (tn.PHASE_PLAY, tn.PHASE_REGISTER))
+    _tour_probe[int(chat_id)] = (now, active)
+    return active
+
+
+async def cmd_final(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/yakuniy <javob> — the team's one final answer, editable until time is up."""
+    message = update.effective_message
+    user = update.effective_user
+    chat_id = update.effective_chat.id
+    tour = await tour_state(update, context)
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
+        return
+    if tour.control_message_id is None:
+        reply = getattr(message, "reply_to_message", None)
+        if reply is not None:
+            tour.control_message_id = getattr(reply, "message_id", None)
+    if tour.phase != tn.PHASE_PLAY or tour.question is None:
+        await message.reply_text(msg.tour_final_closed())
+        return
+    text = " ".join(context.args or []).strip()
+    if not text:
+        mine = tour.team_of(int(user.id))
+        state = (f"Sizning jamoangiz: {mine.name} · hozirgi yakuniy javob: "
+                 f"{mine.final or '(yo‘q)'}") if mine is not None else msg.tour_not_registered()
+        await message.reply_text(msg.final_usage() + "\n\n" + state, parse_mode=ParseMode.HTML)
+        return
+    now = int(time.time())
+    if int(tour.deadline or 0) and now > int(tour.deadline or 0):
+        await message.reply_text(msg.tour_final_deadline())
+        await tour_delete(context.bot, update.effective_chat.id, message.message_id,
+                          tour.can_delete)
+        return
+    team, problem = tour.submit_final(user.id, text, now)
+    if team is None or problem:
+        await message.reply_text(msg.tour_final_rejected(problem or "javob qabul qilinmadi"),
+                                 parse_mode=ParseMode.HTML)
+        return
+    tour.see(user.id, tour_sender(user), getattr(user, "username", "") or "")
+    tour.bump()
+    remaining = max(0, int(tour.deadline) - now)
+    changed = int(team.attempts) > 1
+    # Javob guruhda qolmasligi kerak: imkon bo‘lsa xabar o‘chiriladi.
+    removed = await tour_delete(context.bot, chat_id, message.message_id, tour.can_delete)
+    if not removed and not tour.open_mode:
+        tour.open_mode = True
+    await tour_team_note(context.bot, tour, team,
+                         msg.tour_final_set(team.name, team.final, tour_sender(user),
+                                            remaining, changed))
+    if tour.control_message_id and remaining > 0:
+        try:
+            await paint_tour_strip(context.bot, chat_id, tour, remaining)
+        except TelegramError:
+            pass
+    await tour_persist(context.bot, _archive_of(context), tour, merge_finals=True)
+    if not removed:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=msg.whisper_dropped(getattr(update.effective_chat, "title", "") or "guruh"),
+            parse_mode=ParseMode.HTML)
+
+
+async def cmd_final_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/bekor — take the team's final answer back (while time is left)."""
+    message = update.effective_message
+    user = update.effective_user
+    tour = await tour_state(update, context)
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
+        return
+    if tour.phase != tn.PHASE_PLAY:
+        await message.reply_text(msg.tour_final_closed())
+        return
+    team = tour.team_of(user.id)
+    if team is None:
+        await message.reply_text(msg.tour_not_registered())
+        return
+    if int(time.time()) > int(tour.deadline or 0):
+        await message.reply_text(msg.tour_final_deadline())
+        return
+    had = bool(team.final)
+    team.clear_final(int(time.time()))
+    tour.bump()
+    await tour_delete(context.bot, update.effective_chat.id, message.message_id, tour.can_delete)
+    if had:
+        await tour_team_note(context.bot, tour, team,
+                             msg.final_cleared(team.name, tour_sender(user)))
+    remaining = max(0, int(tour.deadline) - int(time.time()))
+    if tour.control_message_id and remaining > 0:
+        try:
+            await paint_tour_strip(context.bot, update.effective_chat.id, tour, remaining)
+        except TelegramError:
+            pass
+    await tour_persist(context.bot, _archive_of(context), tour, merge_finals=True)
+
+
+async def cmd_whisper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/pichoq <@username|id|jamoa> <matn> — a message only the target sees."""
+    message = update.effective_message
+    user = update.effective_user
+    chat = update.effective_chat
+    args = list(context.args or [])
+    if not args:
+        await message.reply_text(msg.whisper_usage(), parse_mode=ParseMode.HTML)
+        return
+    target = args[0]
+    text = " ".join(args[1:]).strip()
+    if not text:
+        await message.reply_text(msg.whisper_usage(), parse_mode=ParseMode.HTML)
+        return
+    tour = await tour_state(update, context)
+    can_delete = bool(tour.can_delete) if tour is not None else \
+        await detect_can_delete(context.bot, chat.id, getattr(chat, "type", "private"))
+    if tour is not None:
+        tour.see(user.id, tour_sender(user), getattr(user, "username", "") or "")
+    sender = tour_sender(user)
+    title = getattr(chat, "title", "") or "guruh"
+
+    if target.casefold() in {"jamoa", "jamoam", "team", "hamma"}:
+        team = tour.team_of(user.id) if tour is not None else None
+        if team is None:
+            await message.reply_text(msg.tour_not_registered())
+            return
+        others = [person for person in team.members if int(person.user_id) != int(user.id)]
+        delivered, failed = await tour_private(
+            context.bot, others, msg.tour_private_note(team.name, f"{sender}: {text}"))
+        await tour_delete(context.bot, chat.id, message.message_id, can_delete)
+        if tour is not None:
+            tour.bump()
+            await tour_persist(context.bot, _archive_of(context), tour)
+        await context.bot.send_message(
+            chat_id=user.id,
+            text=msg.whisper_team_sent(team.name, delivered, failed, text),
+            parse_mode=ParseMode.HTML)
+        return
+
+    user_id = tour.find(target) if tour is not None else 0
+    if not user_id:
+        needle = str(target).lstrip("@")
+        if needle.isdigit():
+            user_id = int(needle)
+    if not user_id:
+        await message.reply_text(
+            msg.whisper_failed(f"{target} topilmadi. Id bilan yozing: "
+                               "<code>/pichoq 123456789 matn</code> yoki "
+                               "<code>/azolar</code> ro‘yxatidan oling."),
+            parse_mode=ParseMode.HTML)
+        return
+    delivered, failed = await tour_private(
+        context.bot, [{"id": user_id}],
+        msg.whisper_received(sender, text, title))
+    await tour_delete(context.bot, chat.id, message.message_id, can_delete)
+    if tour is not None:
+        tour.bump()
+        await tour_persist(context.bot, _archive_of(context), tour)
+    if delivered:
+        await context.bot.send_message(chat_id=user.id, text=msg.whisper_sent(target, text),
+                                       parse_mode=ParseMode.HTML)
+    else:
+        await message.reply_text(
+            msg.whisper_failed("manzil bot bilan shaxsiy chatni boshlamagan (/start)"),
+            parse_mode=ParseMode.HTML)
+
+
+async def cmd_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/azolar — who the bot can whisper to, with ids and usernames."""
+    chat = update.effective_chat
+    message = update.effective_message
+    tour = await tour_state(update, context)
+    rows: list[dict] = []
+    if tour is not None:
+        rows = tour.directory_rows()
+        for team in tour.teams:
+            for person in team.members:
+                row = {"id": int(person.user_id), "name": person.label(),
+                       "username": person.username}
+                if row not in rows:
+                    rows.append(row)
+    else:
+        try:
+            members = await context.bot.get_chat_administrators(chat.id)
+        except TelegramError:
+            members = []
+        for member in members:
+            person = getattr(member, "user", None)
+            if person is not None:
+                rows.append({"id": int(person.id),
+                             "name": getattr(person, "full_name", "") or "",
+                             "username": getattr(person, "username", "") or ""})
+    await message.reply_text(
+        msg.members_list(rows, getattr(chat, "title", "") or "guruh",
+                         int(update.effective_user.id))[:4090],
+        parse_mode=ParseMode.HTML)
+
+
+async def cmd_table(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/jadval — the score table at any moment."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    heading = "YAKUNIY JADVAL" if tour.phase == tn.PHASE_DONE else "JADVAL"
+    await update.effective_message.reply_text(
+        msg.tour_standings(tour.standings(), tour.title, heading)[:4090],
+        parse_mode=ParseMode.HTML)
+
+
+async def cmd_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/tanlov [so‘z] — search the package and open the include/exclude picker."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    if not await tour_curator(update, context, tour):
+        await update.effective_message.reply_text(msg.tour_denied_action("savol tanlash"),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    query = " ".join(context.args or []).strip()
+    if query:
+        tour.query = query[:24]
+        tour.page = 1
+    rows, page, pages = tour_pick_page(_archive_of(context), tour)
+    if query and not rows:
+        info = _archive_of(context).package_info(tour.package_id) or {}
+        await update.effective_message.reply_text(
+            msg.tour_search_empty(query, info.get("title") or ""), parse_mode=ParseMode.HTML)
+        return
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
+    await tour_render_picker(context, context.bot, tour, message=update.effective_message,
+                             allow_edit=False)
+
+
+async def _selection_ids(args: list) -> list[int]:
+    ids: list[int] = []
+    for chunk in args:
+        for piece in str(chunk).replace(",", " ").split():
+            if piece.isdigit():
+                value = int(piece)
+                if value and value not in ids:
+                    ids.append(value)
+    return ids
+
+
+async def cmd_include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/olish <id…> — put exact questions into the tournament."""
+    await _selection_change(update, context, include=True)
+
+
+async def cmd_exclude(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/chiqarish <id…> — take exact questions out of the tournament."""
+    await _selection_change(update, context, include=False)
+
+
+async def _selection_change(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                            include: bool) -> None:
+    message = update.effective_message
+    tour = await tour_state(update, context)
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
+        return
+    if not await tour_curator(update, context, tour):
+        await message.reply_text(msg.tour_denied_action("savol tanlash"),
+                                 parse_mode=ParseMode.HTML)
+        return
+    archive = _archive_of(context)
+    ids = await _selection_ids(context.args or [])
+    if not ids:
+        await message.reply_text(
+            "Id ko‘rsatilmadi. Masalan: <code>/olish 12345 12346</code> yoki "
+            "<code>/chiqarish 12347</code>", parse_mode=ParseMode.HTML)
+        return
+    known: list[int] = []
+    unknown: list[int] = []
+    for question_id in ids[:tn.SELECTION_LIMIT]:
+        if archive.question(question_id) is None:
+            unknown.append(question_id)
+            continue
+        known.append(question_id)
+        if include:
+            if question_id not in tour.include:
+                tour.include.append(question_id)
+            tour.exclude = [item for item in tour.exclude if item != question_id]
+        else:
+            if question_id not in tour.exclude:
+                tour.exclude.append(question_id)
+            tour.include = [item for item in tour.include if item != question_id]
+    tour.include = tour.include[-tn.SELECTION_LIMIT:]
+    tour.exclude = tour.exclude[-tn.SELECTION_LIMIT:]
+    tour.bump()
+    await tour_persist(context.bot, archive, tour)
+    bank = tour_bank_size(archive, tour)
+    text = msg.tour_selection_done(tour.include if include else tour.exclude,
+                                   tour.exclude if include else tour.include, bank)
+    if unknown:
+        text += "\n• Topilmadi: " + ", ".join(str(item) for item in unknown[:20])
+    await message.reply_text(text[:4090], parse_mode=ParseMode.HTML)
+
+
+async def cmd_show_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/savol <id> — one question for the curator (answer only in private)."""
+    message = update.effective_message
+    tour = await tour_state(update, context)
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
+        return
+    if not await tour_curator(update, context, tour):
+        await message.reply_text(msg.tour_denied_action("savolni ko‘rish"),
+                                 parse_mode=ParseMode.HTML)
+        return
+    argument = " ".join(context.args or []).strip()
+    if not argument.isdigit():
+        await message.reply_text("Masalan: <code>/savol 12345</code>", parse_mode=ParseMode.HTML)
+        return
+    question = _archive_of(context).question(int(argument))
+    if question is None:
+        await message.reply_text("Bunday savol topilmadi.")
+        return
+    private_chat = getattr(update.effective_chat, "type", "") == "private"
+    await message.reply_text(msg.tour_question_card(question, private_chat),
+                             parse_mode=ParseMode.HTML)
+
+
+async def cmd_curator(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/kurator <id|@username> [olib] — appoint or remove a tournament curator."""
+    message = update.effective_message
+    args = list(context.args or [])
+    tour = await tour_state(update, context)
+    if not args:
+        await message.reply_text(msg.tour_curator_usage(), parse_mode=ParseMode.HTML)
+        return
+    if not await is_admin(update, context, None):
+        await message.reply_text(msg.admin_only("/kurator"), parse_mode=ParseMode.HTML)
+        return
+    revoke = any(item.casefold() in {"olib", "ochirish", "remove", "off"} for item in args[1:])
+    target = args[0]
+    user_id = 0
+    name = target
+    if target.lstrip("@").isdigit():
+        user_id = int(target.lstrip("@"))
+    elif tour is not None:
+        user_id = tour.find(target)
+    if not user_id:
+        reply = getattr(message, "reply_to_message", None)
+        if reply is not None and getattr(reply, "from_user", None) is not None:
+            user_id = int(reply.from_user.id)
+            name = tour_sender(reply.from_user)
+    if not user_id:
+        await message.reply_text(
+            msg.whisper_failed(f"{target} topilmadi. Id bilan yozing: "
+                               "<code>/kurator 123456789</code>"), parse_mode=ParseMode.HTML)
+        return
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
+        return
+    tour.appoint(user_id, grant=not revoke)
+    tour.see(user_id, name, str(target).lstrip("@") if not target.isdigit() else "")
+    tour.bump()
+    await tour_persist(context.bot, _archive_of(context), tour)
+    text = (msg.tour_curator_removed(name, len(tour.curators)) if revoke
+            else msg.tour_curator_added(name, len(tour.curators)))
+    await message.reply_text(text, parse_mode=ParseMode.HTML)
+
+
+async def cmd_tour_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/turnirstop — stop the tournament and print the table."""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await update.effective_message.reply_text(msg.tour_no_tournament(),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    if not await tour_curator(update, context, tour):
+        await update.effective_message.reply_text(msg.tour_denied_action("to‘xtatish"),
+                                                  parse_mode=ParseMode.HTML)
+        return
+    await tour_stop(context.bot, _archive_of(context), update.effective_chat.id, tour,
+                    "TURNIR TO‘XTATILDI")
+
+
+async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Registration card buttons: join, ready, new team, start, table, stop."""
+    query = update.callback_query
+    data = query.data or ""
+    parts = data.split("|")
+    action = parts[1] if len(parts) > 1 else ""
+    value = parts[2] if len(parts) > 2 else ""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await query.answer("Turnir holati topilmadi. /turnir bilan qayta oching.",
+                           show_alert=True)
+        return
+    archive = _archive_of(context)
+    user = update.effective_user or query.from_user
+    chat_id = update.effective_chat.id
+    tour.see(int(getattr(user, "id", 0) or 0), tour_sender(user),
+             getattr(user, "username", "") or "")
+
+    if action == st.TEAM_JOIN:
+        position = int(value) if str(value).lstrip("-").isdigit() else -1
+        team, problem = tour.join(position, int(user.id), tour_sender(user),
+                                  getattr(user, "username", "") or "", ready=False)
+        if team is None:
+            await query.answer(problem or "Qo‘shilib bo‘lmadi.", show_alert=True)
+            return
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        if problem:
+            await query.answer(problem, show_alert=True)
+            return
+        await query.answer(f"{team.name}: {team.size} kishi · {team.ready_count} tayyor")
+        return
+
+    if action == st.TEAM_READY:
+        team = tour.team_of(int(user.id))
+        if team is None:
+            await query.answer(msg.tour_not_registered(), show_alert=True)
+            return
+        position = tour.index_of(team)
+        problem = team.set_ready(int(user.id), True)
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        if problem:
+            await query.answer(problem, show_alert=True)
+            return
+        sizes = tn.sizes()
+        await query.answer(f"Men tayyorman · {team.name} ({team.ready_count}/{sizes['min_ready']})")
+        if team.is_ready:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=msg.tour_joined(team.name, tour_sender(user), team.size,
+                                     team.ready_count, sizes),
+                parse_mode=ParseMode.HTML)
+        return
+
+    if action == st.TEAM_NEW:
+        tour.naming = int(user.id)
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer("Jamoangiz nomini guruhga yozing: /jamoa nom", show_alert=True)
+        return
+
+    if action == st.TEAM_LEAVE:
+        team = tour.team_of(int(user.id))
+        name = team.name if team is not None else ""
+        result, problem = tour.leave(int(user.id))
+        if team is None:
+            await query.answer(problem or msg.tour_not_registered(), show_alert=True)
+            return
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer(msg.tour_left(name, tour_sender(user), result is None)[:200])
+        return
+
+    if action == st.TEAM_REFRESH:
+        if tour.phase == tn.PHASE_PLAY:
+            if tour.control_message_id is None:
+                tour.control_message_id = getattr(getattr(query, "message", None),
+                                                  "message_id", None)
+            remaining = int(tour.deadline or 0) - int(time.time())
+            if remaining > 0 and tour.control_message_id:
+                try:
+                    await paint_tour_strip(context.bot, chat_id, tour, remaining)
+                except TelegramError:
+                    pass
+                await query.answer(f"Qolgan vaqt: {msg.clock(remaining)}")
+                await schedule_tour_tick(tour, int(tour.deadline or 0))
+                return
+            await query.answer("Vaqt tugadi")
+            if await tour_claim_strip(context.bot, chat_id, tour):
+                await tour_resolve(context.bot, archive, chat_id, tour)
+            return
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer("Yangilandi")
+        return
+
+    if action == st.TEAM_SKIP:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("o‘tkazish"), show_alert=True)
+            return
+        if tour.phase != tn.PHASE_PLAY:
+            await query.answer("Hozir savol ochiq emas.", show_alert=True)
+            return
+        tour.control_message_id = getattr(getattr(query, "message", None), "message_id",
+                                          tour.control_message_id)
+        await query.answer("Savol yopildi")
+        if await tour_claim_strip(context.bot, chat_id, tour):
+            note("skip", chat_id=chat_id, package_id=tour.package_id, skips=1,
+                 detail=f"turnir · savol {tour.number}", log=False)
+            await tour_resolve(context.bot, archive, chat_id, tour)
+        return
+
+    if action == st.TEAM_TABLE:
+        heading = "YAKUNIY JADVAL" if tour.phase == tn.PHASE_DONE else "JADVAL"
+        text = msg.tour_standings(tour.standings(), tour.title, heading)[:4000]
+        await query.answer()
+        await context.bot.send_message(chat_id=chat_id, text=text, parse_mode=ParseMode.HTML)
+        return
+
+    if action == st.TEAM_REVEAL:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("javoblarni ko‘rish"), show_alert=True)
+            return
+        finals = tour_final_count(tour)
+        lines = [f"Yakuniy javob bergan: {finals} / {len(tour.teams)} jamoa"]
+        for team in tour.teams:
+            mark = "bergan" if team.final else "hali bermagan"
+            lines.append(f"• {team.name} — {mark}")
+        await query.answer()
+        await context.bot.send_message(chat_id=chat_id, text="\n".join(lines),
+                                       parse_mode=ParseMode.HTML)
+        return
+
+    if action == st.TEAM_PICK:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("savol tanlash"), show_alert=True)
+            return
+        await query.answer()
+        await tour_render_picker(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action == st.TEAM_START:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("boshlash"), show_alert=True)
+            return
+        bank = tour_bank_size(archive, tour)
+        problems = tour.missing(bank)
+        if problems:
+            await query.answer("Shartlar bajarilmagan", show_alert=True)
+            await context.bot.send_message(chat_id=chat_id,
+                                           text=msg.tour_missing(problems)[:4090],
+                                           parse_mode=ParseMode.HTML)
+            return
+        await query.answer("Turnir boshlandi!")
+        started = await tour_start(context.bot, archive, chat_id, tour)
+        if not started:
+            await context.bot.send_message(chat_id=chat_id,
+                                           text=msg.tour_missing(tour.missing(bank))[:4090],
+                                           parse_mode=ParseMode.HTML)
+        return
+
+    if action == st.TEAM_STOP:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("to‘xtatish"), show_alert=True)
+            return
+        await query.answer("Turnir to‘xtatildi")
+        await tour_stop(context.bot, archive, chat_id, tour, "TURNIR TO‘XTATILDI")
+        return
+
+    await query.answer()
+
+
+async def on_curator_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Curator panel and picker buttons: rounds, per-round, timer, include, exclude."""
+    query = update.callback_query
+    data = query.data or ""
+    parts = data.split("|")
+    action = parts[1] if len(parts) > 1 else ""
+    value = parts[2] if len(parts) > 2 else ""
+    tour = await tour_state(update, context)
+    if tour is None:
+        await query.answer("Turnir holati topilmadi. /turnir bilan qayta oching.",
+                           show_alert=True)
+        return
+    if not await tour_curator(update, context, tour):
+        await query.answer(msg.tour_denied_action("sozlash"), show_alert=True)
+        return
+    archive = _archive_of(context)
+    pressed = getattr(getattr(query, "message", None), "message_id", None)
+    # The pinned card is rewritten by tour_persist alone; a panel drawn into it
+    # would replace the roster, so panels open in their own message instead.
+    editable = bool(pressed) and pressed != tour.card_message_id
+
+    if action == "c":
+        await query.answer()
+        await tour_persist(context.bot, archive, tour)
+        await tour_render_curator_panel(context, context.bot, tour, query=query,
+                                        allow_edit=editable)
+        return
+
+    if action in {"r", "q", "t"} and value.isdigit():
+        number = int(value)
+        if action == "r":
+            tour.rounds = number
+        elif action == "q":
+            tour.per_round = number
+        else:
+            tour.timer = number
+        tour.bump()
+        await query.answer("Saqlandi")
+        await tour_persist(context.bot, archive, tour)
+        await tour_render_curator_panel(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action == "s":
+        tour.seed = int(value) if value.isdigit() else random.randrange(1, 999999)
+        tour.bump()
+        await query.answer(f"Urug‘: {tour.seed}")
+        await tour_persist(context.bot, archive, tour)
+        await tour_render_curator_panel(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action == "pk":
+        await query.answer("Paketni almashtirish: /turnir <paket raqami yoki nomi>")
+        return
+
+    if action == "pg" and value.isdigit():
+        tour.page = int(value)
+        await query.answer()
+        await tour_persist(context.bot, archive, tour)
+        await tour_render_picker(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action in {"i", "e", "u"} and value.isdigit():
+        question_id = int(value)
+        if action == "i":
+            if question_id not in tour.include:
+                tour.include.append(question_id)
+            tour.exclude = [item for item in tour.exclude if item != question_id]
+        elif action == "e":
+            if question_id not in tour.exclude:
+                tour.exclude.append(question_id)
+            tour.include = [item for item in tour.include if item != question_id]
+        else:
+            tour.include = [item for item in tour.include if item != question_id]
+            tour.exclude = [item for item in tour.exclude if item != question_id]
+        tour.include = tour.include[-tn.SELECTION_LIMIT:]
+        tour.exclude = tour.exclude[-tn.SELECTION_LIMIT:]
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer(f"{question_id}: " + ("olindi" if action == "i" else
+                                                 "chiqarildi" if action == "e" else "tozalandi"))
+        await tour_render_picker(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action in {"ai", "ae", "ac"}:
+        rows, page, pages = tour_pick_page(archive, tour)
+        ids = [int(row["id"]) for row in rows]
+        if action == "ai":
+            for question_id in ids:
+                if question_id not in tour.include:
+                    tour.include.append(question_id)
+                tour.exclude = [item for item in tour.exclude if item != question_id]
+        elif action == "ae":
+            for question_id in ids:
+                if question_id not in tour.exclude:
+                    tour.exclude.append(question_id)
+                tour.include = [item for item in tour.include if item != question_id]
+        else:
+            tour.include = []
+            tour.exclude = []
+        tour.include = tour.include[-tn.SELECTION_LIMIT:]
+        tour.exclude = tour.exclude[-tn.SELECTION_LIMIT:]
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer("Tanlov yangilandi")
+        await tour_render_picker(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action == "qs":
+        await query.answer("Qidirish: /tanlov so‘z", show_alert=True)
+        return
+
+    await query.answer()
 
 
 def is_owner(update: Update) -> bool:
@@ -1438,6 +2984,22 @@ BOT_COMMANDS = [
     ("skip", "Savolni o‘tkazish (admin)"),
     ("accept", "Javobni qabul qilish (admin)"),
     ("stop", "O‘yinni to‘xtatish"),
+    ("turnir", "Turnir ochish (admin yoki kurator)"),
+    ("jamoa", "Jamoa yaratish: /jamoa nom"),
+    ("qoshil", "Jamoaga qo‘shilish: /qoshil nom"),
+    ("tayyor", "Men tayyorman"),
+    ("chiqish", "Jamoadan chiqish"),
+    ("yakuniy", "Yakuniy javob: /yakuniy javob"),
+    ("bekor", "Yakuniy javobni bekor qilish"),
+    ("pichoq", "Maxfiy xabar: /pichoq @user matn"),
+    ("azolar", "Guruh a’zolari (id va username)"),
+    ("jadval", "Ochkolar jadvali"),
+    ("tanlov", "Savol tanlash: /tanlov so‘z"),
+    ("olish", "Savolni tanlovga olish: /olish 12345"),
+    ("chiqarish", "Savolni tanlovdan chiqarish: /chiqarish 12345"),
+    ("savol", "Bitta savolni ko‘rish: /savol 12345"),
+    ("kurator", "Kurator tayinlash: /kurator 123456789"),
+    ("turnirstop", "Turnirni to‘xtatish va jadval"),
 ]
 OWNER_COMMANDS = BOT_COMMANDS + [
     ("stats", "Statistika (faqat bot egasi)"),
@@ -1458,6 +3020,27 @@ COMMANDS = {
     "skip": cmd_skip,
     "stop": cmd_stop,
     "accept": cmd_accept,
+    "turnir": cmd_tour,
+    "tournament": cmd_tour,
+    "jamoa": cmd_team,
+    "team": cmd_team,
+    "qoshil": cmd_join,
+    "join": cmd_join,
+    "tayyor": cmd_ready,
+    "chiqish": cmd_leave,
+    "yakuniy": cmd_final,
+    "final": cmd_final,
+    "bekor": cmd_final_cancel,
+    "pichoq": cmd_whisper,
+    "whisper": cmd_whisper,
+    "azolar": cmd_members,
+    "jadval": cmd_table,
+    "tanlov": cmd_selection,
+    "olish": cmd_include,
+    "chiqarish": cmd_exclude,
+    "savol": cmd_show_question,
+    "kurator": cmd_curator,
+    "turnirstop": cmd_tour_stop,
     "stats": cmd_stats,
     "access": cmd_access,
     "grant": cmd_grant,
@@ -1521,6 +3104,27 @@ def build_app(bot=None) -> Application:
         command_handler("skip", cmd_skip),
         command_handler("stop", cmd_stop),
         command_handler("accept", cmd_accept),
+        command_handler("turnir", cmd_tour),
+        command_handler("tournament", cmd_tour),
+        command_handler("jamoa", cmd_team),
+        command_handler("team", cmd_team),
+        command_handler("qoshil", cmd_join),
+        command_handler("join", cmd_join),
+        command_handler("tayyor", cmd_ready),
+        command_handler("chiqish", cmd_leave),
+        command_handler("yakuniy", cmd_final),
+        command_handler("final", cmd_final),
+        command_handler("bekor", cmd_final_cancel),
+        command_handler("pichoq", cmd_whisper),
+        command_handler("whisper", cmd_whisper),
+        command_handler("azolar", cmd_members),
+        command_handler("jadval", cmd_table),
+        command_handler("tanlov", cmd_selection),
+        command_handler("olish", cmd_include),
+        command_handler("chiqarish", cmd_exclude),
+        command_handler("savol", cmd_show_question),
+        command_handler("kurator", cmd_curator),
+        command_handler("turnirstop", cmd_tour_stop),
         command_handler("stats", cmd_stats),
         command_handler("access", cmd_access),
         command_handler("grant", cmd_grant),
@@ -1530,6 +3134,8 @@ def build_app(bot=None) -> Application:
         CallbackQueryHandler(on_page_button, pattern="^" + st.PREFIX_PAGE + r"\|"),
         CallbackQueryHandler(on_game_button, pattern="^" + st.PREFIX_GAME + r"\|"),
         CallbackQueryHandler(on_stats_button, pattern="^" + st.PREFIX_STATS + r"\|"),
+        CallbackQueryHandler(on_team_button, pattern="^" + st.PREFIX_TEAM + r"\|"),
+        CallbackQueryHandler(on_curator_button, pattern="^" + st.PREFIX_TOUR + r"\|"),
         MessageHandler(filters.Regex(r"^/"), on_command_fallback),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_text),
     ])
@@ -1716,7 +3322,7 @@ async def status():
         f"javobsizlik chegarasi {IDLE_LIMIT or 'o‘chirilgan'}",
         f"Statistika: {stats.store_label()}"
         f" · egasi {stats.OWNER_ID} · /stats · ?statsprobe=1",
-        f"Jonli soat: /api/timer (Mini App) · server vaqti: /api/now",
+        f"Soat savol tasmasida ko‘rinadi · server vaqti: /api/now",
         f"Mini App panel: {app_menu_url() or '(manzil yo‘q)'} · "
         f"ruxsatlar: {len(stats.access_list())} ta · egasi {stats.OWNER_ID} · "
         f"/access /grant /revoke · ?appprobe=1",
@@ -1997,21 +3603,6 @@ async def home():
     if page.exists():
         return HTMLResponse(page.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>Zakovat Agent</h1><p>Sahifa fayli topilmadi.</p>")
-
-
-@app.get("/api/timer")
-async def timer_page(request: Request):
-    """Mini App clock face: counts down on the user's device, not on the server."""
-    params = dict(request.query_params)
-    bucket: list = []
-    token = _bg_tasks.set(bucket)
-    try:
-        if str(params.get("demo") or "") != "1":
-            note("clock_opened", clock_opened=1, log=False)
-        response: Response = HTMLResponse(clock_page.render(params))
-    finally:
-        _bg_tasks.reset(token)
-    return with_background(response, bucket)
 
 
 @app.get("/app")

@@ -10,8 +10,9 @@ import html
 import re
 import time
 
-BAR_WIDTH = 10
+BAR_WIDTH = 20
 IDLE_HINT = 3
+URGENT_SECONDS = 10
 
 
 def esc(value: object) -> str:
@@ -19,7 +20,12 @@ def esc(value: object) -> str:
 
 
 def bar(remaining: int, total: int, width: int = BAR_WIDTH) -> str:
-    """Text countdown bar: ▰▰▰▱▱▱▱▱▱▱"""
+    """Text countdown bar: ▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱
+
+    Twenty segments instead of ten, so with a 60-second question one segment is
+    three seconds: the bar visibly walks down between two repaints instead of
+    jumping a tenth of the way at a time.
+    """
     if total <= 0:
         return "▱" * width
     filled = max(0, min(width, round(width * remaining / total)))
@@ -45,8 +51,9 @@ def countdown(remaining: int, total: int) -> str:
     one time value being written down once.
     """
     if remaining <= 0:
-        return "VAQT TUGADI  00:00\n" + "▱" * BAR_WIDTH
-    return f"QOLGAN VAQT  {clock(remaining)}\n{bar(remaining, total)}"
+        return "<b>VAQT TUGADI</b> · 00:00\n" + "▱" * BAR_WIDTH
+    label = "VAQT TUGAYAPTI" if remaining <= URGENT_SECONDS else "QOLGAN VAQT"
+    return f"<b>{clock(remaining)}</b> · {label}\n{bar(remaining, total)}"
 
 
 def welcome(packages: int, questions: int) -> str:
@@ -372,6 +379,537 @@ def access_changed(target: int, name: str, granted: bool, saved: bool, menu: str
     else:
         lines.append("Foydalanuvchining menyusi oddiy holatga qaytdi va Mini App unga yopildi.")
     return "\n".join(lines)
+
+
+# ------------------------------------------------------------------ turnir
+def tour_intro(title: str, package_title: str, rounds: int, per_round: int, timer: int,
+               total: int, sizes: dict) -> str:
+    """The registration card: what is being played and what the rules require."""
+    lines = [
+        f"<b>TURNIR · {esc(title)}</b>",
+        f"Paket: {esc(package_title or '(sarlavhasiz)')}",
+        f"Tuzilma: {rounds} raund × {per_round} savol = {total} savol · har savolga {timer} s",
+        "",
+        "<b>RO‘YXATDAN O‘TISH</b>",
+        f"• Kamida {sizes['min_teams']} ta jamoa, har birida {sizes['min_members']}–"
+        f"{sizes['max_members']} kishi",
+        f"• Har jamoadan kamida {sizes['min_ready']} kishi «Men tayyorman» tugmasini bosadi",
+        "• Jamoa yaratish: «Yangi jamoa» tugmasi, so‘ng nomini yozing",
+        "• Qo‘shilish: o‘z jamoangiz tugmasini bosing",
+        "",
+        "<b>O‘YIN TARTIBI</b>",
+        "• Har savolga har jamoa <b>bitta yakuniy javob</b> beradi",
+        "• Yakuniy javobni jamoaning istalgan a’zosi /yakuniy bilan yozadi",
+        "• Vaqt tugaguncha javobni o‘zgartirish mumkin — oxirgisi hisoblanadi",
+        "• To‘g‘ri yakuniy javob — jamoaga +1 ochko; bir savolda bir nechta jamoa "
+        "ochko olishi mumkin",
+    ]
+    return "\n".join(lines)
+
+
+def tour_teams(teams: list, phase: str, sizes: dict) -> str:
+    """The roster as it stands, one line per team."""
+    if not teams:
+        return "\n".join(["", "<b>JAMOALAR</b>", "• Hali hech kim ro‘yxatdan o‘tmagan."])
+    lines = ["", "<b>JAMOALAR</b>"]
+    for index, team in enumerate(teams, start=1):
+        ready = sum(1 for person in team["members"] if person.get("ready"))
+        mark = "tayyor" if (len(team["members"]) >= sizes["min_members"]
+                            and ready >= sizes["min_ready"]) else "kutmoqda"
+        lines.append(f"{index}. <b>{esc(team['name'])}</b> — {len(team['members'])} kishi · "
+                     f"{ready} tayyor · {mark}")
+        names = [esc(person.get("name") or person.get("username") or f"id {person['id']}")
+                 for person in team["members"][:8]]
+        if names:
+            lines.append(f"   {' · '.join(names)}")
+    if phase == "register":
+        lines.append("")
+        lines.append("Jamoani tark etish: /chiqish · holat: /turnir holat")
+    return "\n".join(lines)
+
+
+def tour_missing(problems: list) -> str:
+    """What still has to happen before the tournament may start."""
+    lines = ["<b>BOSHLASH UCHUN YETMAYAPTI</b>"]
+    lines += [f"• {esc(item)}" for item in problems]
+    return "\n".join(lines)
+
+
+def tour_ready(total: int, people: int, teams: int) -> str:
+    return ("Barcha shartlar bajarildi: "
+            f"{teams} ta jamoa, {people} kishi, {total} savol. «Boshlash» tugmasini bosing.")
+
+
+def tour_started(title: str, teams: list, total: int, timer: int, private: bool) -> str:
+    lines = [
+        f"<b>TURNIR BOSHLANDI · {esc(title)}</b>",
+        f"• Savollar: {total} · har biriga {timer} sekund",
+        "• Jamoalar: " + " · ".join(esc(team["name"]) for team in teams),
+        "",
+    ]
+    if private:
+        lines += [
+            "<b>JAVOBLAR GURUHDA KO‘RINMAYDI</b>",
+            "• Bot javobingizni o‘chiradi va faqat o‘z jamoangizga shaxsiy xabar bilan ko‘rsatadi",
+            "• Yakuniy javob: savol ustidagi tasmaga reply qilib <code>/yakuniy javob</code>",
+        ]
+    else:
+        lines += [
+            "<b>JAVOBLAR GURUHDA KO‘RINADI</b>",
+            "• Botda xabar o‘chirish huquqi yo‘q, shuning uchun javoblar ochiq qoladi",
+            "• Yakuniy javob: tasmaga reply qilib <code>/yakuniy javob</code>",
+        ]
+    return "\n".join(lines)
+
+
+def tour_strip(number: int, total: int, round_label: str, finals: int, teams: int,
+               countdown: str) -> str:
+    """The countdown strip of a tournament question."""
+    head = f"SAVOL {number} / {total}"
+    if round_label:
+        head += f" · {round_label}"
+    return f"{head}\nYakuniy javob bergan: {finals} / {teams} jamoa\n{countdown}"
+
+
+def tour_question(number: int, total: int, round_label: str, package_title: str, text: str,
+                  timer: int, link: str = "", standings_line: str = "") -> str:
+    lines = [f"<b>SAVOL {number} / {total}</b>"]
+    if round_label:
+        lines[0] += f" · {round_label}"
+    if package_title:
+        lines.append(esc(package_title))
+    lines.append("")
+    lines.append(esc(text or "").replace("\n", "<br>"))
+    if link:
+        lines += ["", f"<a href=\"{esc(link)}\">Rasm / manba</a>"]
+    lines += ["", f"Javob uchun {timer} sekund. Har jamoa bitta yakuniy javob beradi:"]
+    lines.append("tasmaga reply qilib <code>/yakuniy javob</code> — vaqt tugaguncha "
+                 "o‘zgartirish mumkin.")
+    if standings_line:
+        lines += ["", standings_line]
+    return "\n".join(lines)
+
+
+def tour_private_question(number: int, total: int, team: str, text: str, timer: int) -> str:
+    """What one member sees in private: the question and how to answer."""
+    return "\n".join([
+        f"<b>TURNIR · {esc(team)}</b>",
+        f"Savol {number} / {total} · javob uchun {timer} s",
+        "",
+        esc(text or ""),
+        "",
+        "Javobingizni shu yerga yozing — uni faqat o‘z jamoangiz ko‘radi.",
+        "Yakuniy javob uchun guruhda tasmaga reply qilib "
+        "<code>/yakuniy javob</code> deb yozing.",
+    ])
+
+
+def tour_final_set(team: str, answer: str, by: str, remaining: int, changed: bool) -> str:
+    head = "YAKUNIY JAVOB O‘ZGARTIRILDI" if changed else "YAKUNIY JAVOB QABUL QILINDI"
+    return "\n".join([
+        f"<b>{head}</b>",
+        f"• Jamoa: {esc(team)}",
+        f"• Javob: {esc(answer)}",
+        f"• Bergan: {esc(by)}",
+        f"• Qolgan vaqt: {clock(remaining)}",
+        "",
+        f"Vaqt tugaguncha o‘zgartirish mumkin: yana <code>/yakuniy yangi javob</code>.",
+    ])
+
+
+def tour_final_seen(number: int, total: int, finals: list, teams: int) -> str:
+    """The group line after a final answer lands: who answered, never what."""
+    names = " · ".join(esc(item) for item in finals)
+    return (f"Savol {number} / {total} · yakuniy javob berdi: {names} "
+            f"({len(finals)} / {teams} jamoa)")
+
+
+def tour_result(number: int, total: int, answer: str, comment: str, winners: list,
+                finals: list, standings_line: str) -> str:
+    lines = [f"<b>SAVOL {number} / {total} YAKUNI</b>"]
+    if winners:
+        lines.append("• Ochko oldi: " + " · ".join(esc(name) for name in winners))
+    else:
+        lines.append("• Hech qaysi jamoa ochko olmadi.")
+    lines.append(f"• To‘g‘ri javob: <b>{esc(answer)}</b>")
+    if comment:
+        lines.append(f"• Izoh: {esc(comment)[:600]}")
+    if finals:
+        lines.append("")
+        lines.append("<b>YAKUNIY JAVOBLAR</b>")
+        for row in finals:
+            mark = "to‘g‘ri" if row.get("correct") else ("javob bermadi" if not row.get("answer")
+                                                         else "noto‘g‘ri")
+            answer_text = esc(row.get("answer") or "—")
+            lines.append(f"• {esc(row.get('team'))}: {answer_text} — {mark}")
+    if standings_line:
+        lines += ["", standings_line]
+    return "\n".join(lines)
+
+
+def tour_standings(rows: list, title: str = "", heading: str = "JADVAL") -> str:
+    """The score table: place, team, points, how many questions it solved."""
+    lines = [f"<b>{esc(heading)}</b>"]
+    if title:
+        lines.append(esc(title))
+    lines.append("")
+    if not rows:
+        lines.append("• Hozircha jamoa yo‘q.")
+        return "\n".join(lines)
+    best = int(rows[0].get("score") or 0)
+    for row in rows:
+        name = esc(row["name"])
+        score = int(row["score"] or 0)
+        line = f"{row['place']}. {name} — <b>{score}</b> ochko"
+        if row.get("solved"):
+            line += f" · {row['solved']} savol topildi"
+        if row.get("size"):
+            line += f" · {row['size']} kishi"
+        if score == best and best:
+            line += " · yetakchi"
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def tour_over(title: str, rows: list, asked: int, rounds: int) -> str:
+    lines = [f"<b>TURNIR YAKUNLANDI · {esc(title)}</b>",
+             f"• O‘ynalgan savollar: {asked}" + (f" · {rounds} raund" if rounds > 1 else "")]
+    if rows:
+        leaders = [row for row in rows if int(row["score"] or 0) == int(rows[0]["score"] or 0)]
+        if int(rows[0]["score"] or 0) == 0:
+            lines.append("• Hech qaysi jamoa ochko to‘plamadi.")
+        elif len(leaders) > 1:
+            lines.append("• G‘oliblar (teng ochko): " + " · ".join(esc(row["name"])
+                                                                   for row in leaders))
+        else:
+            lines.append(f"• G‘olib: <b>{esc(rows[0]['name'])}</b> — "
+                         f"{rows[0]['score']} ochko")
+    lines += ["", tour_standings(rows, heading="YAKUNIY JADVAL")]
+    return "\n".join(lines)
+
+
+def tour_round_banner(number: int, rounds: int, standings_line: str) -> str:
+    return f"<b>{number}-RAUND BOSHLANDI</b> · {rounds} raunddan" + (
+        f"\n{standings_line}" if standings_line else "")
+
+
+def tour_stopped(title: str, asked: int, total: int, rows: list) -> str:
+    lines = [f"<b>TURNIR TO‘XTATILDI · {esc(title)}</b>",
+             f"• O‘ynalgan: {asked} / {total} savol", "",
+             tour_standings(rows, heading="JADVAL")]
+    return "\n".join(lines)
+
+
+def tour_denied(reason: str) -> str:
+    return "\n".join(["<b>TURNIR UCHUN RUXSAT YO‘Q</b>", f"• {esc(reason)}"])
+
+
+def tour_team_created(name: str, captain: str, sizes: dict) -> str:
+    return "\n".join([
+        f"<b>JAMOA RO‘YXATDAN O‘TDI</b>",
+        f"• {esc(name)} · kapitan {esc(captain)}",
+        f"• Kamida {sizes['min_members']} kishi, ko‘pi bilan {sizes['max_members']} kishi",
+        f"• Boshlash uchun kamida {sizes['min_ready']} kishi «Men tayyorman» deydi",
+        "",
+        "A’zolarni guruhdagi tugmadan qo‘shing yoki /azolar bilan id larni ko‘ring.",
+    ])
+
+
+def tour_joined(team: str, name: str, size: int, ready: int, sizes: dict) -> str:
+    lines = [f"<b>{esc(team)}</b> · {esc(name)} qo‘shildi",
+             f"• Jamoada {size} kishi · {ready} tayyor"]
+    if size < sizes["min_members"]:
+        lines.append(f"• Yana {sizes['min_members'] - size} kishi kerak")
+    if ready < sizes["min_ready"]:
+        lines.append(f"• Yana {sizes['min_ready'] - ready} kishi «Men tayyorman» deyishi kerak")
+    return "\n".join(lines)
+
+
+def tour_left(team: str, name: str, dropped: bool) -> str:
+    if dropped:
+        return f"<b>{esc(team)}</b> bo‘shagani uchun o‘chirildi ({esc(name)} oxirgi a’zo edi)."
+    return f"{esc(name)} <b>{esc(team)}</b> jamoasidan chiqdi."
+
+
+def tour_not_registered() -> str:
+    return ("Siz biror jamoada emassiz. Guruhdagi turnir xabaridan o‘z jamoangiz "
+            "tugmasini bosing yoki «Yangi jamoa» bilan yangi jamoa yarating.")
+
+
+# ------------------------------------------------------------------ pichoq
+def whisper_usage() -> str:
+    return "\n".join([
+        "<b>MAXFIY XABAR</b>",
+        "• /pichoq @username matn — bitta a’zoga shaxsiy xabar",
+        "• /pichoq 123456789 matn — id orqali",
+        "• /jamoa matn — o‘z jamoangizdagi hamma a’zolarga",
+        "• /azolar — guruh a’zolarining id va username ro‘yxati",
+        "",
+        "Guruhda xabar ko‘rinmaydi: bot uni o‘chiradi (agar huquqi bo‘lsa) va faqat "
+        "manzilga shaxsiy xabar yuboradi.",
+    ])
+
+
+def whisper_received(sender: str, text: str, chat_title: str) -> str:
+    return "\n".join([
+        f"<b>MAXFIY XABAR</b> · {esc(chat_title)}",
+        f"Kimdan: {esc(sender)}",
+        "",
+        esc(text),
+        "",
+        "Javob berish: /pichoq " + esc(sender) + " javobingiz",
+    ])
+
+
+def whisper_sent(target: str, text: str) -> str:
+    return f"Xabar {esc(target)} ga shaxsiy yuborildi. Guruhda ko‘rinmaydi.\n{esc(text)[:300]}"
+
+
+def whisper_team_sent(team: str, count: int, failed: int, text: str) -> str:
+    lines = [f"Xabar <b>{esc(team)}</b> jamoasining {count} a’zosiga yuborildi."]
+    if failed:
+        lines.append(f"• {failed} kishiga yetib bormadi: ular bot bilan shaxsiy chatni "
+                     "boshlamagan (/start).")
+    lines.append(esc(text)[:300])
+    return "\n".join(lines)
+
+
+def whisper_failed(reason: str) -> str:
+    return f"Xabar yuborilmadi: {esc(reason)}"
+
+
+def whisper_dropped(chat_title: str) -> str:
+    """The neutral group line when a whisper could not be deleted."""
+    return (f"{esc(chat_title)} da maxfiy xabar yuborildi. Botda xabar o‘chirish huquqi "
+            "yo‘q, shuning uchun asl xabarni o‘chirib yuboring.")
+
+
+def members_list(rows: list, title: str, me: int) -> str:
+    lines = [f"<b>GURUH A’ZOLARI</b> · {esc(title)}",
+             f"• Ko‘rsatilgan: {len(rows)} kishi (bot ko‘rgan a’zolar)"]
+    for row in rows[:40]:
+        mark = " · siz" if int(row.get("id") or 0) == int(me) else ""
+        username = f" @{row['username']}" if row.get("username") else ""
+        lines.append(f"• <code>{row.get('id')}</code>{username} — {esc(row.get('name') or '')}{mark}")
+    if len(rows) > 40:
+        lines.append(f"• … yana {len(rows) - 40} ta")
+    lines += ["", "Maxfiy xabar: /pichoq <code>id</code> matn"]
+    return "\n".join(lines)
+
+
+# ----------------------------------------------------------- yakuniy javob
+def final_usage() -> str:
+    return "\n".join([
+        "<b>YAKUNIY JAVOB</b>",
+        "Savol ustidagi tasmaga reply qilib yozing:",
+        "<code>/yakuniy javob matni</code>",
+        "",
+        "• Vaqt tugaguncha o‘zgartirish mumkin — oxirgisi hisoblanadi",
+        "• Turnirda javob jamoaga tegishli: istalgan a’zo yozadi",
+        "• /bekor — jamoaning yakuniy javobini olib tashlaydi",
+    ])
+
+
+def final_answer(team: str, answer: str, by: str, remaining: int, changed: bool) -> str:
+    head = "YAKUNIY JAVOB O‘ZGARTIRILDI" if changed else "YAKUNIY JAVOB QABUL QILINDI"
+    lines = [f"<b>{head}</b>"]
+    if team:
+        lines.append(f"• Jamoa: {esc(team)}")
+    lines += [f"• Javob: {esc(answer)}", f"• Bergan: {esc(by)}",
+              f"• Qolgan vaqt: {clock(remaining)}", "",
+              "O‘zgartirish: yana <code>/yakuniy yangi javob</code> · bekor qilish: <code>/bekor</code>"]
+    return "\n".join(lines)
+
+
+def final_cleared(team: str, by: str) -> str:
+    return f"<b>YAKUNIY JAVOB BEKOR QILINDI</b> · {esc(team)} · {esc(by)}"
+
+
+def tour_no_tournament() -> str:
+    return "\n".join([
+        "Bu guruhda ochiq turnir yo‘q.",
+        "• Turnir ochish (admin yoki kurator): <code>/turnir</code> yoki <code>/turnir 959</code>",
+        "• Paketlar ro‘yxati: <code>/packages</code>",
+    ])
+
+
+def tour_card_play(title: str, number: int, total: int, round_label: str, standings: str,
+                   finals: int, teams: int, timer: int) -> str:
+    """The pinned card while the tournament is running."""
+    head = f"<b>TURNIR · {esc(title)}</b>"
+    lines = [head, f"• Savol {number} / {total}" + (f" · {round_label}" if round_label else ""),
+             f"• Har savolga {timer} s · yakuniy javob bergan: {finals} / {teams} jamoa",
+             "", standings, "",
+             "Yakuniy javob: tasmaga reply qilib <code>/yakuniy javob</code>.",
+             "Jamoangizga maxfiy xabar: <code>/pichoq jamoa matn</code>."]
+    return "\n".join(lines)
+
+
+def tour_curator_panel(title: str, package_id: int, package_title: str, bank: int,
+                       rounds: int, per_round: int, timer: int, total: int, seed: int,
+                       chosen: int, dropped: int, curators: int) -> str:
+    wanted = max(1, int(rounds or 1)) * (int(per_round or 0) or int(bank or 0))
+    lines = [
+        f"<b>TURNIR SOZLAMALARI · {esc(title)}</b>",
+        f"• Paket: <b>{package_id}</b> — {esc(package_title or '(sarlavhasiz)')}",
+        f"• Tanlov: {bank} savol qoldi · olingan {chosen} · chiqarilgan {dropped}",
+        f"• Tuzilma: {rounds} raund × {per_round or bank} savol = {total} savol",
+        f"• Har savolga: {timer} s · aralashtirish urug‘i: {seed}",
+        f"• Kuratorlar: {curators} kishi (admin va tayinlanganlar)",
+        "",
+        "<b>QANDAY O‘ZGARTIRILADI</b>",
+        "• Tugmalardan raund, savol soni va vaqtni tanlang",
+        "• «Savol tanlash» — paketdagi savollar ro‘yxati: bosib OLISH yoki CHIQARISH",
+        "• Qidirish: <code>/tanlov so‘z</code> · aniq savol: <code>/olish 12345</code>, "
+        "<code>/chiqarish 12345</code>",
+        "• Boshqa paket: <code>/turnir paket_raqami</code>",
+        "• Kurator tayinlash: <code>/kurator 123456789</code> · olish: "
+        "<code>/kurator 123456789 olib</code>",
+    ]
+    if bank and wanted > bank:
+        lines.insert(5, f"• <b>Diqqat:</b> so‘ralgan {wanted} savol, to‘plamda {bank} ta bor — "
+                        f"bir savol ikki marta berilmaydi, {total} savol o‘ynaladi")
+    return "\n".join(lines)
+
+
+def tour_picker(rows: list, query: str, page: int, pages: int, chosen: int, dropped: int,
+                bank: int, package_title: str) -> str:
+    lines = ["<b>SAVOL TANLASH</b>",
+             f"• Paket: {esc(package_title or '(sarlavhasiz)')}",
+             f"• Tanlov: olingan {chosen} · chiqarilgan {dropped} · jami {bank} savol qoldi"]
+    if query:
+        lines.append(f"• Qidiruv: «{esc(query)}» — bekor qilish: <code>/tanlov</code>")
+    lines.append(f"• Sahifa {page} / {max(1, pages)}")
+    lines.append("")
+    if not rows:
+        lines.append("Bu sahifada savol yo‘q.")
+    for row in rows:
+        mark = "OLINDI" if row.get("included") else ("CHIQARILDI" if row.get("excluded") else "—")
+        text = " ".join(str(row.get("text") or "").split())[:70]
+        lines.append(f"[{mark}] <code>{row['id']}</code> · {esc(text)}")
+    lines += ["", "Tugma bosilganda savol OLINADI; olingan savol tugmasi uni CHIQARADI.",
+              "Aniq id bilan: <code>/olish 12345 12346</code> · <code>/chiqarish 12347</code>"]
+    return "\n".join(lines)
+
+
+def tour_selection_done(chosen: list, dropped: list, bank: int) -> str:
+    lines = ["<b>TANLOV YANGILANDI</b>"]
+    if chosen:
+        lines.append(f"• Olingan: {', '.join(str(item) for item in chosen[:40])}"
+                     + (" …" if len(chosen) > 40 else ""))
+    if dropped:
+        lines.append(f"• Chiqarilgan: {', '.join(str(item) for item in dropped[:40])}"
+                     + (" …" if len(dropped) > 40 else ""))
+    lines.append(f"• To‘plamda {bank} savol qoldi")
+    return "\n".join(lines)
+
+
+def tour_search_empty(query: str, package_title: str) -> str:
+    return (f"«{esc(query)}» bo‘yicha savol topilmadi "
+            f"({esc(package_title or 'paket')}). Boshqa so‘z bilan urinib ko‘ring.")
+
+
+def tour_question_card(question: dict, show_answer: bool) -> str:
+    lines = [f"<b>SAVOL {question.get('id')}</b>", esc(question.get("text") or "")]
+    if question.get("comment") and show_answer:
+        lines.append(f"• Izoh: {esc(question['comment'])[:600]}")
+    if show_answer:
+        lines.append(f"• Javob: <b>{esc(question.get('answer') or '')}</b>")
+    else:
+        lines.append("• Javob faqat shaxsiy chatda ko‘rsatiladi (guruhda yozmang).")
+    return "\n".join(lines)
+
+
+def tour_curator_added(name: str, count: int) -> str:
+    return f"<b>KURATOR TAYINLANDI</b> · {esc(name)}\n• Endi kuratorlar soni: {count}"
+
+
+def tour_curator_removed(name: str, count: int) -> str:
+    return f"<b>KURATORLIK OLINDI</b> · {esc(name)}\n• Qolgan kuratorlar: {count}"
+
+
+def tour_curator_usage() -> str:
+    return "\n".join([
+        "<b>KURATOR TAYINLASH</b>",
+        "• <code>/kurator 123456789</code> — tayinlash",
+        "• <code>/kurator @username</code> — username orqali (agar bot uni ko‘rgan bo‘lsa)",
+        "• <code>/kurator 123456789 olib</code> — kuratorlikni olish",
+        "",
+        "Kurator turnirni ochadi, savollarni oladi yoki chiqaradi, raund va vaqtni "
+        "sozlaydi, turnirni boshlaydi va to‘xtatadi. Bu buyruq faqat guruh adminida ishlaydi.",
+    ])
+
+
+def tour_denied_action(action: str) -> str:
+    return ("Bu amal faqat guruh admini yoki kurator uchun: " + esc(action)
+            + ". Kurator tayinlash: <code>/kurator 123456789</code>")
+
+
+def tour_started_private(open_mode: bool) -> str:
+    if open_mode:
+        return ("\n\n<b>OGOHLANTIRISH</b>: botda xabar o‘chirish huquqi yo‘q, shuning uchun "
+                "javoblar guruhda ko‘rinib qoladi. Maxfiy o‘yin uchun botga guruhda "
+                "«Xabarlarni o‘chirish» huquqini bering.")
+    return ""
+
+
+def tour_final_deadline() -> str:
+    return "Bu savol uchun vaqt tugadi — yakuniy javob qabul qilinmadi."
+
+
+def tour_final_closed() -> str:
+    return "Hozir ochiq savol yo‘q. Keyingi savol chiqqach /yakuniy ishlaydi."
+
+
+def tour_final_rejected(problem: str) -> str:
+    return f"Yakuniy javob qabul qilinmadi: {esc(problem)}"
+
+
+def tour_private_note(team: str, text: str) -> str:
+    """What a member gets in private while the group sees nothing."""
+    return f"<b>{esc(team)}</b> · jamoangizga maxfiy xabar\n\n{esc(text)}"
+
+
+def tour_help() -> str:
+    return "\n".join([
+        "<b>TURNIR BUYRUQLARI</b>",
+        "<i>Kurator va admin uchun</i>",
+        "• <code>/turnir</code> — turnir ochish (paket: <code>/turnir 959</code>)",
+        "• <code>/tanlov so‘z</code> — savollar ichidan qidirish",
+        "• <code>/olish 12345 12346</code> — savollarni tanlovga olish",
+        "• <code>/chiqarish 12347</code> — savolni tanlovdan chiqarish",
+        "• <code>/savol 12345</code> — bitta savolni ko‘rish",
+        "• <code>/kurator 123456789</code> — kurator tayinlash",
+        "",
+        "<i>Jamoalar uchun</i>",
+        "• <code>/jamoa Bilimdonlar</code> — jamoa yaratish",
+        "• <code>/qoshil Bilimdonlar</code> — jamoaga qo‘shilish (yoki <code>/qoshil 2</code>)",
+        "• <code>/tayyor</code> — «Men tayyorman»",
+        "• <code>/chiqish</code> — jamoadan chiqish",
+        "",
+        "<i>O‘yin paytida</i>",
+        "• <code>/yakuniy javob</code> — jamoaning yakuniy javobi (tasmaga reply qilib)",
+        "• <code>/bekor</code> — yakuniy javobni olib tashlash",
+        "• <code>/pichoq @username matn</code> — bitta a’zoga maxfiy xabar",
+        "• <code>/pichoq jamoa matn</code> — o‘z jamoangizga maxfiy xabar",
+        "• <code>/azolar</code> — guruh a’zolari (id va username)",
+        "• <code>/jadval</code> — ochkolar jadvali",
+    ])
+
+
+def tour_rules_text(sizes: dict) -> str:
+    return "\n".join([
+        "<b>TURNIR QOIDALARI</b>",
+        f"• Kamida {sizes['min_teams']} ta jamoa ro‘yxatdan o‘tadi",
+        f"• Har jamoada {sizes['min_members']}–{sizes['max_members']} kishi",
+        f"• Har jamoadan kamida {sizes['min_ready']} kishi «Men tayyorman» deydi",
+        "• Har savolga har jamoa bitta yakuniy javob beradi: <code>/yakuniy javob</code>",
+        "• Vaqt tugaguncha javobni o‘zgartirish mumkin — oxirgisi hisoblanadi",
+        "• To‘g‘ri javob — jamoaga +1 ochko; bir savolda bir nechta jamoa ochko oladi",
+        "• Javoblar guruhda ko‘rinmaydi: bot ularni o‘chiradi va faqat o‘z jamoangizga "
+        "shaxsiy xabar bilan ko‘rsatadi",
+        "• Yakunda ochkolar jadvali e’lon qilinadi",
+    ])
 
 
 def _stamp(seconds: object) -> str:

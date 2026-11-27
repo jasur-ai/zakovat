@@ -20,8 +20,11 @@ class MessageTests(unittest.TestCase):
         self.assertIn("admin", text)
 
     def test_countdown_bar_shrinks(self):
-        self.assertEqual(msg.bar(60, 60), "▰" * 10)
-        self.assertEqual(msg.bar(0, 60), "▱" * 10)
+        # Twenty segments: with a 60-second question one segment is three seconds,
+        # so the bar visibly walks down between two repaints.
+        self.assertEqual(msg.bar(60, 60), "▰" * 20)
+        self.assertEqual(msg.bar(0, 60), "▱" * 20)
+        self.assertEqual(len(msg.bar(30, 60)), 20)
         self.assertIn("30 s", msg.timer_line(30, 60))
         self.assertIn("tugadi", msg.timer_line(0, 60))
 
@@ -33,12 +36,18 @@ class MessageTests(unittest.TestCase):
 
     def test_countdown_shows_digits_and_a_shrinking_bar(self):
         head, _, track = msg.countdown(45, 60).partition("\n")
-        self.assertEqual(head, "QOLGAN VAQT  00:45")
-        self.assertEqual(track, "▰" * 8 + "▱" * 2)
+        self.assertEqual(head, "<b>00:45</b> · QOLGAN VAQT")   # digits first: they are the clock
+        self.assertEqual(track, "▰" * 15 + "▱" * 5)
         shorter = msg.countdown(12, 60)
-        self.assertIn("00:12", shorter)
+        self.assertIn("<b>00:12</b>", shorter)
         self.assertLess(shorter.count("▰"), track.count("▰"))
         self.assertIn("VAQT TUGADI", msg.countdown(0, 60))
+
+    def test_the_last_seconds_say_the_time_is_almost_up(self):
+        self.assertIn("VAQT TUGAYAPTI", msg.countdown(10, 60))
+        self.assertIn("VAQT TUGAYAPTI", msg.countdown(1, 60))
+        self.assertNotIn("VAQT TUGAYAPTI", msg.countdown(11, 60))
+        self.assertIn("<b>VAQT TUGADI</b>", msg.countdown(0, 60))
 
     def test_settings_panel_shows_every_parameter(self):
         text = msg.settings_panel(959, "Zakovat 959", 54, 3, 10, 45, "solo", 30)
