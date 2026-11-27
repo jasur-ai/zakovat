@@ -1,9 +1,36 @@
-[list] page 1: 30 cards · 260 pages · 7798 packages announced
-[import] 20 packages listed · 0 already stored · 20 to fetch
+[list] page 1: 30 cards · 219 pages · 6560 packages announced
+[list] 25/109 pages · 780 packages
+[list] 50/109 pages · 1530 packages
+[list] 75/109 pages · 2280 packages
+[list] 100/109 pages · 3030 packages
+[list] 109/109 pages · 3300 packages
+[import] 3300 packages listed · 2 already stored · 3300 to fetch
 [import] dedupe against 30378 known questions
-[import] done: {'packages': 2, 'questions': 7, 'duplicates': 593, 'failed': 0, 'empty': 18, 'images': 1, 'missing': 0}
-[import] sample → data/turnirlar/sample.json (8798 bytes)
-packages 2 questions 7 shards 1 bytes 3303
+[import] 150 packages · 5085 questions · 2 shards · 0 duplicates skipped
+[import] 300 packages · 10173 questions · 3 shards · 1 duplicates skipped
+[import] 450 packages · 15121 questions · 4 shards · 1 duplicates skipped
+[import] 600 packages · 20174 questions · 5 shards · 1 duplicates skipped
+[import] 750 packages · 25253 questions · 6 shards · 1 duplicates skipped
+[import] 900 packages · 30197 questions · 7 shards · 1 duplicates skipped
+[import] 1050 packages · 35538 questions · 8 shards · 1 duplicates skipped
+[import] 1200 packages · 40677 questions · 9 shards · 1 duplicates skipped
+[import] 1350 packages · 45650 questions · 10 shards · 1 duplicates skipped
+[import] 1500 packages · 50633 questions · 11 shards · 2 duplicates skipped
+[import] 1650 packages · 55928 questions · 12 shards · 2 duplicates skipped
+[import] 1800 packages · 61329 questions · 13 shards · 2 duplicates skipped
+[import] 1950 packages · 66715 questions · 14 shards · 2 duplicates skipped
+[import] 2100 packages · 71933 questions · 15 shards · 2 duplicates skipped
+[import] 2250 packages · 77317 questions · 16 shards · 2 duplicates skipped
+[import] 2400 packages · 82534 questions · 17 shards · 2 duplicates skipped
+[import] 2550 packages · 87733 questions · 18 shards · 2 duplicates skipped
+[import] 2700 packages · 92854 questions · 19 shards · 2 duplicates skipped
+[import] 2850 packages · 98186 questions · 20 shards · 2 duplicates skipped
+[import] 3000 packages · 103568 questions · 21 shards · 3 duplicates skipped
+[import] 3150 packages · 108700 questions · 22 shards · 6 duplicates skipped
+[import] 3300 packages · 113812 questions · 23 shards · 7 duplicates skipped
+[import] done: {'packages': 3300, 'questions': 113812, 'duplicates': 7, 'failed': 0, 'empty': 0, 'images': 7507, 'missing': 0}
+[import] sample → data/turnirlar/sample.json (18465 bytes)
+packages 3302 questions 113819 shards 23 bytes 34527543
   {"id": 907785, "source_id": 7785, "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari", "questions": 4, "rounds": 1, "date": "10.10.2026", "section": "Professional", "origin": "Zakovat kl
   {"id": 907783, "source_id": 7783, "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari", "questions": 3, "rounds": 1, "date": "26.09.2026", "section": "Professional", "origin": "Zakovat kl
-https://github.com/jasur-ai/zakovat/releases/tag/savollar-bazasi
+  {"id": 906089, "source_id": 6089, "title": "LETIda bahor 2025", "questions": 15, "rounds": 1, "date": "09.03.2025", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6089", "images": 1

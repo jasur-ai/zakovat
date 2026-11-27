@@ -1,304 +1,528 @@
 {
- "generated_at": "2026-11-27T17:33:31+00:00",
+ "generated_at": "2026-11-27T18:00:03+00:00",
  "listed_packages": [
   {
-   "source_id": 7797,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari",
+   "source_id": 7800,
+   "title": "O‘zbekiston chempionati 2025 savollari",
+   "questions": 60,
+   "rounds": 4,
+   "date": "16.11.2025",
+   "section": "",
+   "authors": [
+    "Saidakrom Rasulev Farxadovich"
+   ],
+   "origin": "Foydalanuvchilar yuborgan savollar"
+  },
+  {
+   "source_id": 6559,
+   "title": "«MIFI kubogi 2025» intellektual o‘yinlar festivali",
+   "questions": 75,
+   "rounds": 7,
+   "date": "07.12.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6558,
+   "title": "Odamlar o‘ynaydigan harflar II",
    "questions": 36,
-   "rounds": 1,
-   "date": "31.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "18.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7796,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari",
-   "questions": 37,
-   "rounds": 1,
-   "date": "24.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "source_id": 6557,
+   "title": "Oq otlar kubogi",
+   "questions": 35,
+   "rounds": 3,
+   "date": "10.05.2021",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7795,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "17.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7794,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari",
+   "source_id": 6556,
+   "title": "O‘n to‘rtinchi qahraton",
    "questions": 36,
-   "rounds": 1,
-   "date": "14.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "23.02.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7793,
-   "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari",
-   "questions": 27,
-   "rounds": 1,
-   "date": "14.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7792,
-   "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "07.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7791,
-   "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "31.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7790,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari",
+   "source_id": 6555,
+   "title": "Kub-1. Sentyabr (2023/2024)",
    "questions": 36,
-   "rounds": 1,
-   "date": "07.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "30.09.2023",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7789,
-   "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "24.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7788,
-   "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "17.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7787,
-   "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "10.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7786,
-   "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "03.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7785,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "10.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7784,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari",
+   "source_id": 6554,
+   "title": "Sims To Be. Vol. 7",
    "questions": 36,
-   "rounds": 1,
-   "date": "03.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "30.05.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7783,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "26.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7782,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari",
-   "questions": 37,
-   "rounds": 1,
-   "date": "19.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7781,
-   "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "26.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7780,
-   "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari",
-   "questions": 25,
-   "rounds": 1,
-   "date": "19.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7779,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari",
+   "source_id": 6553,
+   "title": "Kub-1. Sentyabr (2022/2023)",
    "questions": 36,
-   "rounds": 1,
-   "date": "12.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "30.09.2022",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7778,
-   "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "12.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
+   "source_id": 6552,
+   "title": "StudChR-2025. Falstartsiz tezlikka jamoaviy o‘yin",
+   "questions": 104,
+   "rounds": 19,
+   "date": "20.04.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6551,
+   "title": "Yuriy Mironovich xotirasiga bag‘ishlangan turnir – 2024",
+   "questions": 36,
+   "rounds": 3,
+   "date": "04.01.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6550,
+   "title": "Nesterka",
+   "questions": 55,
+   "rounds": 6,
+   "date": "29.10.2023",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6549,
+   "title": "Samarium. Do‘stlik kubogi.",
+   "questions": 36,
+   "rounds": 3,
+   "date": "06.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6548,
+   "title": "O‘ylash uchun bir.. beriladi",
+   "questions": 36,
+   "rounds": 3,
+   "date": "01.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6545,
+   "title": "Cheksizlik orolchasi: mart",
+   "questions": 36,
+   "rounds": 3,
+   "date": "12.04.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6544,
+   "title": "Guldurab qaynovchi kubok",
+   "questions": 36,
+   "rounds": 3,
+   "date": "31.01.2021",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6543,
+   "title": "OVSCH. 4-bosqich",
+   "questions": 36,
+   "rounds": 3,
+   "date": "23.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6542,
+   "title": "Gyombyots-8",
+   "questions": 54,
+   "rounds": 4,
+   "date": "28.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6541,
+   "title": "Meva: guava",
+   "questions": 36,
+   "rounds": 3,
+   "date": "08.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6540,
+   "title": "Borisfen 11: Irkley",
+   "questions": 35,
+   "rounds": 3,
+   "date": "16.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6539,
+   "title": "Balkanfest — 2025",
+   "questions": 94,
+   "rounds": 6,
+   "date": "23.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   }
  ],
  "questions": [
   {
-   "id": 900030415,
-   "question_id": 30415,
-   "package_id": 907785,
-   "index": 13,
+   "id": 900327259,
+   "question_id": 327259,
+   "package_id": 906089,
+   "index": 1,
    "round": 1,
-   "text": "\"SHUNDAY\" so‘zining aniq etimologik ildizi topilmagan bo‘lsa-da, ayrim ishonchsiz manbaalarda \"chashm\" so‘ziga bog‘liqligi aytiladi. Bu esa, IKSlarga SHUNDAY ta’rifi berilishining nafaqat tashqi shakl va ko‘rinish jihatdan, balki etimologik bog‘liqligini ham ham ochib berishi mumkin.\nSavol: 1990-yillar boshida kuylagan qo‘shiqda yordagi SHUNDAY IKS qanday effekt berishini qo‘shni harflardan boshlanuvchi ikki so‘z bilan yozib bering.",
-   "answer": "Tilni so‘ylatadi",
-   "comment": "SHUNDAY IKS - charos ko‘zlar. \"chashm\" so‘zi ko‘z deya tarjima qilinishi va ko‘zga charos deya ta’rif berilishi nafaqat ko‘rinish balki etimologik jihat bilan bog‘liq ekanligini ko‘rsatadi. Qo‘shiq Kamoliddin Rahimovga tegishli \"Qoshingiz qarosi\".",
+   "text": "Mark Pilkingtonning yozishicha, garshilik maxsus xizmatlari XX asr o‘rtalarida NLO haqidagi mish-mishlarni o‘zlari o‘ylab topmagan bo‘lsalar ham, ularning dunyoga kelishiga yordam berishgan va maxsus xizmatlarni ushbu afsonaning ALFAsi deb ataydi. ALFA kim?",
+   "answer": "doya / doya xotin; akusherka",
+   "comment": "Ular mish-mishning ota-onasi bo‘lishmagan bo‘lsa ham, uning tug‘ilishiga (dunyoga kelishiga) yordam berishgan.",
+   "accepted": [
+    "doya xotin; akusherka"
+   ],
    "sources": [
-    "https://www.zakovatklubi.uz/open-question/view/31340"
+    "М. Пилкингтон. Уфологи в штатском. Как спецслужбы работают с НЛО;",
+    "https://clck.ru/3Gf9dr",
+    "https://gotquestions.online/packs/6344/1"
    ],
    "authors": [
-    "Sarvar Aminov Xaytbayevich"
+    "Andrey Skirenko"
    ],
-   "created_at": 1791590400
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1741478400
   },
   {
-   "id": 900030381,
-   "question_id": 30381,
-   "package_id": 907783,
-   "index": 16,
+   "id": 900521812,
+   "question_id": 521812,
+   "package_id": 905847,
+   "index": 1,
    "round": 1,
-   "text": "18-asrda yashagan Jan-Noel Alle Parijdagi butun jamiyatning joniga tekkan masalaga qarshi kurashganligi va shaxsan o‘zi Sena daryosi tarkibini o‘rganganligi haqida gapirar ekan Federiko Kusko Jan-Noel tom ma’noda ham majoziy ma’noda ham bu ishni qilganligini yozadi. Mikromenejment haqidagi maqolada ham bu ishni qilish so‘zlarini uchratish mumkin.\n\nSavol: Qaysi ish?",
-   "answer": "Hamma joyga burnini tiqish",
-   "comment": "Parijlik shifokor Parijning noxush hidlarga to‘lib ketganlik holatini yaxshilashga harakat qiladi. Jumladan, badbo‘y hidning asosiy manbayi bo‘lmish Sena daryosi tarkibini ham o‘rganib chiqqan. Shu sababdan har ikki ma’noda ham Jan-Noel hamma joyga burnini tiqqan desa bo‘ladi.",
+   "text": "Qarshingizda Pyero della Francheskaning muqaddas Aleksandriyalik Apolloniyani tasvirlagan freskasi. Bir versiyaga ko‘ra, della Francheska freskalaridan Ayova shtatida tug‘ilgan mashhur inson ilhomlangan. Ushbu insonni nomlang.",
+   "answer": "Vud / Grant Vud",
+   "comment": "Muqaddas Aleksandriyalik Apolloniyaning qiynoqlar paytida barcha tishlarini sug‘urib olishgan, shuning uchun u qo‘lida qiynoq atributi bilan tasvirlanadi. Ushbu freskada u Vudning «Amerika gotikasi» kartinasidagi ayolni eslatadi. Qiziq, ushbu kartinaning boshqa qahramoni — vilali erkak — tish shifokori Bayron Makkibi bo‘lgan. Della Francheska freskalarining personajlari bilan o‘xshashlik Vudning boshqa kartinalarida ham uchraydi.",
+   "accepted": [
+    "Grant Vud"
+   ],
+   "attachments": [
+    "https://turnirlar.uz/savollar/api/media/pub/archive/gotquestions/7a5d540a_407051_razdatka.webp"
+   ],
    "sources": [
-    "Federiko Kusko – “Odorama”.",
-    "https://www.zakovatklubi.uz/open-question/view/31307"
+    "https://tinyurl.com/5y3j5nv7",
+    "https://gotquestions.online/packs/6095/1"
    ],
    "authors": [
-    "Abdulaziz Sultonov Abduraxim o‘g‘li"
+    "Aleksandr Mudriy"
    ],
-   "created_at": 1790380800
+   "badges": [
+    "AI tarjima",
+    "Rasmli"
+   ],
+   "created_at": 1717891200
+  },
+  {
+   "id": 900192945,
+   "question_id": 192945,
+   "package_id": 906435,
+   "index": 1,
+   "round": 1,
+   "text": "Intellektual galaktika bo‘ylab sayohatga otlanamiz! Greta Gervigning filmida qizaloq ulkan go‘zal Barbi ko‘rinishi bilan Rixard Shtraus musiqasi ostida o‘zining eski qo‘g‘irchoqlarini ura boshlaydi. Ushbu epizod qaysi filmga ishora qiladi?",
+   "answer": "«Koinot odisseyasi: 2001-yil» / «2001: Koinot odisseyasi»; «Koinot odisseyasi»",
+   "comment": "Barchaga tanish «Zardusht shunday degan» musiqasi va «Barbi» filmidagi sahnaning o‘zi Stenli Kubrikning mashhur filmi boshlanishiga ishora qiladi, u yerda maymun birovning skeletini ura boshlaydi.",
+   "accepted": [
+    "«2001: Koinot odisseyasi»; «Koinot odisseyasi»"
+   ],
+   "sources": [
+    "https://daily-afisha-ru.turbopages.org/turbo/daily.afisha.ru/s/news/711…",
+    "https://ru.wikipedia.org/wiki/Космическая_одиссея_2001_года",
+    "https://gotquestions.online/packs/6722/1",
+    "https://daily-afisha-ru.turbopages.org/turbo/daily.afisha.ru/s/news/71136-v-seti-poyavilsya-pervyy-tizer-filma-barbi-s-otsylkoy-k-kosmicheskoy-odissee-kubrika/"
+   ],
+   "authors": [
+    "Dmitriy Pyatkin"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1745712000
+  },
+  {
+   "id": 900460172,
+   "question_id": 460172,
+   "package_id": 906180,
+   "index": 1,
+   "round": 1,
+   "text": "Bevosita betartib deb atalishdan tortinmay, bir kambag‘al talaba mashg‘ulotlarda ULAR cheklanmagan miqdorda berilishidan bajonidil foydalangan. Gap shundaki, ushbu talabaning davrida ULAR sifatida ham oq, ham qora IKSdan foydalanilgan. ULAR va IKS nima ekanligini ayting.",
+   "answer": "o‘chirgichlar, non / o‘chirgich, non; lastic, non",
+   "comment": "Talaba kambag‘al va juda och bo‘lgan, shuning uchun xatolarni tuzatish uchun beriladigan moslamani bajonidil yegan. Bu moslama o‘chirgich bo‘lib, qadimda u oddiy nondan qilingan.",
+   "accepted": [
+    "o‘chirgich, non; lastic, non"
+   ],
+   "sources": [
+    "https://ru.wikipedia.org/wiki/Стирательная_резинка",
+    "https://gotquestions.online/packs/6391/1"
+   ],
+   "authors": [
+    "Pavel Parfianovich"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1731888000
+  },
+  {
+   "id": 900386705,
+   "question_id": 386705,
+   "package_id": 906125,
+   "index": 1,
+   "round": 0,
+   "text": "1585-yilning yoki 31-martida, yoki 10-aprelida vafot etgan shaxsning taxt ismini ayting.",
+   "answer": "Grigoriy / Grigoriy XIII",
+   "comment": "Rim papasi Grigoriy XIII Grigorian taqvimini joriy etgani bilan tanilgan. Eski stil bo‘yicha u 31-martda, yangi stil bo‘yicha esa 10-aprelda vafot etgan.",
+   "accepted": [
+    "Grigoriy XIII"
+   ],
+   "sources": [
+    "https://ru.wikipedia.org/wiki/Григорий_XIII",
+    "https://ru.wikipedia.org/wiki/Тронное_имя",
+    "https://gotquestions.online/packs/6204/46"
+   ],
+   "authors": [
+    "Dmitriy Butsenets"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1462579200
+  },
+  {
+   "id": 900541339,
+   "question_id": 541339,
+   "package_id": 905972,
+   "index": 1,
+   "round": 1,
+   "text": "Savolda almashtirishlar bor. Patologoanatom Syu Blek yaqin kungacha halok bo‘lgan shaxs BIRINCHI yoki IKKINCHI ekanligini qadoqlar joylashgan o‘rniga qarab aniqlash mumkin bo‘lganini ta’kidlaydi. «IKKINCHI» asarini kim yozgan?",
+   "answer": "[Nikolay] Leskov / Leskov",
+   "comment": "BIRINCHI va IKKINCHI — o‘ngaqay va chapaqay. Ruchka va patqalam barmog‘ida qadoq qoldirgan. Nikolay Leskov mashhur «Chapaqay» («Левша») qissasining muallifidir.",
+   "accepted": [
+    "Leskov"
+   ],
+   "sources": [
+    "Сью Блэк. «Записано на костях»; https://flibusta.is/b/745700/read",
+    "https://ru.wikipedia.org/wiki/Левша_(сказ)",
+    "https://gotquestions.online/packs/6059/1",
+    "https://flibusta.is/b/745700/read"
+   ],
+   "authors": [
+    "Ruslan Aliyev"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1709424000
+  },
+  {
+   "id": 900515078,
+   "question_id": 515078,
+   "package_id": 906166,
+   "index": 1,
+   "round": 2,
+   "text": "Diqqat, qarshingizda bir qismi aylana bilan belgilangan material turibdi.\n\n«Xellouin» filmiga ishlangan ushbu posterda ko‘pchilik qandaydir «pasxalka» (yashirin ishora) deb qabul qiladigan tasvir ko‘pincha U bilan tushuntiriladi. Uni aniq nomlang.",
+   "answer": "Pareidoliya / pareidolik illyuziya",
+   "comment": "Poster muallifi Bob Glisonning ta’kidlashicha, xanjarni qisib turgan mushtda ko‘ringan baqirayotgan bashara tasviri tasodifan paydo bo‘lgan. Pareidoliya — bu inson tasodifiy obyektlar yoki naqshlarda (masalan, bulutlar, devordagi dog‘lar) tanish obrazlarni (masalan, yuzlarni) ko‘radigan ko‘rish illyuziyasidir.",
+   "accepted": [
+    "pareidolik illyuziya"
+   ],
+   "attachments": [
+    "https://turnirlar.uz/savollar/api/media/pub/archive/gotquestions/dbf06185_417211_razdatka.webp"
+   ],
+   "sources": [
+    "https://twizz.ru/15-posterov-izvestnyx-filmov-krutymi-skrytymi-573513/",
+    "https://www.screengeek.net/2019/10/09/halloween-poster-hidden-image/",
+    "https://www.fangoria.com/halloween-1978-poster-artist-bob-gleason-on-ha…",
+    "https://gotquestions.online/packs/6338/18"
+   ],
+   "authors": [
+    "Aleksandr Grinberg"
+   ],
+   "badges": [
+    "AI tarjima",
+    "Rasmli"
+   ],
+   "created_at": 1747353600
+  },
+  {
+   "id": 900209732,
+   "question_id": 209732,
+   "package_id": 906097,
+   "index": 1,
+   "round": 1,
+   "text": "Bir kitob muallifining yozishicha, XIX asrning ikkinchi yarmidagi texnik taraqqiyot tomoshabinlar ham diqqat markazida ekanliklarini his qilmasliklari va o‘zlarini bosiqroq tutishlari uchun BU ISHNI QILISH imkonini berdi. Iloji boricha aniq javob bering: BU ISHNI QILISH nima?",
+   "answer": "teatrda tomosha boshlanishidan oldin chiroqni o‘chirish / teatrda chiroqni o‘chirish; spektakl boshlanishidan oldin chiroqni o‘chirish; teatrda yorug‘likni o‘chirish; kontsert zallarida chiroqni o‘chirish",
+   "comment": "XIX asrning ikkinchi yarmigacha teatrlarda tomosha vaqtida chiroqni o‘chirish rasm bo‘lmagan. Elektr yoritish tizimi paydo bo‘lgach, bitta rubilnik bilan zalni qorong‘i qilish imkoni tug‘ilgan, bu esa tomoshabinlarning odobsiz xatti-harakatlarini cheklashga xizmat qilgan.",
+   "accepted": [
+    "teatrda chiroqni o‘chirish; spektakl boshlanishidan oldin chiroqni o‘chirish; teatrda yorug‘likni o‘chirish; kontsert zallarida chiroqni o‘chirish"
+   ],
+   "sources": [
+    "Б. Хейнс. Конец старинной музыки. История музыки, написанная исполнителем-аутентистом для XXI века; https://imgur.com/a/2BaSnO2",
+    "https://gotquestions.online/packs/6339/1",
+    "https://imgur.com/a/2BaSnO2"
+   ],
+   "authors": [
+    "Andrey Skirenko"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1747008000
+  },
+  {
+   "id": 900539206,
+   "question_id": 539206,
+   "package_id": 906442,
+   "index": 1,
+   "round": 1,
+   "text": "Duplet. Har biri 30 sekunddan muhokama qilinadigan ikkita savol. Javoblar bitta blankada topshiriladi.\n1. Qaynatilgan sabzavotlar va dudlangan tovuq go‘shti qatlamlari ustiga qiymali tuxumlarni qo‘ying va pishloq seping. Yarim soatga muzlatgichga qo‘ying. Tayyor taom «U» deb ataladi. U nima?\n2. Tayyorlangan yumaloq xamir bo‘laklarini shakarga botirib, ikkiga, so‘ngra yana ikkiga buklang. Tayyor taom «ULAR» deb ataladi. Ularni nomlang.",
+   "answer": "1. Qor uyumi\n2. Quloqchalar / 1. Sugrob\n2. Ushki; Qorboni; Quloqlar",
+   "comment": "Mayonezli «Qor uyumi» («Sugrob») salati sarg‘ish dog‘li oq rangda bo‘lib, shaklan qor uyumini eslatadi. Unga qo‘shib yeyish uchun esa shirin «Quloqchalar» («Ushki») pechenyesi juda mos keladi. «Sugrobushki» festivaliga xush kelibsiz!",
+   "accepted": [
+    "1. Sugrob\n2. Ushki; Qorboni; Quloqlar"
+   ],
+   "sources": [
+    "https://vkuso.ru/recipe/85697-salat-sugrob-s-kuricej-i-kartofelem-fri",
+    "https://www.iamcook.ru/showrecipe/10675",
+    "https://gotquestions.online/packs/6773/1"
+   ],
+   "authors": [
+    "Olga Sarnitskaya"
+   ],
+   "badges": [
+    "AI tarjima",
+    "Duplet"
+   ],
+   "created_at": 1743724800
+  },
+  {
+   "id": 900162029,
+   "question_id": 162029,
+   "package_id": 906063,
+   "index": 1,
+   "round": 1,
+   "text": "Ed Shiffelin — hindular yashaydigan Arizona hududini tadqiq qilgan oltin izlovchi edi. Uning muvaffaqiyatiga ishonmagan do‘sti Shiffelin topadigan yagona IKS faqat SHUNDAY bo‘lishini aytgan. SHUNDAY IKS bilan qaysi ikki so‘z almashtirilgan?",
+   "answer": "qabr toshi / qabr tosh",
+   "comment": "Do‘sti u yerda qimmatbaho toshlar yo‘q deb hisoblagan va Shiffelin o‘z qabr toshini topadi xolos deb hazillashgan. Keyinchalik Shiffelin u yerda kumush konini topgan va qurilgan shahar Tumstoun («qabr toshi») deb nomlangan.",
+   "accepted": [
+    "qabr tosh"
+   ],
+   "sources": [
+    "https://en.wikipedia.org/wiki/Tombstone,_Arizona",
+    "http://www.grinchevskiy.ru/books/pervaya-encicljpediya-dikogo-zapada/sc…",
+    "https://gotquestions.online/packs/6368/1",
+    "http://www.grinchevskiy.ru/books/pervaya-encicljpediya-dikogo-zapada/schieffelin.php"
+   ],
+   "authors": [
+    "Andrey Volkov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1723248000
+  },
+  {
+   "id": 900231308,
+   "question_id": 231308,
+   "package_id": 905933,
+   "index": 1,
+   "round": 1,
+   "text": "Diqqat, taklif etilgan hammuallif ishtirokidagi savol!\nBiz «Diqqat, taklif etilgan hammuallif ishtirokidagi savol» so‘zlari bilan almashtirgan matnda 2022-yil oxirida tasdiqlangan formulirovka ishlatiladi. 2022-yil oxirigacha esa ushbu matnda 2020-yilda tasdiqlangan formulirovka ishlatilardi. Ushbu formulirovkalardan birining dastlabki ikki so‘zini yozib bering.",
+   "answer": "ushbu xabar / ushbu material; данное сообщение; настоящий материал",
+   "comment": "Rossiyada «chet el agentlari» deb tan olingan shaxslar o‘z matnlari boshiga qo‘yishi shart bo‘lgan rasmiy ogohlantirish iborasi rus tilida «данное сообщение» yoki «настоящий материал» so‘zlari bilan boshlanadi.",
+   "accepted": [
+    "ushbu material; данное сообщение; настоящий материал"
+   ],
+   "sources": [
+    "Приказ Роскомнадзора от 23.09.2020 N 124 ( https://archive.ph/jU7Dl ).",
+    "Постановление Правительства Российской Правительства от 22.11.2022 № 2108 ( https://archive.ph/m26Fq ).",
+    "https://gotquestions.online/packs/6090/1",
+    "https://archive.ph/jU7Dl"
+   ],
+   "authors": [
+    "Aleksey Boronenko , Yuliya Lukyanova"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1732320000
+  },
+  {
+   "id": 900184218,
+   "question_id": 184218,
+   "package_id": 905968,
+   "index": 1,
+   "round": 1,
+   "text": "O‘zining videolaridan birida Ramir Hasanov odamning mashinasini yashirib, ustidan hazillashadi. Transport vositasining yo‘qolishini asoslashga urinib, prankchi turargoh joyini U deb ataydi. UNI juft undoshlar bilan boshlanadigan ikki so‘z bilan nomlang.",
+   "answer": "Bermud to‘rtburchagi / Bermud to‘rtburchak",
+   "comment": "Bermud uchburchagi — afsonaga ko‘ra, kemalar va samolyotlar yo‘qoladigan hudud. Prankchi avtoturargoh o‘rnini «Bermud to‘rtburchagi» deb ataydi. B va T — juft undoshlar (p-b, t-d).",
+   "accepted": [
+    "Bermud to‘rtburchak"
+   ],
+   "sources": [
+    "https://youtube.com/shorts/ZgYkgxnnz5U?si=CBJPNDYlvUCtQFYH",
+    "https://gotquestions.online/packs/5993/1"
+   ],
+   "authors": [
+    "Robert Gabriel Roskam"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1725753600
   }
  ],
  "fields": [
+  "accepted",
   "answer",
+  "attachments",
   "authors",
+  "badges",
   "comment",
   "created_at",
   "id",
@@ -309,5 +533,5 @@
   "sources",
   "text"
  ],
- "average_bytes": 975
+ "average_bytes": 912
 }
