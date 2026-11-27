@@ -231,3 +231,20 @@ Intellektual Marafon 3-tur Espero jamoasi navbatchili
 [check]   {"id": 900559880, "question_id": 559880, "package_id": 907800, "index": 1, "round": 1, "text": "Mexanik turk bilan shaxmat o‘ynamoqchi bo‘lganlarga Volfgang fon Kempelen ikkita shart qo‘ygan. Mexanik turk oq figuralarda o‘ynaydi va BU ISHNI QILADI.\nSavol: Bu ishni qilish bilan almashtirilgan so‘zlarni yozib bering.", "answer": "Birinchi yurishni amalga oshiradi.", "comment": "Mexanik turk 1770-yilda yaratilgan. Bu vaqtda ham shaxmatni oqlar boshlab bergan, ammo aynan oq figuralar birinchi yurishni amalga oshirishi haqidagi qoida mustahkamlab qo‘yilmagan edi. Ushbu qoida 19-asr oxirida kiritilgan.", "accepted": ["Ma’nodosh javoblar."], "sources": ["https://en.wikipedia.org/wiki/Mechanical_Tu
 [check]   {"id": 900559881, "question_id": 559881, "package_id": 907800, "index": 2, "round": 1, "text": "Diqqat, savolda almashtirish bor.\nAbduqodir Husanov uzoq vaqt Ravshan Haydarov boshqaruvi ostida o‘ynagan. Husanov haqida ijobiy fikrlarni aytar ekan, Haydarov hozirga kelib Abduqodirning X Factori qandayligini eslay olmasligini aytadi.\nSavol: Savolda almashtirilganni unli harflari bir xil so‘z bilan yozib bering.", "answer": "Ovoz.", "comment": "Murabbiy Husanovning odobli, kamgapligini ta’kidlar ekan, u bilan haftalab yig‘inlarda ishtirok etgan bo‘lsa-da, hozirga kelib Abduqodirning ovozi qandayligini eslay olmasligini aytadi. Savolda O‘zbekistondagi bir musiqiy loyiha nomi boshqasi bilan alma
 [import] sample → data/turnirlar/probe/sample.json (17140 bytes)
+[verify] package 401: the site says 72 questions, the parser returned 18
+[verify] package 4988: the site says 70 questions, the parser returned 15
+[verify] package 2755: the site says 105 questions, the parser returned 12
+[verify] package 2476: the site says 105 questions, the parser returned 36
+[verify] package 4060: the site says 68 questions, the parser returned 17
+[verify] package 4604: the site says 144 questions, the parser returned 14
+[verify] package 3818: the site says 84 questions, the parser returned 18
+[verify] package 4216: the site says 107 questions, the parser returned 23
+[verify] catalogue: 260 pages · 7798 packages announced (manba=all)
+[verify] list page 1: 8 of 8 cards
+[verify] list page 53: 8 of 8 cards
+[verify] list page 105: 8 of 8 cards
+[verify] list page 156: 8 of 8 cards
+[verify] list page 208: 8 of 8 cards
+[verify] list page 260: 8 of 8 cards
+[verify] checked 48 packages · announced 1845 questions · parsed 1243 · short 8 · empty 0 · failed 0 · card/page disagreement 8
+[verify] the parser keeps 67.4% of what those pages announce; over the whole catalogue that is 201935 questions in 7798 packages
