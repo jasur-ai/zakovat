@@ -1,0 +1,9 @@
+[list] page 1: 30 cards · 260 pages · 7798 packages announced
+[import] 20 packages listed · 0 already stored · 20 to fetch
+[import] dedupe against 30378 known questions
+[import] done: {'packages': 2, 'questions': 7, 'duplicates': 593, 'failed': 0, 'empty': 18, 'images': 1, 'missing': 0}
+[import] sample → data/turnirlar/sample.json (8798 bytes)
+packages 2 questions 7 shards 1 bytes 3303
+  {"id": 907785, "source_id": 7785, "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari", "questions": 4, "rounds": 1, "date": "10.10.2026", "section": "Professional", "origin": "Zakovat kl
+  {"id": 907783, "source_id": 7783, "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari", "questions": 3, "rounds": 1, "date": "26.09.2026", "section": "Professional", "origin": "Zakovat kl
+https://github.com/jasur-ai/zakovat/releases/tag/savollar-bazasi
