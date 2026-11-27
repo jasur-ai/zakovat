@@ -20,6 +20,12 @@ on:
       page:
         description: "Ro‘yxat sahifasi"
         default: "1"
+      verify_pages:
+        description: "Verify: katalogdan necha sahifa namunaga olinadi"
+        default: "6"
+      verify_per_page:
+        description: "Verify: har sahifadan necha to‘plam tekshiriladi"
+        default: "8"
   push:
     branches: ['**']
     paths:
@@ -56,6 +62,18 @@ jobs:
           python3 scripts/export_turnirlar.py --mode check \
             --probe-dir data/turnirlar/probe \
             --sample data/turnirlar/probe/sample.json 2>&1 | tee -a data/turnirlar/probe/digest.txt
+
+      # The catalogue header advertises many more questions than its packages
+      # hold, so sample packages from across the whole list and compare the
+      # count the site announces with the count the parser returns. A package
+      # page that hid questions behind a "load more" shows up here as `short`.
+      - name: Check the parser against the site's own counts
+        run: |
+          python3 scripts/export_turnirlar.py --mode verify \
+            --verify-pages "${{ inputs.verify_pages || 6 }}" \
+            --verify-per-page "${{ inputs.verify_per_page || 8 }}" \
+            --workers 6 --polite 0.4 \
+            2>&1 | tee -a data/turnirlar/probe/digest.txt
 
       - name: Publish the digest
         run: |

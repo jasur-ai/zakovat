@@ -927,10 +927,126 @@ def import_packages(rows: list[dict], out_dir: Path, workers: int, compress: boo
     return dict(stats), sample
 
 
+def _digits(value: object) -> int:
+    """``"36 savol"`` → 36 (0 when the page does not say)."""
+    return int(re.sub(r"\D", "", str(value or "")) or 0)
+
+
+def verify(sample_pages: int, per_page: int, source: str, workers: int,
+           polite: float, start_page: int = 1) -> tuple[dict, list[dict]]:
+    """Does the parser return every question the site says a package has?
+
+    The catalogue header advertises a site-wide question total that is far
+    bigger than the sum over its packages, so this walks a spread of list pages
+    and compares three numbers for each package: the count on the catalogue
+    card, the ``Savollar soni`` fact on the package page, and what
+    ``parse_package`` actually returns. A package page that hid part of its
+    questions behind a "load more" would show up here as ``short``.
+    """
+    query: dict[str, object] = {"page": start_page}
+    if SOURCES.get(source):
+        query["manba"] = SOURCES[source]
+
+    def list_url(page: int) -> str:
+        return f"{SITE}/paketlar?" + urlencode(dict(query, page=page))
+
+    status, markup = fetch(list_url(start_page))
+    if status != 200:
+        print(f"[verify] list page {start_page}: HTTP {status}", file=sys.stderr)
+        return {"checked": 0, "failed": 1}, []
+    last_page = list_page_count(markup) or start_page
+    total = list_total(markup) or 0
+    print(f"[verify] catalogue: {last_page} pages · {total or '?'} packages announced "
+          f"(manba={source})")
+
+    sample_pages = max(1, int(sample_pages))
+    if last_page > start_page:
+        step = (last_page - start_page) / max(1, sample_pages - 1) if sample_pages > 1 else 0
+        wanted = sorted({min(last_page, start_page + round(step * i))
+                         for i in range(sample_pages)})
+    else:
+        wanted = [start_page]
+
+    rows: list[dict] = []
+    for page in wanted:
+        try:
+            status, markup = fetch(list_url(page))
+        except RuntimeError as exc:
+            print(f"[verify] list page {page}: {exc}", file=sys.stderr)
+            continue
+        if status != 200:
+            print(f"[verify] list page {page}: HTTP {status}", file=sys.stderr)
+            continue
+        cards = parse_list(markup)[:max(1, per_page)]
+        print(f"[verify] list page {page}: {len(cards)} of {per_page} cards")
+        rows.extend(cards)
+
+    stats = {"checked": 0, "failed": 0, "empty": 0, "short": 0,
+             "announced": 0, "parsed": 0, "card_mismatch": 0}
+    problems: list[dict] = []
+
+    def one(row: dict) -> dict:
+        source_id = int(row["source_id"])
+        url = f"{SITE}/paket/{source_id}"
+        status, markup = fetch(url)
+        result = {"source_id": source_id, "card": _digits(row.get("questions")),
+                  "page": 0, "parsed": 0, "http": status}
+        if status != 200:
+            return result
+        meta, questions = parse_package(markup, {"id": ID_OFFSET + source_id,
+                                                 "source_id": source_id})
+        result["page"] = _digits(meta.get("Savollar soni"))
+        result["parsed"] = len(questions)
+        return result
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(one, row): row for row in rows}
+        for row in rows:
+            time.sleep(polite / max(1, workers))
+        for future in as_completed(futures):
+            row = futures[future]
+            try:
+                found = future.result()
+            except Exception as exc:                            # noqa: BLE001
+                stats["failed"] += 1
+                print(f"[verify] package {row['source_id']}: {exc}", file=sys.stderr)
+                continue
+            if found.get("http") != 200:
+                stats["failed"] += 1
+                print(f"[verify] package {found['source_id']}: HTTP {found['http']}",
+                      file=sys.stderr)
+                continue
+            stats["checked"] += 1
+            announced = found["page"] or found["card"]
+            stats["announced"] += announced
+            stats["parsed"] += found["parsed"]
+            if found["page"] and found["card"] and found["page"] != found["card"]:
+                stats["card_mismatch"] += 1
+            if not found["parsed"]:
+                stats["empty"] += 1
+            if found["parsed"] < announced:
+                stats["short"] += 1
+                problems.append(found)
+                print(f"[verify] package {found['source_id']}: the site says {announced} "
+                      f"questions, the parser returned {found['parsed']}", file=sys.stderr)
+
+    print(f"[verify] checked {stats['checked']} packages · announced {stats['announced']} "
+          f"questions · parsed {stats['parsed']} · short {stats['short']} · "
+          f"empty {stats['empty']} · failed {stats['failed']} · "
+          f"card/page disagreement {stats['card_mismatch']}")
+    if stats["checked"] and stats["announced"]:
+        ratio = stats["parsed"] / stats["announced"]
+        print(f"[verify] the parser keeps {ratio:.1%} of what those pages announce; "
+              f"over the whole catalogue that is {int(total * stats['parsed'] / max(1, stats['checked']))} "
+              f"questions in {total or '?'} packages")
+    return stats, problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--mode", choices=("probe", "check", "import"), default="import")
+    parser.add_argument("--mode", choices=("probe", "check", "verify", "import"),
+                        default="import")
     parser.add_argument("--out-dir", default="data/turnirlar")
     parser.add_argument("--probe-dir", default="/tmp/turnirlar-probe")
     parser.add_argument("--probe-package", type=int, default=7800)
@@ -946,6 +1062,10 @@ def main() -> int:
     parser.add_argument("--polite", type=float, default=0.4,
                         help="seconds of delay spread over the workers")
     parser.add_argument("--sample", default="", help="write a small readable sample here")
+    parser.add_argument("--verify-pages", type=int, default=6,
+                        help="how many catalogue pages the verify mode samples")
+    parser.add_argument("--verify-per-page", type=int, default=8,
+                        help="how many packages to re-check on each sampled page")
     parser.add_argument("--no-gzip", action="store_true")
     parser.add_argument("--no-dedupe", action="store_true")
     args = parser.parse_args()
@@ -957,6 +1077,11 @@ def main() -> int:
 
     if args.mode == "check":
         return check(Path(args.probe_dir), Path(args.sample) if args.sample else None)
+
+    if args.mode == "verify":
+        found, _problems = verify(args.verify_pages, args.verify_per_page, args.source,
+                                  args.workers, args.polite, args.start_page)
+        return 1 if found.get("short") or found.get("failed") else 0
 
     out_dir = Path(args.out_dir)
     dedupe = [] if args.no_dedupe else sorted(Path("data/all/questions").glob("*.json"))

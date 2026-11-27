@@ -219,5 +219,21 @@ jobs:
             exit 0
           fi
           git commit -m "turnirlar.uz: yig‘ish natijasi"
-          git pull --rebase origin "${GITHUB_REF#refs/heads/}" || git rebase --abort
-          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+          # Another run (or a hand push) can land while this one is scraping.
+          # These files are generated, so the newest run wins its own: rebase
+          # preferring our side, retry, and never fail the job over the race —
+          # the shards and manifest.json are already in the Release by now.
+          branch="${GITHUB_REF#refs/heads/}"
+          published="no"
+          for attempt in 1 2 3; do
+            git fetch origin "$branch"
+            if git rebase -X theirs FETCH_HEAD && git push origin "HEAD:$branch"; then
+              published="yes"; echo "published on attempt $attempt"; break
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "attempt $attempt lost the race with another push"
+            sleep 5
+          done
+          if [ "$published" = "no" ]; then
+            echo "::warning::the run log could not be pushed — the Release copy of manifest.json is the authoritative one"
+          fi

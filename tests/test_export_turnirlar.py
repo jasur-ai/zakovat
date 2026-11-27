@@ -16,6 +16,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
@@ -424,3 +425,80 @@ class CheckModeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VerifyModeTest(unittest.TestCase):
+    """``--mode verify`` compares the site's own counts with the parsed ones.
+
+    The catalogue header advertises far more questions than its packages hold,
+    so this is the check that a package page is not hiding part of its list.
+    """
+
+    def _fetcher(self, announced: int | None = None):
+        calls: list[str] = []
+
+        def fetch(url: str, *args, **kwargs):
+            calls.append(url)
+            if "/paketlar" in url:
+                return 200, LIST_PAGE
+            markup = PACKAGE_PAGE
+            if announced is not None:
+                markup = markup.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                        f"<dt>Savollar soni</dt><dd>{announced}</dd>", 1)
+            return 200, markup
+
+        return fetch, calls
+
+    def test_verify_accepts_a_package_the_parser_reads_completely(self):
+        fetch, calls = self._fetcher()
+        with mock.patch.object(ex, "fetch", fetch):
+            stats, problems = ex.verify(1, 8, "all", 2, 0.0)
+        self.assertEqual(stats["checked"], 2)
+        self.assertEqual(stats["announced"], 6)          # two packages, 3 questions each
+        self.assertEqual(stats["parsed"], 6)
+        self.assertEqual(stats["short"], 0)
+        self.assertEqual(stats["failed"], 0)
+        self.assertEqual(problems, [])
+        self.assertTrue(any("/paket/7794" in url for url in calls))
+
+    def test_verify_flags_a_package_page_that_hides_questions(self):
+        fetch, _calls = self._fetcher(announced=5)
+        with mock.patch.object(ex, "fetch", fetch):
+            stats, problems = ex.verify(1, 8, "all", 2, 0.0)
+        self.assertEqual(stats["short"], 2)
+        self.assertEqual(sorted(row["source_id"] for row in problems), [6001, 7794])
+        self.assertEqual(problems[0]["parsed"], 3)
+        self.assertEqual(problems[0]["page"], 5)
+
+    def test_verify_spreads_its_sample_over_the_whole_catalogue(self):
+        fetch, calls = self._fetcher()
+        with mock.patch.object(ex, "fetch", fetch):
+            stats, _problems = ex.verify(4, 1, "all", 2, 0.0)
+        listed = [url for url in calls if "/paketlar" in url]
+        self.assertEqual(len(listed), 5)                 # the probe page + 4 samples
+        self.assertIn("page=260", listed[-1])            # the last page is always sampled
+        self.assertEqual(len([url for url in calls if "/paket/" in url]), 4)
+        self.assertEqual(stats["checked"], 4)
+
+    def test_verify_counts_a_card_that_disagrees_with_the_package_page(self):
+        def fetch(url: str, *args, **kwargs):
+            if "/paketlar" in url:
+                return 200, LIST_PAGE
+            return 200, PACKAGE_PAGE.replace("<dt>Savollar soni</dt><dd>3</dd>",
+                                             "<dt>Savollar soni</dt><dd>36</dd>", 1)
+        with mock.patch.object(ex, "fetch", fetch):
+            stats, _problems = ex.verify(1, 8, "all", 2, 0.0)
+        self.assertEqual(stats["card_mismatch"], 1)      # 6001's card says 12, the page 36
+        self.assertEqual(stats["short"], 2)              # and the parser is short of both
+
+    def test_verify_survives_a_package_that_refuses(self):
+        def fetch(url: str, *args, **kwargs):
+            if "/paketlar" in url:
+                return 200, LIST_PAGE
+            return 500, ""
+        with mock.patch.object(ex, "fetch", fetch):
+            stats, problems = ex.verify(1, 8, "all", 2, 0.0)
+        self.assertEqual(stats["checked"], 0)
+        self.assertEqual(stats["failed"], 2)
+        self.assertEqual(problems, [])
+
