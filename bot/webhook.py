@@ -1989,6 +1989,10 @@ async def self_test() -> list[str]:
 
 @app.get("/")
 async def home():
+    if wa.demo_enabled():
+        # Local preview only (refused whenever VERCEL_ENV is set): opening the
+        # site shows the Mini App straight away, so there is no address to type.
+        return HTMLResponse(dashboard.render(wa.demo_init_data(), api="/api/app"))
     page = ROOT / "public" / "index.html"
     if page.exists():
         return HTMLResponse(page.read_text(encoding="utf-8"))

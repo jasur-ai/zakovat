@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import re
 import time
 import unittest
@@ -468,6 +469,23 @@ class RouteTests(unittest.TestCase):
     def test_the_proof_can_also_arrive_in_the_address(self):
         body = self.client.get("/api/app?initData=" + quote(self._init(OWNER), safe="")).json()
         self.assertTrue(body["ok"])
+
+    def test_the_local_preview_opens_the_panel_at_the_root(self):
+        with mock.patch.object(wa, "demo_enabled", lambda: True), \
+             mock.patch.object(wa, "demo_init_data", lambda: self._init(OWNER)):
+            answer = self.client.get("/")
+        self.assertEqual(answer.status_code, 200)
+        self.assertIn("/api/app", answer.text)
+        self.assertIn("Ruxsatlar", answer.text)
+
+    def test_production_keeps_the_landing_page_at_the_root(self):
+        with mock.patch.dict(os.environ, {"VERCEL_ENV": "production", "ZAKOVAT_APP_DEMO": "1"}):
+            self.assertFalse(wa.demo_enabled())      # Vercel refuses the demo flag
+        self.assertFalse(wa.demo_enabled())
+        answer = self.client.get("/")
+        self.assertEqual(answer.status_code, 200)
+        self.assertNotIn("Ruxsatlar", answer.text)
+        self.assertIn("Zakovat", answer.text)
 
     def test_the_diagnostic_proves_the_gate_and_leaves_no_trace(self):
         before = asyncio.run(stats.snapshot(self.archive))
