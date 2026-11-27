@@ -245,12 +245,12 @@ def _fake_store_transport(store: dict, *, fail_first: bool = False):
         body = request.content.decode("utf-8")
         if url == "https://jsonblob.com/api/jsonBlob" and request.method == "POST":
             calls["jsonblob"] += 1
-            if fail_first:
-                return httpx.Response(503, text="nope")
             store["https://jsonblob.com/api/jsonBlob/990011"] = body
             return httpx.Response(201, headers={"location": "/api/jsonBlob/990011"}, text="created")
         if url == "https://kvdb.io/" and request.method == "POST":
             calls["kvdb"] += 1
+            if fail_first:                      # the first service in the list refuses
+                return httpx.Response(503, text="<html>blocked</html>")
             store["https://kvdb.io/bucket42/zakovat-stats"] = body
             return httpx.Response(200, text="bucket42")
         if url in store:
@@ -272,9 +272,9 @@ class StoreProvisioningTests(unittest.TestCase):
         transport, calls = _fake_store_transport(store)
         report = asyncio.run(stats.create_store(transport=transport))
         self.assertTrue(report["ok"])
-        self.assertEqual(report["xizmat"], "jsonblob")
-        self.assertEqual(report["manzil"], "https://jsonblob.com/api/jsonBlob/990011")
-        self.assertEqual(calls["jsonblob"], 1)
+        self.assertEqual(report["xizmat"], "kvdb")
+        self.assertEqual(report["manzil"], "https://kvdb.io/bucket42/zakovat-stats")
+        self.assertEqual(calls["kvdb"], 1)
         self.assertIn("init-", store[report["manzil"]])       # the document was seeded
 
     def test_a_refusing_service_falls_through_to_the_next(self):
@@ -282,9 +282,12 @@ class StoreProvisioningTests(unittest.TestCase):
         transport, calls = _fake_store_transport(store, fail_first=True)
         report = asyncio.run(stats.create_store(transport=transport))
         self.assertTrue(report["ok"])
-        self.assertEqual(report["xizmat"], "kvdb")
-        self.assertEqual(report["manzil"], "https://kvdb.io/bucket42/zakovat-stats")
-        self.assertEqual(report["urinishlar"][0]["xizmat"], "jsonblob")
+        self.assertEqual(report["xizmat"], "jsonblob")        # kvdb refused, the next one worked
+        self.assertEqual(calls["kvdb"], 1)
+        first = report["urinishlar"][0]
+        self.assertEqual(first["xizmat"], "kvdb")
+        self.assertEqual(first["kod"], 503)                   # the reason is visible
+        self.assertIn("blocked", first["javob"])
 
     def test_a_dead_network_is_reported_not_raised(self):
         def handler(request):

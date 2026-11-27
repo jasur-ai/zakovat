@@ -314,7 +314,8 @@ _STORE_HEADERS = {
 
 
 def _detail(response, extra: dict | None = None) -> dict:
-    info = {"kod": response.status_code, "javob": response.text[:200].strip()}
+    snippet = " ".join(response.text.split())[:90]
+    info = {"kod": response.status_code, "javob": snippet}
     location = response.headers.get("location") or response.headers.get("Location")
     if location:
         info["location"] = str(location)[:160]
@@ -355,6 +356,28 @@ async def _provision_extendsclass(client) -> tuple[str, dict]:
     return f"https://extendsclass.com/api/json-storage/{blob_id}", detail
 
 
+PANTRY_EMAIL = os.getenv("ZAKOVAT_STATS_EMAIL", "zakovat-agent@users.noreply.github.com")
+
+
+async def _provision_pantry(client) -> tuple[str, dict]:
+    """getpantry.cloud: a free JSON pantry, the id is the only credential."""
+    response = await client.post(
+        "https://getpantry.cloud/apiv1/pantry/create",
+        content=json.dumps({"name": "Zakovat Agent statistika",
+                            "description": "Bot statistikasi uchun JSON hujjat",
+                            "contactEmail": PANTRY_EMAIL}),
+        headers=_STORE_HEADERS, follow_redirects=False)
+    detail = _detail(response)
+    try:
+        pantry_id = str(response.json().get("id") or "")
+    except Exception:
+        return "", detail
+    if not pantry_id:
+        return "", detail
+    detail["pantry"] = pantry_id
+    return f"https://api.getpantry.cloud/apiv1/pantry/{pantry_id}/basket/zakovat", detail
+
+
 async def _provision_npoint(client) -> tuple[str, dict]:
     """npoint.io keeps a JSON document behind a short id and allows PUT."""
     response = await client.post("https://api.npoint.io/",
@@ -371,10 +394,11 @@ async def _provision_npoint(client) -> tuple[str, dict]:
 
 
 PROVIDERS: tuple[tuple[str, object], ...] = (
-    ("jsonblob", _provision_jsonblob),
     ("kvdb", _provision_kvdb),
+    ("pantry", _provision_pantry),
     ("extendsclass", _provision_extendsclass),
     ("npoint", _provision_npoint),
+    ("jsonblob", _provision_jsonblob),   # datacentre manzillarini rad etadi
 )
 
 
@@ -400,7 +424,9 @@ async def create_store(transport=None) -> dict:
                     attempts.append({"xizmat": name, "xato": f"{type(exc).__name__}: {exc}"})
                     continue
                 if not url:
-                    attempts.append({"xizmat": name, "bosqich": "yaratish", **detail})
+                    attempts.append({"xizmat": name, "bosqich": "yaratish",
+                                     "kod": detail.get("kod"),
+                                     "javob": detail.get("javob", "")[:70]})
                     continue
                 try:
                     written = await _put(client, url, body, plain)
