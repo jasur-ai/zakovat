@@ -1,0 +1,462 @@
+{
+ "generated_at": "2026-11-27T19:41:35+00:00",
+ "listed_packages": [
+  {
+   "source_id": 7794,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "14.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7793,
+   "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari",
+   "questions": 27,
+   "rounds": 1,
+   "date": "14.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7792,
+   "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "07.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7790,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "07.11.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7791,
+   "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "31.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7797,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "31.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7796,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari",
+   "questions": 37,
+   "rounds": 1,
+   "date": "24.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7789,
+   "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "24.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7788,
+   "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "17.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7795,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "17.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7787,
+   "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "10.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7785,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "10.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7784,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "03.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7786,
+   "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "03.10.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7781,
+   "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "26.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7783,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari",
+   "questions": 38,
+   "rounds": 1,
+   "date": "26.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7780,
+   "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari",
+   "questions": 25,
+   "rounds": 1,
+   "date": "19.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7782,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari",
+   "questions": 37,
+   "rounds": 1,
+   "date": "19.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7779,
+   "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari",
+   "questions": 36,
+   "rounds": 1,
+   "date": "12.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+    "Dilshod Sharipov Shaxidjonovich"
+   ],
+   "origin": "Zakovat klubi"
+  },
+  {
+   "source_id": 7778,
+   "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari",
+   "questions": 24,
+   "rounds": 1,
+   "date": "12.09.2026",
+   "section": "Professional",
+   "authors": [
+    "Dilshod Sharipov Shaxidjonovich",
+    "Alibek Shilmanov"
+   ],
+   "origin": "Zakovat klubi"
+  }
+ ],
+ "questions": [
+  {
+   "id": 900029178,
+   "question_id": 29178,
+   "package_id": 907742,
+   "index": 1,
+   "round": 1,
+   "text": "Marvel’ning «What If…?» multserialida Yerda ko‘ngilxushlik qilib yurgan Tor onasi Yerga kelayotganini eshitib, shosha-pisha o‘zi va do‘stlari keltirib chiqargan tartibsizliklarni bartaraf eta boshlaydi. Shu jarayonda u uni ham to‘g‘rilab qo‘yadi. Uning og‘irligi taxminan 16 ming tonna.\n\nSavol: Uni ikki so‘zda yozib bering.",
+   "answer": "Piza minorasi",
+   "sources": [
+    "https://en.wikipedia.org/wiki/What_If..._Thor_Were_an_Only_Child%3F",
+    "https://www.zakovatklubi.uz/open-question/view/30127"
+   ]
+  },
+  {
+   "id": 900029179,
+   "question_id": 29179,
+   "package_id": 907742,
+   "index": 2,
+   "round": 1,
+   "text": "Hazil videoda kassir xaridor sifatida kelgan Undan 18 yoshga to‘lganini tasdiqlovchi hujjat so‘raydi. U hujjat o‘rniga arrani olib bir ish qiladi. Video so‘nggida U alkogol bilan do‘konni tark etadi.\n\nSavol: Aytingchi uning ismi nima?",
+   "answer": "Buratino",
+   "comment": "Buratino bir qismini arralab kassirga beradi. Daraxt tanasidagi yillik halqalarni sanash daraxtning yoshini aniqlashga yordam beradi. Savol formasida chaqiriq sizga yordam berdi deb umid qilamiz.",
+   "sources": [
+    "https://www.instagram.com/reel/Dba2YgcNXa3/?igsh=eWdjNWpodzRpZGpj",
+    "https://www.zakovatklubi.uz/open-question/view/30128"
+   ]
+  },
+  {
+   "id": 900029180,
+   "question_id": 29180,
+   "package_id": 907742,
+   "index": 3,
+   "round": 1,
+   "text": "\"3 tana muammosi\" serialida qahramon Unga sovg‘a qilingan oltin baliqqa IKS ismini beradi. “Qizil”dagi 17 tadan biri - IKS.\n\nSavol: IKSni toping.",
+   "answer": "Pushkin",
+   "comment": "Qahramon Pushkinning \"Oltin baliq\" ertagini eslaydi. Chilonzor metro liniyasi ko‘pgina metro haritasida qizil rangda tasvirlanadi.",
+   "sources": [
+    "https://three-body-problem.fandom.com/wiki/The_Stars_Our_Destination",
+    "https://uz.wikipedia.org/wiki/Toshkent_metropoliteni",
+    "https://www.zakovatklubi.uz/open-question/view/30129"
+   ]
+  },
+  {
+   "id": 900029181,
+   "question_id": 29181,
+   "package_id": 907742,
+   "index": 4,
+   "round": 1,
+   "text": "Bu savol ba’zi jamolar uchun BO‘SHLIQ bo‘lmaydi deb umid qilamiz.\n\nFaoliyatini 1967-yil boshlagan Al Pachino 1993-yil Oskarni qo‘lga kiritadi. U nutqi boshida xazillashib akademiyani qandaydir ma’noda Bo‘shliq deb ataydi.\n\nSavol: BO‘SHLIQni ikki so‘zda yozib bering.",
+   "answer": "Strayk buzuvchi",
+   "comment": "Al Pachino 6 ta nominatsiyadan so‘ng “Ayol ifori” filmidagi roli uchun Oskarni qo‘lga kiritadi va shu tariqa o‘ziga xos straykini buzgani uchun akademiyaga raxmat aytadi. Ba’zi jamoalar bu savol o‘qilmasidan oldin strayk qilib kelishayotgan bo‘lishi mumkin edi. Bu zanjirni buzmadik deb umid qilamiz.",
+   "sources": [
+    "https://aaspeechesdb.oscars.org/link/065-1",
+    "https://www.zakovatklubi.uz/open-question/view/30130"
+   ]
+  },
+  {
+   "id": 900029182,
+   "question_id": 29182,
+   "package_id": 907742,
+   "index": 5,
+   "round": 1,
+   "text": "Bir gruzin filmida ovulga kelgan otda kelgan sayyoh yigitga murojaat qiladi.\n\nSayyohning iltimosiga salbiy javob berarkan yigit kinoya bilan otingni tokka bog‘lab qo‘y deydi.\n\nSavol: Sayyoh nima so‘ragan?",
+   "answer": "Vino",
+   "comment": "Chanqagan sayyoh vino so‘raydi. Kambag‘al uyda yashovchi aqlli yigit otni mavjud bo‘lmagan tokka bo‘g‘la deb vino yo‘qligiga ishora qiladi.",
+   "sources": [
+    "https://www.kinopoisk.ru/film/317149/?socialAlias=MTc1ODY1ODUx",
+    "https://www.zakovatklubi.uz/open-question/view/30131"
+   ],
+   "badges": [
+    "Duplet · 1/2"
+   ]
+  },
+  {
+   "id": 900029184,
+   "question_id": 29184,
+   "package_id": 907742,
+   "index": 6,
+   "round": 1,
+   "text": "Nitshe Zardushti 30 yoshga to‘lgach ilm izlab tog‘ yon bag‘irlariga tarki dunyo qiladi. 10 yil o‘tgach o‘zini ALFA ga qiyoslab ortga qaytadi. 2015-yil Ruan Lyanmin 63.7 kilogramlik ALFAli mantiyani “kiyib” rekord o‘rnatadi.\nSavol: ALFA ni toping.",
+   "answer": "Asalari",
+   "comment": "Zardusht 10 yildan so‘ng donoligi oshib ketadi. U qaytib donoligini odamlar bilan bo‘lishishni istaydi. Bu holatni asal yig‘ish uchun chiqqan asalariga o‘xshatadi. Qaysadir ma’noda, asalga to‘lgan asalari uyiga qaytadi.",
+   "sources": [
+    "Фридрих Ницше, «Так говорил Заратустра». Издательство «АСТ Москва», 2015. Страница 66.",
+    "https://www.zakovatklubi.uz/open-question/view/30132"
+   ]
+  },
+  {
+   "id": 900029185,
+   "question_id": 29185,
+   "package_id": 907742,
+   "index": 7,
+   "round": 1,
+   "text": "Savolda advokat va YTH - almashtirishlar.\n\nEmili Uilson Nolanning Odisseyasini tanqid qilar ekan, Kalipso tekin advokatga aylanib, Troya urushidan keyin Odisseyga YTH bilan kurashishda yordam beradi, deydi.\n\nSavol: Almashtirilgan so‘zlarni originalida yozib bering.",
+   "answer": "psixoterapevt va PTSB",
+   "comment": "Filmda Kalipso Odisseyga Troya urushidan so‘ng urush asoratarini yengish uchun yordam bergani ko‘rsatilgan. Post travmatik stress buzilishi - odatda urushdan qaytgan harbiylarda uchraydigan sindrom.",
+   "sources": [
+    "https://www.lrb.co.uk/the-paper/v48/n14/emily-wilson/an-uncomplicated-m…",
+    "https://www.zakovatklubi.uz/open-question/view/30133",
+    "https://www.lrb.co.uk/the-paper/v48/n14/emily-wilson/an-uncomplicated-man"
+   ]
+  },
+  {
+   "id": 900029186,
+   "question_id": 29186,
+   "package_id": 907742,
+   "index": 8,
+   "round": 1,
+   "text": "Шесть Элче\nSavolda bir so‘z ikki joyda almashgan.\n\nFutbol mavzusida faoliyat yuritadigan bir Telegram kanali tarixida 2019-yil 2-iyunda rebrending sodir bo‘lgan.\n\nSavol: Savol muallifi fikricha, kanal egalari mantiqiga ko‘ra, keyingi shunday rebrending qachon bo‘lishi mumkinligini aniq yozib bering",
+   "answer": "“Liverpul” Chempionlar Ligasidagi yettinchi kubogini qo‘lga kiritganidan keyin.",
+   "comment": "Savolda rebrending reneyming so‘zi o‘rnida kelgan.\n2019-yil 2-iyunda “Liverpul” oltinchi marta Chempionlar Ligasida g‘olib bo‘lgan. Ruscha “ЛЧ” — “Лига чемпионов” qisqartmasi. “Шесть ЛЧ” talaffuzda “Шесть Элче”ga yaqin eshitiladi. Shuning uchun keyingi reneyming “Liverpul”ning yettinchi Chempionlar Ligasi kubogi bilan bog‘liq bo‘lishi mumkin.",
+   "sources": [
+    "Шесть Элче telegram kanali va muallif fikrlari.",
+    "https://www.zakovatklubi.uz/open-question/view/30134"
+   ]
+  },
+  {
+   "id": 900029187,
+   "question_id": 29187,
+   "package_id": 907742,
+   "index": 9,
+   "round": 1,
+   "text": "Janamen - bu og‘irligi juda katta insonlarni ozdirishga yordam beradigan loyiha. Unda har oyning birinchi kuni ishtirokchilar oldindan belgilangan normalarda ozganligi yoki ozmaganligini tekshiriladi. Aytilishicha, barcha ishtirokchilarning yakuniy orzusi X ni ko‘rish. X ham X.\nSavol: Xni 3 ta so‘z ishtirokida yozib bering.",
+   "answer": "Ikki xonali son / Tarozdagi ikki xonali son",
+   "comment": "Loyihada asosan 200kg, 300 kg ga yaqin vaznli ishtirokchilar qatnashadi. Barchaning orzusi 100 kgdan pastga tushish. Rim raqamidagi X ya’ni 10 ham ikki xonali son.",
+   "accepted": [
+    "Tarozdagi ikki xonali son"
+   ],
+   "sources": [
+    "https://www.youtube.com/watch?v=Amq9h4Tejv4",
+    "https://www.zakovatklubi.uz/open-question/view/30135"
+   ]
+  },
+  {
+   "id": 900029188,
+   "question_id": 29188,
+   "package_id": 907742,
+   "index": 10,
+   "round": 1,
+   "text": "Bir detektiv serialida qotillik qurboni katakombadan topiladi. Ma’lum bo‘lishicha, jasad tepadan o‘pirilib tushgan yer qatlami bilan birga pastga qulagan. Qaxramon qotillik sodir bo‘lgan nuqtani aniqlash uchun avval arxivga yo‘l oladi. Aniqlik uchun IKSni bir xil tanlash kerakligini qo‘shimcha qiladi.\n\nSavol: IKS ni kelib chiqishi nemischa bo‘lgan so‘zda yozib bering.",
+   "answer": "masshtab",
+   "comment": "Qotillik joyi shaharning karyer tomi o‘pirilgan nuqtasiga to‘g‘ri keladi. Uni aniqlash uchun karyer rejasi va shahar xaritasini solishtirish kerak edi. Bunday solishtirish aniq bo‘lishi uchun xaritalar bir xil masshtabda bo‘lishi lozim.",
+   "sources": [
+    "https://www.themoviedb.org/tv/88384-astrid-et-raphaelle/season/1/episod…",
+    "https://www.zakovatklubi.uz/open-question/view/30136",
+    "https://www.themoviedb.org/tv/88384-astrid-et-raphaelle/season/1/episode/5"
+   ]
+  },
+  {
+   "id": 900029189,
+   "question_id": 29189,
+   "package_id": 907742,
+   "index": 11,
+   "round": 1,
+   "text": "Savolda bir so‘z biroz o‘zgartirilgan.\n\nTinkov sarmoya kiritgan, 2023-yilda Meksikada tashkil etilgan fintex startapning nomi “Palata” deb ataladi. Kompaniyaning asosiy mahsuloti — cashback dasturiga ega kredit kartalar.\n\nSavol: O‘zgartirilgan so‘zni yozib bering.",
+   "answer": "Plata",
+   "comment": "Meksikada ispan tili keng tarqalgan. Ispan tilida plata “kumush” degan ma’noni anglatadi, so‘zlashuv tilida esa “pul” ma’nosida ham ishlatiladi. Shu sababli pul bilan bog‘liq kompaniya uchun Plata nomi mantiqan mos keladi.",
+   "sources": [
+    "https://ru.wikipedia.org/wiki/Plata",
+    "https://www.zakovatklubi.uz/open-question/view/30137"
+   ]
+  },
+  {
+   "id": 900029190,
+   "question_id": 29190,
+   "package_id": 907742,
+   "index": 12,
+   "round": 1,
+   "text": "1907-yilda ommalashgan ushbu jumboqda 9 ta nuqtani qalamni uzmasdan atigi 4 ta to‘g‘ri chiziq yordamida birlashtirish talab etiladi. Jumboq ilk bor ommaga tarqatilganida, uning noodatiy yechimi ko‘pchilikni o‘yga soldirgan bo‘lsa ajab emas. Uning eng mashhur yechimi esa BO‘SHLIQ iborasining muomalaga kirishiga sabab bo‘lgan, deb ishoniladi.\nSavol: BO‘SHLIQni aniq yozib bering.",
+   "answer": "Thinking outside the box",
+   "comment": "Ekranda jumboqning eng ommabop yechimini ko‘rib turibsiz. Ushbu yechimga erishish uchun nuqtalar hosil qilgan xayoliy chegaradan biroz tashqariga chiqish kerak bo‘ladi.",
+   "attachments": [
+    "https://turnirlar.uz/savollar/api/media/pub/archive/zakovatklubi/x0d6a74f3fc20d553c6321097f7df7f9e1b6713ac23d7829c537f6bde66cd2035.webp"
+   ],
+   "sources": [
+    "https://en.wikipedia.org/wiki/Nine_dots_puzzle",
+    "https://www.zakovatklubi.uz/open-question/view/30138"
+   ],
+   "badges": [
+    "Rasmli"
+   ]
+  }
+ ],
+ "fields": [
+  "accepted",
+  "answer",
+  "attachments",
+  "authors",
+  "badges",
+  "comment",
+  "id",
+  "index",
+  "package_id",
+  "question_id",
+  "round",
+  "sources",
+  "text"
+ ],
+ "average_bytes": 836
+}

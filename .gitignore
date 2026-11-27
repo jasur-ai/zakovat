@@ -6,3 +6,10 @@ __pycache__/
 venv/
 .vercel/
 data/answer_aliases.json
+
+# turnirlar.uz export: the shards (~170 MB) live in the Release
+# "savollar-bazasi", not in git, and the probe keeps only its digest.
+data/turnirlar/shards/
+data/turnirlar/probe/*.html
+data/turnirlar/run-log.txt
+data/turnirlar/last-run.json

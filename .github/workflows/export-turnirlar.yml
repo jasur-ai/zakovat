@@ -1,0 +1,103 @@
+name: Probe turnirlar.uz pages
+
+# turnirlar.uz has no JSON API, so its pages are read by scripts/export_turnirlar.py
+# — here, in CI, because the development sandbox has no route to the site.
+#
+# This job fetches a list page and two package pages, parses them offline
+# (--mode check) and commits a few-KB digest plus a sample. That is how the
+# parsers get verified without reaching the site; the raw pages stay in the
+# Actions artifact. Collecting the base itself is turnirlar-import.yml.
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Tekshiriladigan to‘plam id si"
+        default: "7800"
+      package2:
+        description: "Ikkinchi to‘plam id si (boshqacha tuzilish)"
+        default: "7742"
+      page:
+        description: "Ro‘yxat sahifasi"
+        default: "1"
+      verify_pages:
+        description: "Verify: katalogdan necha sahifa namunaga olinadi"
+        default: "6"
+      verify_per_page:
+        description: "Verify: har sahifadan necha to‘plam tekshiriladi"
+        default: "8"
+  push:
+    branches: ['**']
+    paths:
+      - scripts/export_turnirlar.py
+      - .github/workflows/export-turnirlar.yml
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    name: Sahifa tuzilishini tekshirish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch the pages
+        run: |
+          mkdir -p data/turnirlar/probe
+          python3 scripts/export_turnirlar.py --mode probe \
+            --probe-dir data/turnirlar/probe \
+            --probe-package "${{ inputs.package || 7800 }}" \
+            --probe-package2 "${{ inputs.package2 || 7742 }}" \
+            --probe-page "${{ inputs.page || 1 }}" \
+            2>&1 | tee data/turnirlar/probe/digest.txt
+
+      - name: Parse them offline
+        run: |
+          python3 scripts/export_turnirlar.py --mode check \
+            --probe-dir data/turnirlar/probe \
+            --sample data/turnirlar/probe/sample.json 2>&1 | tee -a data/turnirlar/probe/digest.txt
+
+      # The catalogue header advertises many more questions than its packages
+      # hold, so sample packages from across the whole list and compare the
+      # count the site announces with the count the parser returns. A package
+      # page that hid questions behind a "load more" shows up here as `short`.
+      - name: Check the parser against the site's own counts
+        run: |
+          python3 scripts/export_turnirlar.py --mode verify \
+            --verify-pages "${{ inputs.verify_pages || 6 }}" \
+            --verify-per-page "${{ inputs.verify_per_page || 8 }}" \
+            --workers 6 --polite 0.4 \
+            2>&1 | tee -a data/turnirlar/probe/digest.txt
+
+      - name: Publish the digest
+        run: |
+          git config user.name "Zakovat Archive Bot"
+          git config user.email "archive@users.noreply.github.com"
+          git add data/turnirlar/probe/digest.txt data/turnirlar/probe/sample.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Probe: turnirlar.uz sahifa tuzilishi"
+            # An import run can commit to the same branch while this one parses:
+            # replay onto its tip and retry instead of failing the job.
+            branch="${GITHUB_REF#refs/heads/}"
+            for attempt in 1 2 3; do
+              git fetch origin "$branch"
+              if git rebase -X theirs FETCH_HEAD && git push origin "HEAD:$branch"; then
+                echo "published on attempt $attempt"; break
+              fi
+              git rebase --abort 2>/dev/null || true
+              echo "attempt $attempt lost the race with another push"
+              sleep 5
+            done
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: turnirlar-probe
+          path: data/turnirlar/probe
+          retention-days: 14

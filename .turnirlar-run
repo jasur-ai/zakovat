@@ -1,0 +1,14 @@
+{
+  "_comment": "Options for the next turnirlar-import run. Pushing a change to this file starts it — the sandbox cannot send workflow_dispatch. The Monday cron uses these same options, so keep them light: pages counts how many catalogue pages to walk from start_page (the newest packages are on page 1). source stays on 'boshqa' because the newest 'all' pages are Zakovat-klubi packages whose questions data/all already has — a weekly run over them keeps nothing. 0 means everything; dedupe=false keeps questions that data/all already has; fresh=true rebuilds from an empty archive (after a parser change) and prunes the shards it supersedes; a full rebuild is source=all, pages=0, fresh=true (~50 minutes); commit pushes manifest.json + sample.json back to this branch; release uploads the shards to 'savollar-bazasi'.",
+  "source": "boshqa",
+  "start_page": 1,
+  "pages": 4,
+  "max_packages": 0,
+  "workers": 6,
+  "polite": 0.5,
+  "dedupe": true,
+  "commit": true,
+  "release": true,
+  "run": "haftalik yengil yangilash — boshqa manbalarning eng yangi 4 sahifasi (o‘zgarmasa Release qayta yuklanmaydi)",
+  "fresh": false
+}

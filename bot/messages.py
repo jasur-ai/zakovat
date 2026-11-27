@@ -9,6 +9,7 @@ from __future__ import annotations
 import html
 import re
 import time
+from typing import Sequence
 
 BAR_WIDTH = 20
 IDLE_HINT = 3
@@ -56,11 +57,16 @@ def countdown(remaining: int, total: int) -> str:
     return f"<b>{clock(remaining)}</b> · {label}\n{bar(remaining, total)}"
 
 
-def welcome(packages: int, questions: int) -> str:
+def welcome(packages: int, questions: int, sources: Sequence[tuple[str, int, int]] | None = None) -> str:
+    """sources: (manba nomi, paketlar, savollar) — bir nechta baza bo‘lsa."""
+    base = f"Arxiv: {packages} paket, {questions} savol.\n"
+    if sources:
+        base += "".join(f"• {esc(name)} — {count} paket, {total} savol\n"
+                        for name, count, total in sources)
     return (
         "<b>ZAKOVAT AGENT</b>\n"
         "Savol-javob o‘yini boti — shaxsiy chat va yopiq guruhlar uchun.\n\n"
-        f"Arxiv: {packages} paket, {questions} savol.\n\n"
+        f"{base}\n"
         "<b>O‘YINNI BOSHLASH</b>\n"
         "• /solo — yakka o‘yin, javobni faqat boshlagan kishi yozadi\n"
         "• /duel — guruh o‘yini, barcha ishtirokchi javob yozadi\n"
@@ -82,6 +88,7 @@ HELP_SECTIONS = (
         "/solo — yakka o‘yin · /solo 959 — aniq paket bilan",
         "/duel — guruh o‘yini",
         "/packages — barcha paketlar, sahifalab · /packages Zakovat — qidirish",
+        "/solo katta — butun bazadan tasodifiy to‘plam (ikki manba)",
         "/score — joriy hisob va raund",
         "/skip — savolni o‘tkazish va javobini ko‘rsatish (faqat admin)",
         "/accept — javobni to‘g‘ri deb qabul qilish (faqat admin)",
@@ -272,7 +279,8 @@ def auto_stop(streak: int, title: str, total: int, correct: int, wrong: int,
     )
 
 
-def packages_page(result: dict, query: str = "") -> str:
+def packages_page(result: dict, query: str = "", is_remote=None) -> str:
+    """is_remote(package_id) — paket katta bazadan (turnirlar.uz) olinganmi."""
     items = result["items"]
     start = result["start"]
     scope = f"«{esc(query)}» bo‘yicha" if query else "barcha"
@@ -281,13 +289,28 @@ def packages_page(result: dict, query: str = "") -> str:
         f"Sahifa {result['page']} / {result['pages']}",
         "",
     ]
+    remote_rows = 0
     for offset, package in enumerate(items, start=start + 1):
         title = esc(package.get("title") or "(sarlavhasiz)")
         count = package.get("questions") or 0
-        lines.append(f"{offset}. {package['id']} — {title} ({count} savol)")
+        mark = ""
+        if is_remote is not None and is_remote(package["id"]):
+            mark = " *"
+            remote_rows += 1
+        lines.append(f"{offset}. {package['id']} — {title} ({count} savol){mark}")
     lines.append("")
     lines.append("Boshlash: /solo 959     Qidirish: /packages so‘z")
+    if remote_rows:
+        lines.append("* — turnirlar.uz bazasidan: savollar o‘yin boshida yuklanadi")
     return "\n".join(lines)
+
+
+def remote_unavailable(title: str = "") -> str:
+    """A package from the big base whose shard could not be fetched."""
+    head = f"«{esc(title)}» " if title else "Bu to‘plam "
+    return (head + "turnirlar.uz bazasidan olinadi va hozir yuklanmadi. "
+            "Bir ozdan so‘ng qayta urinib ko‘ring yoki <code>/packages</code> "
+            "orqali boshqa to‘plam tanlang.")
 
 
 def admin_only(action: str = "bu amal") -> str:

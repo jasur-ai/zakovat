@@ -46,7 +46,7 @@ from . import stats
 from . import tournament as tn
 from . import webapp as wa
 from .answers import AnswerChecker, normalize
-from .archive import Archive
+from .archive import SHARDS_IN_MEMORY, Archive
 from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session, build_playlist
 
 MARKER = "\n\n#ZS2 "
@@ -814,6 +814,10 @@ def _resolve_package(context: ContextTypes.DEFAULT_TYPE, argument: str):
     if not argument:
         package_id = archive.random_package_id()
         return package_id, (archive.package_info(package_id) or {}).get("title", "")
+    if argument.casefold().strip("!.?") in st.WHOLE_BASE_WORDS:
+        # "/solo katta" — a random package from the whole base, turnirlar.uz included
+        package_id = archive.random_package_id(remote=True)
+        return package_id, (archive.package_info(package_id) or {}).get("title", "")
     found = archive.search(argument, limit=1)
     return (int(found[0]["id"]), found[0]["title"]) if found else None
 
@@ -863,7 +867,11 @@ async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameC
     archive = _archive_of(context)
     questions = archive.questions(config.package_id)
     if not questions:
-        await context.bot.send_message(chat_id, "Bu paketda savol yo‘q. /packages orqali boshqasini tanlang.")
+        info = archive.package_info(config.package_id) or {}
+        text = (msg.remote_unavailable(info.get("title", ""))
+                if archive.is_remote(config.package_id)
+                else "Bu paketda savol yo‘q. /packages orqali boshqasini tanlang.")
+        await context.bot.send_message(chat_id=chat_id, text=text, parse_mode=ParseMode.HTML)
         return
     playlist = build_playlist(questions, config.rounds, config.per_round, config.seed)
     info = archive.package_info(config.package_id) or {}
@@ -917,7 +925,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await open_settings(update, context, "solo", context.args[0])
         return
     packages, questions = ARCHIVE.counts()
-    await update.effective_message.reply_text(msg.welcome(packages, questions), parse_mode=ParseMode.HTML)
+    await update.effective_message.reply_text(
+        msg.welcome(packages, questions, ARCHIVE.welcome_sources()), parse_mode=ParseMode.HTML)
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -944,7 +953,7 @@ async def render_packages(context: ContextTypes.DEFAULT_TYPE, page: int, query: 
                           message=None, callback=None) -> None:
     archive = _archive_of(context)
     result = archive.list_packages(query, page, PER_PAGE)
-    text = msg.packages_page(result, query)[:4000]
+    text = msg.packages_page(result, query, is_remote=archive.is_remote)[:4000]
     keyboard = st.page_keyboard(result["page"], result["pages"], query)
     if callback is not None:
         try:
@@ -3359,15 +3368,39 @@ def status_page(title: str, lines: list[str], status_code: int = 200) -> HTMLRes
     )
 
 
-def archive_lines() -> list[str]:
+def archive_lines(shard_probe: bool = False) -> list[str]:
     packages, questions = ARCHIVE.counts()
     loaded = len(ARCHIVE._load()) if hasattr(ARCHIVE, "_load") else 0
     root = ARCHIVE.root.resolve()
-    return [
+    lines = [
         f"Arxiv manifesti: {packages} paket, {questions} savol",
         f"Arxiv katalogi: {root} ({'bor' if root.exists() else 'YO‘Q — fayllar deploy bo‘lmagan'})",
         f"Yuklangan paketlar: {loaded}",
     ]
+    for name, entry in ARCHIVE.source_counts().items():
+        detail = f"{entry.get('packages', 0)} paket, {entry.get('questions', 0)} savol"
+        if entry.get("shards"):
+            detail += f", {entry['shards']} shard · saqlanishi: {entry.get('stored')}"
+        lines.append(f"Manba {name}: {detail}")
+    if ARCHIVE.remote_available():
+        lines.append(f"Katta baza: {ARCHIVE.remote_base or '(manzil yo‘q)'} · "
+                     f"kesh: {ARCHIVE.cache_dir} · xotirada: {SHARDS_IN_MEMORY} shard")
+        if shard_probe:
+            lines.append(remote_probe_line())
+    return lines
+
+
+def remote_probe_line() -> str:
+    """Fetch one shard for real: ?shardprobe=1 proves the big base is reachable."""
+    started = time.time()
+    package_id = min(ARCHIVE.remote_packages)
+    rows = ARCHIVE.questions(package_id)
+    cost = int((time.time() - started) * 1000)
+    if not rows:
+        return f"Shard tekshiruvi: YUKLANMADI ({cost} ms) · paket {package_id}"
+    head = str(rows[0].get("text") or "")[:40].replace("\n", " ")
+    return (f"Shard tekshiruvi: {len(rows)} savol, {cost} ms · paket {package_id} · "
+            f"{ARCHIVE.package_info(package_id).get('title', '')[:40]} · «{head}…»")
 
 
 @app.get("/api/setup")
@@ -3426,7 +3459,7 @@ async def status():
         f"Shu nusxadagi taymer urinishlari: {_ticks_seen} · yangilangan: {_ticks_painted} · "
         f"vaqti tugagan: {_ticks_resolved} · to‘xtagan: {_ticks_stopped}",
     ]
-    lines += archive_lines()
+    lines += archive_lines(request.query_params.get("shardprobe") == "1")
     if os.getenv("BOT_TOKEN"):
         try:
             application = get_application()

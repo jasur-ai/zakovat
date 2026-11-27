@@ -1,0 +1,247 @@
+[probe] package-7800.html: HTTP 200 · 739462 chars → https://turnirlar.uz/savollar/paket/7800
+[probe]   rendered markup: 342924 chars · markers: {'Javob': 185, 'Qabul': 10, 'Izoh': 52, 'Manba': 60, 'Muallif': 78, 'Muharrir': 64, '-tur': 16}
+[probe]   question links: 60 · package links: 1
+[probe]   articles: 60 · tours: 4 · details: 60 · images: 16
+[probe]   badges: ['Blits', 'Duplet', 'Rasmli']
+[probe]   answer labels: {'Javob:': 60, 'Qabul:': 10, 'Izoh:': 52, 'Manbalar:': 30, 'Muallif:': 45, 'Muharrir:': 60, 'Manba:': 30, 'Mualliflar:': 15}
+[probe]   non-ascii letters: ş×1211, ö×596, ç×487, ğ×90, Ş×87, е×62, и×53, о×52, а×48, н×39, р×35, с×33, л×33, Ö×30
+[probe]   visible text: 48299 chars
+[probe]   --- first 500 chars of visible text ---
+Savollar To‘plamlar Tasodifiy to‘plam Mualliflar Taymer
+Izlash
+
+Kirish
+
+To‘plamlar
+O‘zbekiston chempionati 2025 savollari
+
+To‘plamdan qidirish
+To‘plamdan qidirish
+
+0
+
+To‘plam haqida
+To‘plam haqida :
+60 savol · 16.11.2025 · Saidakrom Rasulev Farxadovich
+Batafsil
+
+Savollar soni
+60
+
+Turlar
+4
+
+Sana
+16.11.2025
+
+Muharrir
+Saidakrom Rasulev Farxadovich
+
+Jamoalarga eslatma. Boshlovchi savol tartib raqamini e‘lon qilganidan so‘ng aytilgan yoki aytilmagan barcha jumlalar bevosita savolga aloqador. Boshlovc
+[probe]   --- end ---
+[probe] package-7742.html: HTTP 200 · 189217 chars → https://turnirlar.uz/savollar/paket/7742
+[probe]   rendered markup: 85337 chars · markers: {'Javob': 44, 'Qabul': 1, 'Izoh': 12, 'Manba': 13, 'Muallif': 1, 'Muharrir': 4, '-tur': 5}
+[probe]   question links: 13 · package links: 1
+[probe]   articles: 13 · tours: 1 · details: 13 · images: 2
+[probe]   badges: ['Duplet · 1/2', 'Duplet · 2/2', 'Rasmli']
+[probe]   answer labels: {'Javob:': 13, 'Manbalar:': 12, 'Izoh:': 12, 'Manba:': 1, 'Qabul:': 1}
+[probe]   non-ascii letters: ş×281, ö×122, ç×107, ğ×23, Ş×18, е×10, а×9, т×9, Ç×8, Ö×8, и×7, с×7, р×6, о×6
+[probe]   visible text: 10222 chars
+[probe]   --- first 500 chars of visible text ---
+Savollar To‘plamlar Tasodifiy to‘plam Mualliflar Taymer
+Izlash
+
+Kirish
+
+To‘plamlar
+Intellektual Marafon 5-tur Renessans Universiteti jamoasi navbatchiligi
+
+To‘plamdan qidirish
+To‘plamdan qidirish
+
+0
+
+To‘plam haqida
+To‘plam haqida :
+12 savol · 23.08.2026 · Dilshod Sharipov Shaxidjonovich
+Batafsil
+
+Savollar soni
+12
+
+Sana
+23.08.2026
+
+Muharrir
+Dilshod Sharipov Shaxidjonovich
+
+Toifa
+Professional
+
+Mashq rejimi
+Mashq
+Barcha javoblarni ochish
+Javoblar
+
+Taymer
+Saqlash
+
+Yoqdi
+0
+
+Chop etish
+Chop etish
+
+Qan
+[probe]   --- end ---
+[probe] list-1.html: HTTP 200 · 97806 chars → https://turnirlar.uz/savollar/paketlar?page=1
+[probe]   rendered markup: 33721 chars · markers: {'Javob': 0, 'Qabul': 0, 'Izoh': 0, 'Manba': 1, 'Muallif': 1, 'Muharrir': 1, '-tur': 30}
+[probe]   question links: 0 · package links: 30
+[probe]   articles: 30 · tours: 0 · details: 0 · images: 0
+[probe]   badges: []
+[probe]   answer labels: {}
+[probe]   non-ascii letters: ç×66, Ş×64, ş×45, ö×35, ğ×16, Ö×1
+[probe]   visible text: 5627 chars
+[probe]   --- first 500 chars of visible text ---
+Savollar To‘plamlar Tasodifiy to‘plam Mualliflar Taymer
+Izlash
+
+Kirish
+
+Barcha to‘plamlar
+Filtrlar
+
+Filtrlar
+
+Filtrlar
+To‘plam nomi
+
+Muharrir
+
+Toifa
+Professional
+Oliy ta’lim
+O‘rta maxsus va kasb-hunar ta’limi
+Maktab
+Mahalla
+Tashkilot
+
+Yil Barcha yillar
+
+Til Barcha tillar
+
+Tozalash
+
+7 798 ta to‘plamni ko‘rsatish
+
+To‘plamlar
+7 798
+ta to‘plam bazada mavjud
+
+Saralash:
+Eng yangi
+
+Hammasi ( 7 798 )
+Zakovat klubi ( 1 238 )
+Boshqa manbalar ( 6 560 )
+
+Professional va Birinchi liga kuzgi mavsumi 10-tur Be
+[probe]   --- end ---
+[probe] list-next.html: HTTP 200 · 99639 chars → https://turnirlar.uz/savollar/paketlar?page=2
+[probe]   rendered markup: 34218 chars · markers: {'Javob': 0, 'Qabul': 0, 'Izoh': 0, 'Manba': 1, 'Muallif': 1, 'Muharrir': 1, '-tur': 29}
+[probe]   question links: 0 · package links: 30
+[probe]   articles: 30 · tours: 0 · details: 0 · images: 0
+[probe]   badges: []
+[probe]   answer labels: {}
+[probe]   non-ascii letters: ç×61, Ş×61, ş×44, ö×41, ğ×19, Ö×1
+[probe]   visible text: 5657 chars
+[probe]   --- first 500 chars of visible text ---
+Savollar To‘plamlar Tasodifiy to‘plam Mualliflar Taymer
+Izlash
+
+Kirish
+
+Barcha to‘plamlar
+Filtrlar
+
+Filtrlar
+
+Filtrlar
+To‘plam nomi
+
+Muharrir
+
+Toifa
+Professional
+Oliy ta’lim
+O‘rta maxsus va kasb-hunar ta’limi
+Maktab
+Mahalla
+Tashkilot
+
+Yil Barcha yillar
+
+Til Barcha tillar
+
+Tozalash
+
+7 798 ta to‘plamni ko‘rsatish
+
+To‘plamlar
+7 798
+ta to‘plam bazada mavjud
+
+Saralash:
+Eng yangi
+
+Hammasi ( 7 798 )
+Zakovat klubi ( 1 238 )
+Boshqa manbalar ( 6 560 )
+
+Intellektual Marafon 3-tur Espero jamoasi navbatchili
+[probe]   --- end ---
+[probe] looking for a JSON endpoint behind the pages
+[probe]   /api/paketlar?page=1 : HTTP 404 · json · 0 chars · ''
+[probe]   /api/paketlar?page=1 {'RSC': '1'}: HTTP 404 · json · 0 chars · ''
+[probe]   /savollar/api/paketlar?page=1 : HTTP 200 · json · 15 chars · '{"packages":[]}'
+[probe]   /savollar/api/paketlar?page=1 {'RSC': '1'}: HTTP 200 · json · 15 chars · '{"packages":[]}'
+[probe]   /savollar/api/paket/7800 : HTTP 404 · json · 0 chars · ''
+[probe]   /savollar/api/paket/7800 {'RSC': '1'}: HTTP 404 · json · 0 chars · ''
+[probe]   /savollar/api/paketlar/7800 : HTTP 404 · json · 0 chars · ''
+[probe]   /savollar/api/paketlar/7800 {'RSC': '1'}: HTTP 404 · json · 0 chars · ''
+[probe]   /savollar/api/savol/559880 : HTTP 200 · json · 781 chars · '{"publicId":559880,"slug":"mexanik-turk-bilan-saxmat-oynamoqci-bolganlarga-b8f1bff4cb","packageTitle":"Özbekiston çempionati 2025 savollari","savol":"Mexanik tu'
+[probe]   /savollar/api/savol/559880 {'RSC': '1'}: HTTP 200 · json · 781 chars · '{"publicId":559880,"slug":"mexanik-turk-bilan-saxmat-oynamoqci-bolganlarga-b8f1bff4cb","packageTitle":"Özbekiston çempionati 2025 savollari","savol":"Mexanik tu'
+[check] list-1.html: 30 cards · 260 pages · 7798 packages announced
+[check]   {"source_id": 7794, "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari", "questions": 36, "rounds": 1, "date": "14.11.2026", "section": "Professional", "authors": ["Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
+[check]   {"source_id": 7793, "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari", "questions": 27, "rounds": 1, "date": "14.11.2026", "section": "Professional", "authors": ["Dilshod Sharipov Shaxidjonovich", "Alibek Shilmanov"], "origin": "Zakova
+[check]   {"source_id": 7792, "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari", "questions": 24, "rounds": 1, "date": "07.11.2026", "section": "Professional", "authors": ["Dilshod Sharipov Shaxidjonovich", "Alibek Shilmanov"], "origin": "Zakovat
+[check] list-next.html: 30 cards · 260 pages · 7798 packages announced
+[check]   {"source_id": 7740, "title": "Intellektual Marafon 3-tur Espero jamoasi navbatchiligi", "questions": 12, "rounds": 1, "date": "23.08.2026", "section": "Professional", "authors": ["Dilshod Sharipov Shaxidjonovich"], "origin": "Zakovat klubi"
+[check]   {"source_id": 7739, "title": "Intellektual Marafon 2-tur Zero jamoasi navbatchiligi", "questions": 12, "rounds": 1, "date": "23.08.2026", "section": "Professional", "authors": ["Dilshod Sharipov Shaxidjonovich"], "origin": "Zakovat klubi"}
+[check]   {"source_id": 7757, "title": "Professional va Birinchi liga yozgi mavsumi 10-tur Benom jamoasi savollari", "questions": 36, "rounds": 1, "date": "22.08.2026", "section": "Professional", "authors": ["Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"]
+[check] 60 cards listed · 0 repeated ids
+[check] package-7742.html: parsed 12 of 12 questions · meta {"title": "Intellektual Marafon 5-tur Renessans Universiteti jamoasi navbatchiligi", "Savollar soni": "12", "Sana": "23.08.2026", "Muharrir": "Dilshod Sharipov Shaxidjonovich", "Toifa": "Professional"}
+[check]   fields: {'id': 12, 'question_id': 12, 'package_id': 12, 'index': 12, 'round': 12, 'text': 12, 'answer': 12, 'sources': 12, 'comment': 11, 'badges': 2, 'accepted': 1, 'attachments': 1}
+[check]   size: 9614 bytes raw · 4010 bytes gzipped · 801 bytes per question
+[check]   {"id": 900029178, "question_id": 29178, "package_id": 907742, "index": 1, "round": 1, "text": "Marvel’ning «What If…?» multserialida Yerda ko‘ngilxushlik qilib yurgan Tor onasi Yerga kelayotganini eshitib, shosha-pisha o‘zi va do‘stlari keltirib chiqargan tartibsizliklarni bartaraf eta boshlaydi. Shu jarayonda u uni ham to‘g‘rilab qo‘yadi. Uning og‘irligi taxminan 16 ming tonna.\n\nSavol: Uni ikki so‘zda yozib bering.", "answer": "Piza minorasi", "sources": ["https://en.wikipedia.org/wiki/What_If..._Thor_Were_an_Only_Child%3F", "https://www.zakovatklubi.uz/open-question/view/30127"]}
+[check]   {"id": 900029179, "question_id": 29179, "package_id": 907742, "index": 2, "round": 1, "text": "Hazil videoda kassir xaridor sifatida kelgan Undan 18 yoshga to‘lganini tasdiqlovchi hujjat so‘raydi. U hujjat o‘rniga arrani olib bir ish qiladi. Video so‘nggida U alkogol bilan do‘konni tark etadi.\n\nSavol: Aytingchi uning ismi nima?", "answer": "Buratino", "comment": "Buratino bir qismini arralab kassirga beradi. Daraxt tanasidagi yillik halqalarni sanash daraxtning yoshini aniqlashga yordam beradi. Savol formasida chaqiriq sizga yordam berdi deb umid qilamiz.", "sources": ["https://www.instagram.com/reel/Dba2YgcNXa3/?igsh=eWdjNWpodzRpZGpj", "https://www.zakovatklubi.uz/open-question/view/30128
+[check] package-7800.html: parsed 60 of 60 questions · meta {"title": "O‘zbekiston chempionati 2025 savollari", "Savollar soni": "60", "Turlar": "4", "Sana": "16.11.2025", "Muharrir": "Saidakrom Rasulev Farxadovich", "tours": [{"title": "1-tur", "count": "15 savol"}, {"title": "2-tur", "count": "15 savol"}, {"title": "3-tur", "count": "15 savol"}, {"title": 
+[check]   fields: {'id': 60, 'question_id': 60, 'package_id': 60, 'index': 60, 'round': 60, 'text': 60, 'answer': 60, 'sources': 60, 'authors': 60, 'comment': 52, 'accepted': 10, 'badges': 7, 'attachments': 6}
+[check]   size: 51485 bytes raw · 17909 bytes gzipped · 858 bytes per question
+[check]   {"id": 900559880, "question_id": 559880, "package_id": 907800, "index": 1, "round": 1, "text": "Mexanik turk bilan shaxmat o‘ynamoqchi bo‘lganlarga Volfgang fon Kempelen ikkita shart qo‘ygan. Mexanik turk oq figuralarda o‘ynaydi va BU ISHNI QILADI.\nSavol: Bu ishni qilish bilan almashtirilgan so‘zlarni yozib bering.", "answer": "Birinchi yurishni amalga oshiradi.", "comment": "Mexanik turk 1770-yilda yaratilgan. Bu vaqtda ham shaxmatni oqlar boshlab bergan, ammo aynan oq figuralar birinchi yurishni amalga oshirishi haqidagi qoida mustahkamlab qo‘yilmagan edi. Ushbu qoida 19-asr oxirida kiritilgan.", "accepted": ["Ma’nodosh javoblar."], "sources": ["https://en.wikipedia.org/wiki/Mechanical_Tu
+[check]   {"id": 900559881, "question_id": 559881, "package_id": 907800, "index": 2, "round": 1, "text": "Diqqat, savolda almashtirish bor.\nAbduqodir Husanov uzoq vaqt Ravshan Haydarov boshqaruvi ostida o‘ynagan. Husanov haqida ijobiy fikrlarni aytar ekan, Haydarov hozirga kelib Abduqodirning X Factori qandayligini eslay olmasligini aytadi.\nSavol: Savolda almashtirilganni unli harflari bir xil so‘z bilan yozib bering.", "answer": "Ovoz.", "comment": "Murabbiy Husanovning odobli, kamgapligini ta’kidlar ekan, u bilan haftalab yig‘inlarda ishtirok etgan bo‘lsa-da, hozirga kelib Abduqodirning ovozi qandayligini eslay olmasligini aytadi. Savolda O‘zbekistondagi bir musiqiy loyiha nomi boshqasi bilan alma
+[import] sample → data/turnirlar/probe/sample.json (17140 bytes)
+[verify] catalogue: 260 pages · 7798 packages announced (manba=all)
+[verify] list page 1: 8 of 8 cards
+[verify] list page 53: 8 of 8 cards
+[verify] list page 105: 8 of 8 cards
+[verify] list page 156: 8 of 8 cards
+[verify] list page 208: 8 of 8 cards
+[verify] list page 260: 8 of 8 cards
+[verify] checked 48 packages · announced 1845 questions · parsed 1845 · short 0 · empty 0 · failed 0 · card/page disagreement 8 · read over several tour pages 8
+[verify] package 6834: the card promises 27 questions, the package page 23 — parsed 23
+[verify] package 6843: the card promises 28 questions, the package page 24 — parsed 24
+[verify] package 7793: the card promises 27 questions, the package page 24 — parsed 24
+[verify] package 6860: the card promises 13 questions, the package page 10 — parsed 10
+[verify] package 6939: the card promises 27 questions, the package page 24 — parsed 24
+[verify] the parser keeps 100.0% of what those pages announce; over the whole catalogue that is 299735 questions in 7798 packages

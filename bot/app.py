@@ -122,6 +122,10 @@ def _resolve_package(context: ContextTypes.DEFAULT_TYPE, argument: str) -> tuple
     if argument.isdigit():
         info = archive.package_info(int(argument))
         return (int(argument), info.get("title", "")) if info and info.get("questions") else None
+    if argument.casefold().strip("!.?") in st.WHOLE_BASE_WORDS:
+        # "/solo katta" — a random package from the whole base, turnirlar.uz included
+        package_id = archive.random_package_id(remote=True)
+        return package_id, (archive.package_info(package_id) or {}).get("title", "")
     matches = archive.search(argument, limit=1)
     if matches:
         return int(matches[0]["id"]), matches[0]["title"]
@@ -133,7 +137,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await open_settings(update, context, "solo", context.args[0])
         return
     packages, questions = _archive(context).counts()
-    await update.effective_message.reply_text(msg.welcome(packages, questions), parse_mode=ParseMode.HTML)
+    await update.effective_message.reply_text(
+        msg.welcome(packages, questions, archive.welcome_sources()), parse_mode=ParseMode.HTML)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -156,7 +161,7 @@ async def on_my_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def render_packages(context: ContextTypes.DEFAULT_TYPE, page: int, query: str,
                           message=None, callback=None) -> None:
     result = _archive(context).list_packages(query, page, PER_PAGE)
-    text = msg.packages_page(result, query)[:4000]
+    text = msg.packages_page(result, query, is_remote=archive.is_remote)[:4000]
     keyboard = st.page_keyboard(result["page"], result["pages"], query)
     if callback is not None:
         try:
@@ -260,7 +265,11 @@ async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameC
     archive = _archive(context)
     questions = archive.questions(config.package_id)
     if not questions:
-        await context.bot.send_message(chat_id, "Bu paketda savol yo‘q. /packages orqali boshqasini tanlang.")
+        info = archive.package_info(config.package_id) or {}
+        text = (msg.remote_unavailable(info.get("title", ""))
+                if archive.is_remote(config.package_id)
+                else "Bu paketda savol yo‘q. /packages orqali boshqasini tanlang.")
+        await context.bot.send_message(chat_id=chat_id, text=text, parse_mode=ParseMode.HTML)
         return
 
     old = _current(context, chat_id)
