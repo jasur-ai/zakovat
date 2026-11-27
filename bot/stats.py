@@ -340,28 +340,42 @@ KVDB_TTL = 7776000      # 90 days: the longest the free plan keeps an idle key
 async def _provision_kvdb(client) -> tuple[str, dict]:
     """kvdb: a free key-value bucket, private from the moment it is created.
 
-    The email has to be a deliverable address (kvdb validates it), and a
-    ``secret_key`` makes every later read and write need ``Authorization:
+    The documented call is ``curl -d 'email=user@example.com' https://kvdb.io``,
+    yet the service answers "email required" to some clients, so a handful of
+    equivalent spellings are tried in order and every answer is reported. The
+    ``secret_key`` variant makes later reads and writes need ``Authorization:
     Bearer <key>`` — exactly what ``ZAKOVAT_STATS_TOKEN`` already sends.
     """
     secret = secrets.token_urlsafe(18)
-    fields = {"email": STORE_EMAIL, "secret_key": secret, "default_ttl": str(KVDB_TTL)}
-    response = await client.post("https://kvdb.io/", data=fields,
-                                 headers={"accept": "text/plain, */*",
-                                          "user-agent": _STORE_HEADERS["user-agent"]},
-                                 follow_redirects=False)
-    detail = _detail(response, {"usul": "forma"})
-    bucket = response.text.strip()
-    if not _usable_bucket(response.status_code, bucket):
-        # a query parameter is the other form kvdb has been seen to accept
-        response = await client.post(f"https://kvdb.io/?email={STORE_EMAIL}",
-                                     headers=_STORE_HEADERS, follow_redirects=False)
-        detail = _detail(response, {"usul": "so‘rov"})
+    private = {"email": STORE_EMAIL, "secret_key": secret, "default_ttl": str(KVDB_TTL)}
+    variants: tuple[tuple[str, bool, dict], ...] = (
+        ("forma+kalit", True, {"data": private}),        # private bucket first
+        ("forma", False, {"data": {"email": STORE_EMAIL}}),
+        ("xom", False, {"content": f"email={STORE_EMAIL}",
+                        "headers": {"content-type": "application/x-www-form-urlencoded"}}),
+        ("json", False, {"json": {"email": STORE_EMAIL}}),
+        ("so‘rov", False, {"params": {"email": STORE_EMAIL}}),
+        ("sarlavha", False, {"headers": {"email": STORE_EMAIL}}),
+    )
+    summary: list[str] = []
+    last_code = 0
+    for usul, keyed, kwargs in variants:
+        try:
+            response = await client.post("https://kvdb.io/", timeout=5.0,
+                                         follow_redirects=True, **kwargs)
+        except Exception as exc:
+            summary.append(f"{usul}:xato {type(exc).__name__}")
+            continue
         bucket = response.text.strip()
-    if not _usable_bucket(response.status_code, bucket):
-        return "", detail
-    detail["kalit"] = secret
-    return f"https://kvdb.io/{bucket}/zakovat", detail
+        last_code = response.status_code
+        summary.append(f"{usul}:{response.status_code} {' '.join(response.text.split())[:34]}")
+        if _usable_bucket(response.status_code, bucket):
+            detail = {"kod": response.status_code, "usul": usul,
+                      "javob": " | ".join(summary)[:400]}
+            if keyed:
+                detail["kalit"] = secret
+            return f"https://kvdb.io/{bucket}/zakovat", detail
+    return "", {"kod": last_code, "usul": "hammasi", "javob": " | ".join(summary)[:400]}
 
 
 def _usable_bucket(status: int, bucket: str) -> bool:
@@ -452,7 +466,7 @@ async def create_store(transport=None) -> dict:
                 if not url:
                     attempts.append({"xizmat": name, "bosqich": "yaratish",
                                      "kod": detail.get("kod"), "usul": detail.get("usul"),
-                                     "javob": detail.get("javob", "")[:70]})
+                                     "javob": detail.get("javob", "")[:300]})
                     continue
                 # a private bucket needs its key for the very first check
                 auth = ({**plain, "authorization": f"Bearer {detail['kalit']}"}
