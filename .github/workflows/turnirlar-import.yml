@@ -39,6 +39,10 @@ on:
       workers:
         description: "Parallel so‘rovlar soni"
         default: "8"
+      dedupe:
+        description: "data/all’da bor savollarni tashlab yuborish"
+        type: boolean
+        default: true
       commit:
         description: "Manifest va namunani shu branch ga commit qilish"
         type: boolean
@@ -86,7 +90,7 @@ jobs:
         # workflow_dispatch inputs; a scheduled run has only the file.
         env:
           PAYLOAD: ${{ toJSON(github.event.client_payload) }}
-          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};start_page=${{ inputs.start_page }};polite=${{ inputs.polite }};workers=${{ inputs.workers }};source=${{ inputs.source }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
+          DISPATCH_INPUTS: "max_packages=${{ inputs.max_packages }};pages=${{ inputs.pages }};start_page=${{ inputs.start_page }};polite=${{ inputs.polite }};workers=${{ inputs.workers }};source=${{ inputs.source }};dedupe=${{ inputs.dedupe }};commit=${{ inputs.commit }};release=${{ inputs.release }}"
         run: |
           python3 - <<'PY' | tee -a "$GITHUB_OUTPUT"
           import json, os, pathlib
@@ -125,7 +129,7 @@ jobs:
           for key, default in (("max_packages", 0), ("pages", 0), ("start_page", 1),
                                ("polite", 0.4), ("workers", 8), ("source", "all")):
               print(f"{key}={merged.get(key, default)}")
-          for key, default in (("commit", "true"), ("release", "true")):
+          for key, default in (("dedupe", "true"), ("commit", "true"), ("release", "true")):
               value = str(merged.get(key, default)).lower()
               print(f"{key}={'true' if value in ('true', '1', 'yes') else 'false'}")
           PY
@@ -145,7 +149,11 @@ jobs:
       - name: Import
         run: |
           set -o pipefail
-          echo "options: source=${{ steps.opts.outputs.source }} start_page=${{ steps.opts.outputs.start_page }} pages=${{ steps.opts.outputs.pages }} max_packages=${{ steps.opts.outputs.max_packages }} workers=${{ steps.opts.outputs.workers }} polite=${{ steps.opts.outputs.polite }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
+          echo "options: source=${{ steps.opts.outputs.source }} start_page=${{ steps.opts.outputs.start_page }} pages=${{ steps.opts.outputs.pages }} max_packages=${{ steps.opts.outputs.max_packages }} workers=${{ steps.opts.outputs.workers }} polite=${{ steps.opts.outputs.polite }} dedupe=${{ steps.opts.outputs.dedupe }} commit=${{ steps.opts.outputs.commit }} release=${{ steps.opts.outputs.release }}"
+          extra=""
+          if [ "${{ steps.opts.outputs.dedupe }}" = "false" ]; then
+            extra="--no-dedupe"     # keep every package exactly as the site has it
+          fi
           python3 scripts/export_turnirlar.py --mode import \
             --out-dir data/turnirlar \
             --max-packages "${{ steps.opts.outputs.max_packages }}" \
@@ -154,6 +162,7 @@ jobs:
             --polite "${{ steps.opts.outputs.polite }}" \
             --source "${{ steps.opts.outputs.source }}" \
             --workers "${{ steps.opts.outputs.workers }}" \
+            $extra \
             --sample data/turnirlar/sample.json 2>&1 | tee data/turnirlar/run-log.txt
 
       - name: Show the result
