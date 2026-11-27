@@ -772,5 +772,133 @@ class WebAppFallbackTests(unittest.TestCase):
                                             int(time.time()) + 30))
 
 
+try:
+    from tests.test_archive import (Fetcher, build_local, build_remote, payloads_for,
+                                    remote_row)
+except ImportError:                                  # discovery puts tests/ on the path
+    from test_archive import (Fetcher, build_local, build_remote, payloads_for,
+                              remote_row)
+
+from bot.archive import REMOTE_PACKAGE_FLOOR
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class WholeBaseTests(unittest.TestCase):
+    """The turnirlar.uz half of the archive, as the bot sees it."""
+
+    def setUp(self):
+        import pathlib
+        import shutil
+        import tempfile
+
+        self.base = pathlib.Path(tempfile.mkdtemp(prefix="webhook-base-"))
+        self.addCleanup(shutil.rmtree, self.base, True)
+        build_local(self.base / "all")
+        self.built = build_remote(self.base / "turnirlar")
+        self.fetcher = Fetcher(payloads_for(self.built))
+        self.archive = Archive(self.base / "all", self.base / "snapshot.json",
+                               self.base / "turnirlar", fetcher=self.fetcher,
+                               cache_dir=self.base / "cache")
+        self.bot = FakeBot()
+        self.context = SimpleNamespace(
+            application=SimpleNamespace(bot_data={"archive": self.archive}),
+            bot=self.bot, args=[],
+        )
+        self.remote_id = REMOTE_PACKAGE_FLOOR + 11
+        self.remote_title = (self.archive.package_info(self.remote_id) or {})["title"]
+
+    def test_the_welcome_names_both_sources(self):
+        message = FakeMessage("/start")
+        with mock.patch.object(webhook, "ARCHIVE", self.archive):
+            asyncio.run(webhook.cmd_start(update(message), self.context))
+        text = message.replies[-1]
+        self.assertIn("zakovatklubi.uz — 1 paket, 2 savol", text)
+        self.assertIn("turnirlar.uz — 4 paket, 12 savol", text)
+        self.assertIn("Arxiv: 5 paket, 14 savol.", text)
+
+    def test_a_single_source_is_not_listed_twice(self):
+        archive = Archive(self.base / "all", self.base / "snapshot.json", None,
+                          cache_dir=self.base / "cache")
+        self.assertEqual(archive.welcome_sources(), [])
+        message = FakeMessage("/start")
+        with mock.patch.object(webhook, "ARCHIVE", archive):
+            asyncio.run(webhook.cmd_start(update(message), self.context))
+        self.assertIn("Arxiv: 1 paket, 2 savol.", message.replies[-1])
+        self.assertNotIn("turnirlar.uz —", message.replies[-1])
+
+    def test_the_package_list_marks_rows_from_the_big_base(self):
+        message = FakeMessage("/packages")
+        asyncio.run(webhook.render_packages(self.context, 1, "", message=message))
+        text = message.replies[-1]
+        self.assertIn(f"{self.remote_id} — {self.remote_title} (3 savol) *", text)
+        self.assertIn("* — turnirlar.uz bazasidan", text)
+
+    def test_a_local_only_list_has_no_mark_and_no_footnote(self):
+        message = FakeMessage("/packages Mahalliy")
+        asyncio.run(webhook.render_packages(self.context, 1, "Mahalliy", message=message))
+        text = message.replies[-1]
+        self.assertNotIn("*", text)
+
+    def test_katta_opens_the_whole_base(self):
+        for word in ("katta", "KATTA", "butun", " hamma "):
+            resolved = webhook._resolve_package(self.context, word)
+            self.assertIsNotNone(resolved, word)
+            self.assertTrue(self.archive.is_remote(resolved[0]) or resolved[0] == 5)
+
+    def test_a_random_game_stays_local_unless_asked(self):
+        picks = {webhook._resolve_package(self.context, "")[0] for _ in range(20)}
+        self.assertEqual(picks, {5})
+        self.assertEqual(self.fetcher.calls, [])
+
+    def test_a_remote_package_is_played_after_its_shard_is_fetched(self):
+        config = st.GameConfig(package_id=self.remote_id, mode="solo", rounds=1,
+                               per_round=3, timer=45, seed=7)
+        asyncio.run(webhook.start_from_config(self.context, config, -100, 1))
+        texts = " ".join(row["text"] for row in self.bot.sent)
+        self.assertIn(self.remote_title, texts)
+        self.assertIn("Uzoq savol", texts)
+        self.assertTrue(self.fetcher.calls[0].endswith("turnirlar-0001.json.gz"))
+
+    def test_an_unreachable_shard_says_so_instead_of_starting_an_empty_game(self):
+        self.archive._fetch = Fetcher(fail=True)
+        self.archive.cache_dir = self.base / "empty-cache"
+        config = st.GameConfig(package_id=self.remote_id, mode="solo", rounds=1,
+                               per_round=3, timer=45, seed=7)
+        asyncio.run(webhook.start_from_config(self.context, config, -100, 1))
+        text = self.bot.sent[-1]["text"]
+        self.assertIn("turnirlar.uz bazasidan olinadi", text)
+        self.assertIn(self.remote_title, text)
+        self.assertEqual(len(self.bot.sent), 1)          # no question was sent
+
+    def test_an_empty_local_package_keeps_its_own_wording(self):
+        self.archive.manifest["packages"].append({"id": 77, "title": "Bo‘sh", "questions": 0})
+        self.archive.packages[77] = self.archive.manifest["packages"][-1]
+        config = st.GameConfig(package_id=77, mode="solo", rounds=1, per_round=3,
+                               timer=45, seed=7)
+        asyncio.run(webhook.start_from_config(self.context, config, -100, 1))
+        self.assertIn("Bu paketda savol yo‘q", self.bot.sent[-1]["text"])
+
+    def test_a_remote_package_is_resolved_by_its_number(self):
+        resolved = webhook._resolve_package(self.context, str(self.remote_id))
+        self.assertEqual(resolved, (self.remote_id, self.remote_title))
+        self.assertEqual(self.fetcher.calls, [])          # the manifest is enough
+
+    def test_searching_the_big_base_needs_no_download(self):
+        found = webhook._resolve_package(self.context, "to‘plami 21")
+        self.assertEqual(found[0], REMOTE_PACKAGE_FLOOR + 21)
+        self.assertEqual(self.fetcher.calls, [])
+
+    def test_a_remote_package_carries_its_own_metadata(self):
+        info = self.archive.package_info(self.remote_id)
+        self.assertEqual(info["origin"], "Boshqa manba")
+        self.assertEqual(info["section"], "Professional")
+        self.assertEqual(info["date"], "16.11.2025")
+        self.assertEqual(info["url"], "https://turnirlar.uz/savollar/paket/11")
+        self.assertEqual(info["shard"], 1)
+
+    def test_unused_helpers_stay_importable(self):
+        self.assertTrue(callable(remote_row))
+
+
 if __name__ == "__main__":
     unittest.main()

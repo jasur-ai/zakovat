@@ -17,6 +17,13 @@ PER_ROUND = (5, 10, 15, 25, 0)      # 0 = paketdagi barcha savol
 TIMERS = (30, 45, 60, 90, 120)
 
 ACTION_ROUNDS = "r"
+# "/solo katta" opens the whole base: a random package from turnirlar.uz as
+# well, whose shard is fetched when the game starts.
+WHOLE_BASE_WORDS = frozenset({
+    "katta", "kattta", "butun", "hamma", "hammasi", "barcha", "turnirlar",
+    "big", "all", "huge", "full",
+})
+
 ACTION_PER_ROUND = "q"
 ACTION_TIMER = "t"
 ACTION_SHUFFLE = "n"

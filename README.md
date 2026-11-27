@@ -1,14 +1,39 @@
 # Zakovat savollar arxivi + Telegram bot
 
-`zakovatklubi.uz` savollar bazasi JSON ko‘rinishda GitHub’da saqlangan va yopiq Telegram guruhida / shaxsiy chatda o‘yin o‘tkazadigan bot mavjud. Bot **tashqi AI API va API kalitisiz** ishlaydi.
+`zakovatklubi.uz` va `turnirlar.uz` savollar bazalari JSON ko‘rinishda GitHub’da saqlangan va yopiq Telegram guruhida / shaxsiy chatda o‘yin o‘tkazadigan bot mavjud. Jami **~560 000 savol**. Bot **tashqi AI API va API kalitisiz** ishlaydi.
 
 ## Arxiv holati
 
-- `data/all/manifest.json` — 1266 paket, **30853 savol** indeksi;
-- `data/all/questions/questions-0001.json … 0007.json` — barcha savollar (matn, javob, izoh, havolalar, paket id);
+Bot **ikki manbani** bitta interfeys orqali o‘qiydi (`bot/archive.py`):
+
+- `data/all/manifest.json` — **zakovatklubi.uz**: 1266 paket, **30853 savol**. Shardlari (`data/all/questions/questions-0001.json … 0007.json`) deploy bilan birga ketadi, shuning uchun diskdan o‘qiladi;
+- `data/turnirlar/manifest.json` — **turnirlar.uz**: ~6800 paket, **~530 000 savol**. Shardlari (~160 MB gzip) GitHub Release [`savollar-bazasi`](https://github.com/jasur-ai/zakovat/releases/tag/savollar-bazasi) da turadi va **kerak bo‘lganda** yuklanadi: `data/turnirlar/shards` `.gitignore` va `.vercelignore` ichida, ya’ni na repo, na deploy og‘irlashadi. Xotirada bir vaqtda 2 shard ushlab turiladi, qolgani `/tmp` keshida; shard yuklanmasa o‘yin buzilmaydi — bot mahalliy baza bilan ishlashni davom ettiradi;
 - `data/zakovat-959.json`, `data/zakovat-959.flat.json` — sinov uchun 54 savollik 959-paket (2024-yil 19–20 dekabr).
 
-Arxiv avvalgi branchda GitHub Actions orqali yaratilgan va shu branchga qaytarib olingan. To‘liq bazani qayta yuklash uchun `.github/workflows/export-all.yml` (`workflow_dispatch` yoki `repository_dispatch` `archive-zakovat`) ishlatiladi.
+Paket id’lari to‘qnashmaydi: turnirlar.uz paketlari `900000+`, savollari `900000000+` siljish bilan saqlanadi (7800-paket → `907800`).
+
+**Katta baza bilan o‘ynash.** `/solo katta` (yoki `butun`, `hamma`) — ikki manbadan tasodifiy to‘plam; `/solo 907785` — aniq to‘plam; `/packages` ro‘yxatida katta bazadagi qatorlar `*` bilan belgilanadi. To‘plam nomi bo‘yicha qidiruv (`/packages liga`) ikkala bazani qamrab oladi.
+
+Ixtiyoriy o‘zgaruvchilar: `ZAKOVAT_TURNIRLAR_BASE` (shardlar manzili; sukut bo‘yicha manifest’dagi Release), `ZAKOVAT_TURNIRLAR_CACHE` (kesh katalogi; sukut bo‘yicha `/tmp/zakovat-turnirlar`).
+
+### turnirlar.uz bazasi qanday yig‘iladi
+
+Saytning JSON API’si yo‘q (faqat PDF/DOCX yuklab olish bor), shuning uchun `scripts/export_turnirlar.py` sahifalarni o‘qiydi:
+
+- `/savollar/paketlar?page=N` — 30 ta `article.zk-catalog-card`: id, sarlavha, savol/tur soni, sana, toifa, mualliflar, manba;
+- `/savollar/paket/<id>` — `section#tur-N` ichida `article#savol-N`; savol matni `p.zk-question-text`, javob bloki `Javob: Qabul: Izoh: Manba(lar): Muallif(lar): Muharrir:` yorliqlari bilan, rasm `figure.zk-material-block` ichida (havolalar mutlaq qilinadi), `Blits`/`Duplet`/`Rasmli` nishonlari ham olinadi;
+- Next.js flight payload butun sahifani `<script>` ichida takrorlaydi — parser uni kesib tashlaydi.
+
+Yig‘ish **GitHub Actions**’da ishlaydi (`.github/workflows/turnirlar-import.yml`), chunki ishlab chiqish muhitidan saytga chiqib bo‘lmaydi:
+
+- ishga tushirish: `.turnirlar-run` faylini o‘zgartirib push qilish — yoki Actions → *Import turnirlar.uz question base* → *Run workflow*;
+- variantlar: `source` (`all` / `zakovat-klubi` / `boshqa`), `start_page`, `pages`, `max_packages`, `workers`, `polite`, `commit`, `release`;
+- yig‘ish **davom etadigan**: Release’dagi shardlar avval qaytarib olinadi, saqlangan paketlar o‘tkazib yuboriladi; diskda yo‘q shard manifest’dan olib tashlanadi, ya’ni «saqlangan» deb hech narsa hisoblanmaydi;
+- sayt yozuvi (`ö ç ş ğ ı`) standart o‘zbek lotiniga o‘tkaziladi (`o‘ ch sh g‘ i`); katta harfli so‘zlarda `Ş→SH`, bosh harfda `Ş→Sh`;
+- `data/all`’da bor savollar takrorlanmaydi (matnning ortografiyaga befarq barmoq izi bo‘yicha) — saytning 1238 ta «Zakovat klubi» to‘plami asosan shu sabab tushib qoladi;
+- `--mode probe` sahifa tuzilishini tekshiradi va hisobotni branchga commit qiladi (`.github/workflows/export-turnirlar.yml`), `--mode check` yuklab olingan fayllarni **tarmoqsiz** tahlil qiladi — parserlar shunday yozilgan.
+
+zakovatklubi.uz eksporti esa `.github/workflows/export-all.yml` orqali yangilanadi (`workflow_dispatch`, `repository_dispatch archive-zakovat` yoki har kuni 03:17).
 
 ## Botni ishga tushirish
 
