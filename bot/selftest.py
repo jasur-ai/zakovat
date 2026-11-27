@@ -173,6 +173,7 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
     application = build_app(bot)
     await application.initialize()
     ticks_saved, dry_saved = wh.TICKS_ENABLED, stats.DRY_RUN
+    counters_saved = stats.freeze()
     wh.TICKS_ENABLED = False          # no self-invocations during a dry run
     stats.DRY_RUN = True              # a dry run never writes to the real store
     lines: list[str] = []
@@ -250,5 +251,6 @@ async def run_self_test(build_app: Callable[[Bot], Any]) -> list[str]:
     finally:
         wh.TICKS_ENABLED = ticks_saved
         stats.DRY_RUN = dry_saved
+        stats.restore(counters_saved)
         await application.shutdown()
     return lines

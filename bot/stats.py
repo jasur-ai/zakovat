@@ -776,6 +776,31 @@ async def snapshot(archive=None, force: bool = True) -> dict:
     }
 
 
+def freeze() -> dict:
+    """Copy the buffers, so a dry run can be undone without a trace."""
+    return {"pending": {field: Counter(_pending[field]) for field in ("c", "u", "h", "p")},
+            "events": list(_pending["e"]),
+            "instance_c": Counter(_instance["c"]),
+            "instance_u": set(_instance["u"]),
+            "instance_h": set(_instance["h"]),
+            "instance_p": set(_instance["p"])}
+
+
+def restore(state: dict) -> None:
+    """Put the buffers back exactly as they were before the dry run.
+
+    The self-test counts a whole synthetic game. Those numbers must never reach
+    the real store later, when a warm instance handles live traffic again.
+    """
+    for field in ("c", "u", "h", "p"):
+        _pending[field] = Counter(state["pending"][field])
+    _pending["e"] = list(state["events"])
+    _instance["c"] = Counter(state["instance_c"])
+    _instance["u"] = set(state["instance_u"])
+    _instance["h"] = set(state["instance_h"])
+    _instance["p"] = set(state["instance_p"])
+
+
 def reset() -> None:
     """Test helper: drop everything this instance has counted."""
     global _last_flush, _remote, _remote_at, _blob_url, _tg_message_id
