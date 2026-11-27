@@ -1,500 +1,500 @@
 {
- "generated_at": "2026-11-27T18:24:43+00:00",
+ "generated_at": "2026-11-27T19:00:31+00:00",
  "listed_packages": [
   {
-   "source_id": 7797,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 8-tur Paxtaqand jamoasi savollari",
+   "source_id": 7800,
+   "title": "O‘zbekiston chempionati 2025 savollari",
+   "questions": 60,
+   "rounds": 4,
+   "date": "16.11.2025",
+   "section": "",
+   "authors": [
+    "Saidakrom Rasulev Farxadovich"
+   ],
+   "origin": "Foydalanuvchilar yuborgan savollar"
+  },
+  {
+   "source_id": 6559,
+   "title": "«MIFI kubogi 2025» intellektual o‘yinlar festivali",
+   "questions": 75,
+   "rounds": 7,
+   "date": "07.12.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6558,
+   "title": "Odamlar o‘ynaydigan harflar II",
    "questions": 36,
-   "rounds": 1,
-   "date": "31.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "18.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7796,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 7-tur Farrux Rafiqov jamoasi savollari",
-   "questions": 37,
-   "rounds": 1,
-   "date": "24.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "source_id": 6557,
+   "title": "Oq otlar kubogi",
+   "questions": 35,
+   "rounds": 3,
+   "date": "10.05.2021",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7795,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 6-tur Tesla jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "17.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7794,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 10-tur Benom jamoasi savollari",
+   "source_id": 6556,
+   "title": "O‘n to‘rtinchi qahraton",
    "questions": 36,
-   "rounds": 1,
-   "date": "14.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "23.02.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7793,
-   "title": "Ikkinchi Liga kuzgi mavsum 10-tur savollari",
-   "questions": 27,
-   "rounds": 1,
-   "date": "14.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7792,
-   "title": "Ikkinchi Liga kuzgi mavsum 9-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "07.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7791,
-   "title": "Ikkinchi Liga kuzgi mavsum 8-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "31.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7790,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 9-tur Jobir Ahmedov jamoasi savollari",
+   "source_id": 6555,
+   "title": "Kub-1. Sentyabr (2023/2024)",
    "questions": 36,
-   "rounds": 1,
-   "date": "07.11.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "30.09.2023",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7789,
-   "title": "Ikkinchi Liga kuzgi mavsum 7-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "24.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7788,
-   "title": "Ikkinchi Liga kuzgi mavsum 6-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "17.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7787,
-   "title": "Ikkinchi Liga kuzgi mavsum 5-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "10.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7786,
-   "title": "Ikkinchi Liga kuzgi mavsum 4-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "03.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7785,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "10.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7784,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 4-tur TGFU jamoasi savollari",
+   "source_id": 6554,
+   "title": "Sims To Be. Vol. 7",
    "questions": 36,
-   "rounds": 1,
-   "date": "03.10.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "30.05.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7783,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari",
-   "questions": 38,
-   "rounds": 1,
-   "date": "26.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7782,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 2-tur Yengil kavaleriya jamoasi savollari",
-   "questions": 37,
-   "rounds": 1,
-   "date": "19.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7781,
-   "title": "Ikkinchi Liga kuzgi mavsum 3-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "26.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7780,
-   "title": "Ikkinchi Liga kuzgi mavsum 2-tur savollari",
-   "questions": 25,
-   "rounds": 1,
-   "date": "19.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
-  },
-  {
-   "source_id": 7779,
-   "title": "Professional va Birinchi liga kuzgi mavsumi 1-tur Metaverse jamoasi savollari",
+   "source_id": 6553,
+   "title": "Kub-1. Sentyabr (2022/2023)",
    "questions": 36,
-   "rounds": 1,
-   "date": "12.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Oyatillo To‘xtaraliyev Ubaydullo o‘g‘li",
-    "Dilshod Sharipov Shaxidjonovich"
-   ],
-   "origin": "Zakovat klubi"
+   "rounds": 3,
+   "date": "30.09.2022",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   },
   {
-   "source_id": 7778,
-   "title": "Ikkinchi Liga kuzgi mavsum 1-tur savollari",
-   "questions": 24,
-   "rounds": 1,
-   "date": "12.09.2026",
-   "section": "Professional",
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich",
-    "Alibek Shilmanov"
-   ],
-   "origin": "Zakovat klubi"
+   "source_id": 6552,
+   "title": "StudChR-2025. Falstartsiz tezlikka jamoaviy o‘yin",
+   "questions": 104,
+   "rounds": 19,
+   "date": "20.04.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6551,
+   "title": "Yuriy Mironovich xotirasiga bag‘ishlangan turnir – 2024",
+   "questions": 36,
+   "rounds": 3,
+   "date": "04.01.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6550,
+   "title": "Nesterka",
+   "questions": 55,
+   "rounds": 6,
+   "date": "29.10.2023",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6549,
+   "title": "Samarium. Do‘stlik kubogi.",
+   "questions": 36,
+   "rounds": 3,
+   "date": "06.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6548,
+   "title": "O‘ylash uchun bir.. beriladi",
+   "questions": 36,
+   "rounds": 3,
+   "date": "01.02.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6545,
+   "title": "Cheksizlik orolchasi: mart",
+   "questions": 36,
+   "rounds": 3,
+   "date": "12.04.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6544,
+   "title": "Guldurab qaynovchi kubok",
+   "questions": 36,
+   "rounds": 3,
+   "date": "31.01.2021",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6543,
+   "title": "OVSCH. 4-bosqich",
+   "questions": 36,
+   "rounds": 3,
+   "date": "23.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6542,
+   "title": "Gyombyots-8",
+   "questions": 54,
+   "rounds": 4,
+   "date": "28.01.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6541,
+   "title": "Meva: guava",
+   "questions": 36,
+   "rounds": 3,
+   "date": "08.03.2026",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6540,
+   "title": "Borisfen 11: Irkley",
+   "questions": 35,
+   "rounds": 3,
+   "date": "16.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
+  },
+  {
+   "source_id": 6539,
+   "title": "Balkanfest — 2025",
+   "questions": 94,
+   "rounds": 6,
+   "date": "23.11.2025",
+   "section": "",
+   "authors": [],
+   "origin": "Got Questions"
   }
  ],
  "questions": [
   {
-   "id": 900029203,
-   "question_id": 29203,
-   "package_id": 907744,
+   "id": 900332584,
+   "question_id": 332584,
+   "package_id": 906457,
    "index": 1,
    "round": 1,
-   "text": "Ko‘rgazmali material\n\nMay I help you?\n\nIncheon aeroportida tez, sifatli va aniq ma’lumot beruvchi portal xizmati nomidan bir harfni tushirib qoldirdik.\nSavol: Shu harfni yozib bering.",
-   "answer": "A",
-   "comment": "May AI help you",
-   "sources": [
-    "https://www.zakovatklubi.uz/open-question/view/30151"
-   ],
-   "created_at": 1787443200
-  },
-  {
-   "id": 900025041,
-   "question_id": 25041,
-   "package_id": 907633,
-   "index": 15,
-   "round": 1,
-   "text": "Chempionlar ligasi doirasidagi Real Madrid va Manchester Siti jamoalari o‘rtasidagi o‘yinning javob uchrashuvida, Kilian Mbappe 1-taymning o‘zidayoq dubl qayd etib, qaysidir ma’noda raqib jamoa muxlislarining OVOZINI O‘CHIRIB qo‘ydi. Qiziq tomoni, Mbappening o‘sha o‘yin 1-bo‘limidagi ikkita goli aynan shu daqiqalarda urilgan edi.\nSavol: Nechanchi daqiqalarda?",
-   "answer": "4 va 33-daqiqalarda",
-   "comment": "Mbappe o‘yinning 1-bo‘limida 4 va 33-daqiqalarida gol urgan edi. Savol matnidagi “muxlislarning ovozini o‘chirib qo‘ydi” so‘zlari kompozitor Jon Keyjning sukutdan iborat “4:33” kompozitsiyasiga ishora edi.",
-   "sources": [
-    "https://ru.uefa.com/uefachampionsleague/match/2044482--real-madrid-vs-m…",
-    "https://www.zakovatklubi.uz/open-question/view/26036",
-    "https://ru.uefa.com/uefachampionsleague/match/2044482--real-madrid-vs-man-city/lineups/"
-   ],
-   "authors": [
-    "Tazabay Yuldashev Niyetbay uli"
-   ],
-   "created_at": 1751068800
-  },
-  {
-   "id": 900027548,
-   "question_id": 27548,
-   "package_id": 907724,
-   "index": 8,
-   "round": 1,
-   "text": "Elektronikada uzatgich va analog karta qabul qilgichi o‘rtasidagi uzilishda elektron signal qiymati eng quyi chegaraga tushishi mumkin, lekin shu holatda ham elektron uzatgichlar faol ish rejimida bo‘ladi. Bu holat U deb ataladi. “Beeline” aloqa operatorining hisobingizda mablag‘ qolmaganda ham oldindan to‘lov evaziga qo‘ng‘iroqlarni faol qabul qilish xizmati ham U deb nomlangan.\n\nSavol: Uni 2 so‘zda yozib bering.",
-   "answer": "Jonli nol.",
-   "sources": [
-    "https://share.google/yt1Ps8cyQse56eZr9",
-    "https://share.google/pZF3egdHpF9ORdklH",
-    "https://www.zakovatklubi.uz/open-question/view/28523"
-   ],
-   "created_at": 1771632000
-  },
-  {
-   "id": 900029496,
-   "question_id": 29496,
-   "package_id": 907756,
-   "index": 1,
-   "round": 1,
-   "text": "Yurtimizda joylashgan gruzincha muassasalardan birining nomi “Nino buvining alisi” deb nomlangan.\n\nSavol: Harflari tushirib qoldirilgan so‘zni asl holida yozib bering",
-   "answer": "Xinkali / Xinkalisi",
-   "comment": "So‘ngi yillarda yurtimizda gruzin restoranlari ko‘payib bormoqda. “Nino buvining xinkalisi” restorani turlicha xinkali taomlarini taqdim qiladi.",
+   "text": "BUNI eshitgan serial qahramoni rohibaga: «Menda aniqroq», deydi. BUNI nomlang.",
+   "answer": "Cherkov qo‘ng‘irog‘i jarangi / Qo‘ng‘iroq jarangi; Qo‘ng‘iroq ovozi; Qo‘ng‘iroq chalinishi; Qo‘ng‘iroq",
+   "comment": "Qo‘ng‘iroq jarangi bilan an’anaviy ravishda yangi soat kirgani bildiriladi, ammo bu safar qo‘ng‘iroqxonada olti daqiqaga kechikishadi. Rohiba buni oqlash uchun ilgari rohibalar o‘z vaqtida chalar edilar, keyin esa uni mexanik moslama o‘rnatishga ko‘ndirishgani va shundan beri hamma narsa buzilganini aytadi.",
    "accepted": [
-    "Xinkalisi"
+    "Qo‘ng‘iroq jarangi; Qo‘ng‘iroq ovozi; Qo‘ng‘iroq chalinishi; Qo‘ng‘iroq"
    ],
    "sources": [
-    "https://www.instagram.com/khinkali.nino/",
-    "https://www.goldenpages.uz/company/?Id=115902",
-    "https://www.zakovatklubi.uz/open-question/view/30439"
+    "Monsieur Spade S01E01",
+    "https://gotquestions.online/packs/6795/1"
    ],
    "authors": [
-    "Suxrob Sharipov Shuxrat o‘g‘li"
-   ],
-   "created_at": 1786752000
-  },
-  {
-   "id": 900026141,
-   "question_id": 26141,
-   "package_id": 907648,
-   "index": 1,
-   "round": 1,
-   "text": "Savolda Alif ikki so‘zni almashtirib keladi. Tarqatma materialda siz Alifning makroaksini ko‘rib turibsiz. 1971-yilda tug‘ilgan qo‘qonlikning ijod mahsuli Alifning bir uy buyumi bag‘rida ekanligini ta’kidlashdan boshlanadi.\nSavol: Shu ijod mahsuli nomini yozib bering.",
-   "answer": "Birinchi yor",
-   "comment": "Alif — bu soch tolasi edi. Tarqatmamali materialda soch tolasining makroaksi, ya’ni mikroskop orqali qaralgandagi tasviri keltirilgan. Xurshid Rasulovning “Birinchi yor” qo‘shig‘i “Yostig‘im bag‘rida soching tolasi” degan so‘zlar bilan boshlanadi.",
-   "attachments": [
-    "https://turnirlar.uz/savollar/api/media/pub/archive/zakovatklubi/985b0ad1_i6wZvzcTj3BbqHFCq0kK6L6CzAp3v5.webp"
-   ],
-   "sources": [
-    "https://oyina.uz/uz/article/3272",
-    "https://uz.lyricsus.com/xurshid-rasulov/birinchi-yor/",
-    "https://uz.wikipedia.org/wiki/Xurshid_Rasulov",
-    "https://www.zakovatklubi.uz/open-question/view/27118"
+    "Aleksandr Korobeynikov"
    ],
    "badges": [
-    "Rasmli"
+    "AI tarjima"
    ],
-   "created_at": 1758326400
+   "created_at": 1713225600
   },
   {
-   "id": 900027332,
-   "question_id": 27332,
-   "package_id": 907714,
-   "index": 20,
-   "round": 1,
-   "text": "U “italiyaliklar” bilan birga mashhurlikka erishgan bo‘lsa-da, aslida Indoneziyada paydo bo‘lgan. Afsonaga ko‘ra, 3 marotaba saharlikka tura olmagan insonlar oldiga beysbol bittasi bilan qurollangan U keladi. Uning nomi tarkibida bir so‘z 3 yoki 9-marta takrorlanadi.\n\nSavol: Uning nomini yozib bering.",
-   "answer": "Tun Tun Tun Sahur / Tun Tun Tun Tun Tun Tun Tun Tun Tun Sahur, Tung Tung Tung Sahur.",
-   "comment": "Indoneziyada saharlikni sahur yoki suxur deyishar ekan. Tun tun tun – saharlikka odamlarni uyg‘otuvchi nog‘ora ovozi. Italyan Brainrot mavjudotlari bo‘lgan Bombardiro Crocodilo, Tralalero Tralala, Bombombini Gusini, Cappuccino Assassino, Ballerina Cappuccina kabilar orasida Tun Tun Tun Sahur ham bor.",
-   "accepted": [
-    "Tun Tun Tun Tun Tun Tun Tun Tun Tun Sahur, Tung Tung Tung Sahur."
-   ],
-   "sources": [
-    "https://trends.rbc.ru/trends/social/681b58499a7947293a495c39",
-    "https://neolurk.org/wiki/Итальянский_brainrot",
-    "https://www.zakovatklubi.uz/open-question/view/28307"
-   ],
-   "authors": [
-    "Azamat Qobilov Adiljanovich"
-   ],
-   "created_at": 1768003200
-  },
-  {
-   "id": 900027627,
-   "question_id": 27627,
-   "package_id": 907683,
+   "id": 900410581,
+   "question_id": 410581,
+   "package_id": 906146,
    "index": 1,
    "round": 1,
-   "text": "Ko‘plab ma’lumotlarni xotirasida saqlaydigan YIRIK raqamli kutubxonalardan birining nomida biz ikki harfni berkitib qo‘ydik. Loyiha mualliflari 19-asr oxiridagi KITOBni sevib o‘qigan ko‘rinadi.\n\nSavol: Berkitilgan ikki harfni yozib bering.",
-   "answer": "hi / Istalgan ketma-ketlikda",
-   "comment": "Loyihaning to‘liq nomi “HathiTrust Digital Library”. Uning nomidagi “hathi” so‘zi hindi tilidan “fil” ma’nosini anglatadi. Fillarning yaxshi xotiraga ega ekani ma’lum. Maugli haqidagi asarda ham Hathi ismli qari fil personaj bor. “hi” [hay] so‘zi bilan inglizchada salomlashish mumkin. Biz ham bu savol orqali siz bilan salomlashib oldik.",
+   "text": "Kunning birida Filipp Farbax repeticiyaga boshqa kuni kelib qoladi, lekin uni bekor qilmay, qo‘l ostidagilarga qo‘ng‘iroq qiladi va birinchi imkoniyat tug‘ilishi bilanoq boshlash umidida kuta boshlaydi. Keyingi voqealarni tasvirlar ekan, savol muallifi QARSHILASH SIMFONIYASINI tilga oldi. QARSHILASH SIMFONIYASINI nomlang.",
+   "answer": "qarshilash simfoniyasi / kutib olish simfoniyasi; qabul qilish simfoniyasi",
+   "comment": "Muzikantlar birin-ketin qaytib kelganlarida sozlarini olib, repeticiyaga qo‘shilishgan — teskarisiga bo‘lgan «Xayrlashuv simfoniyasi» hosil bo‘lgan. E’tiborlisi, Farbaxning o‘zida ham ushbu asarning variatsiyasi — ijrochilari namoyish davomida sahnani tark etadigan «Muzikantlar g‘aloyoni» hazil-asari bor.",
    "accepted": [
-    "Istalgan ketma-ketlikda"
-   ],
-   "attachments": [
-    "https://turnirlar.uz/savollar/api/media/pub/archive/zakovatklubi/483327bc_gjiWx3kQUKATuBAOAV9Cuk2wtLHS8Z.webp"
+    "kutib olish simfoniyasi; qabul qilish simfoniyasi"
    ],
    "sources": [
-    "https://en.wikipedia.org/wiki/HathiTrust",
-    "https://www.zakovatklubi.uz/open-question/view/28600"
+    "https://archive.org/stream/musicallaughs007238mbp/musicallaughs007238mb…",
+    "https://www.windrep.org/Musician's_Strike",
+    "https://gotquestions.online/packs/6236/1",
+    "https://iqga.me/base/2182/"
+   ],
+   "authors": [
+    "Pavel Parfianovich (Cherven)"
    ],
    "badges": [
-    "Rasmli"
+    "AI tarjima"
    ],
-   "created_at": 1770422400
+   "created_at": 1740268800
   },
   {
-   "id": 900028550,
-   "question_id": 28550,
-   "package_id": 907728,
-   "index": 16,
-   "round": 1,
-   "text": "Imkon qadar ko‘proq AQSH shtatlarini kezishni maqsad qilgan \"Kanikul\" filmi personajlari sayohatini BO‘SH LIQ dan boshlashga qaror qilishadi. O‘z nomidan ham bilish mumkinki, BO‘SHLIQ BO‘SH LIQ dan iborat.\nBO‘SH LIQ yoki BO‘SHLIQ o‘rnidagini yozib bering.",
-   "answer": "To‘rt burchak / To‘rtburchak",
-   "comment": "AQShning Arizona, Kolorado, Nyu-Meksiko hamda Yuta shtatlari chegaralari kesishgan hudud \"To‘rt burchak\" deb ataladi, sayyohlar bir vaqtning o‘zida 4 ta shtatda bo‘lish maqsadida ushbu hududga ko‘p tashrif buyurishadi. Iloji boricha ko‘proq shtatga borishni maqsad qilgan film personajlari o‘z sayohatlarini aynan ushbu hududda boshlashga qaror qilishadi.",
-   "accepted": [
-    "To‘rtburchak"
-   ],
-   "sources": [
-    "https://share.google/I3MRzsdZC1iyzy9RQ",
-    "https://www.zakovatklubi.uz/open-question/view/29505"
-   ],
-   "authors": [
-    "Firdavs Bozorov Ilyosovich"
-   ],
-   "created_at": 1781308800
-  },
-  {
-   "id": 900026906,
-   "question_id": 26906,
-   "package_id": 907641,
-   "index": 11,
-   "round": 1,
-   "text": "Qal’alar, Qoraqalpoq yerlaridagi oltinsimon qumlar va manzaralar Igor Savitskiyni rom etadi. Bu yerlar IKS uchun IGREK qanday ahamiyat kasb etgan bo‘lsa, Igor uchu xuddi shunday ahamiyat kasb etgan.\nSavol: IKS va IGREKNI toping.",
-   "answer": "Gogen, Taiti. / Gogen, Polineziya.",
-   "comment": "Igor Savitskiy uchun Qoraqalpoqiston xuddi, Gogen uchun Taiti bajargan vazifani o‘tagan",
-   "accepted": [
-    "Gogen, Polineziya."
-   ],
-   "sources": [
-    "https://ru.wikipedia.org/Савицкий , Игорь Витальевич",
-    "https://www.zakovatklubi.uz/open-question/view/27888",
-    "https://ru.wikipedia.org/Савицкий"
-   ],
-   "created_at": 1762041600
-  },
-  {
-   "id": 900027740,
-   "question_id": 27740,
-   "package_id": 907709,
-   "index": 2,
-   "round": 1,
-   "text": "Fridyesh Karintining “Faremidoga sayohat” asari voqealari Birinchi jahon urushi vaqtida yuz beradi. Bosh qahramon ingliz flotida jarroh bo‘lib ishlaydi. Qahramon boshqaruvni yo‘qotgan gidrosamolyotda osmonga ko‘tariladi va musiqiy tovushlar orqali muloqot qiladigan mexanik maxluqlar olamiga tushib qoladi. Asarning yana bir nomi “Uning beshinchi sayohati”.\n\nSavol: Uni toping.",
-   "answer": "Gulliver.",
-   "comment": "Jonatan Svift Gulliverning 4 ta sayohati haqida asarlar yozgan. Fridyesh Karinti esa Gulliverning beshinchi sayohati haqida asar yozgan. Sviftning asarlarida ham Gulliver ingliz kemasida jarroh bo‘lib ishlardi.",
-   "sources": [
-    "https://hu.wikipedia.org/wiki/Utazás_Faremidóba",
-    "https://www.zakovatklubi.uz/open-question/view/28710"
-   ],
-   "authors": [
-    "Dilshod Sharipov Shaxidjonovich"
-   ]
-  },
-  {
-   "id": 900026959,
-   "question_id": 26959,
-   "package_id": 907684,
+   "id": 900361876,
+   "question_id": 361876,
+   "package_id": 906529,
    "index": 1,
    "round": 1,
-   "text": "“Virus” nomli o‘zbek filmi qahramoni dahshat va gallyutsinatsiyadan aziyat chekib yurganida mehmonxonadan qo‘ng‘iroq bo‘ladi va bir xonaga chaqiriladi.\nSavol: Nechanchi raqamli xonaga?",
-   "answer": "1408",
-   "comment": "Stiven Kingning “1408” nomli asarida “Delfin” nomli mehmonxonaning 1408-raqamli xonasi haqida turli dahshatli mish-mishlar yurar va u yerda tunagan insonlar sirli ravishda vafot etar edi. O‘zbek filmida ushbu xonaga kichik ishora qilingan.",
-   "sources": [
-    "https://www.youtube.com/watch?v=gcKJusrZqLo 00:59:38",
-    "https://www.zakovatklubi.uz/open-question/view/27938",
-    "https://www.youtube.com/watch?v=gcKJusrZqLo"
-   ],
-   "created_at": 1762041600
-  },
-  {
-   "id": 900028059,
-   "question_id": 28059,
-   "package_id": 907661,
-   "index": 5,
-   "round": 1,
-   "text": "Yaqinda “Starbaks” kompaniyasi ayiqcha shaklidagi stakanlarni sotuvga chiqardi. Haridorlar orasida ushbu stakanga ega chiqishni ISTAGANLAR ancha ko‘p topilgani sababli, u mashhurlikka erishdi. Stakan nomini to‘liq holda yozib bering.",
-   "answer": "Bearista",
-   "comment": "Starbaks kompaniyasi stakanga nom tanlashda inglizchada “ayiq” ya’ni “bear” va “barista” so‘zlari bilan so‘z o‘yini qilgan. Savol matnidagi “istaganlar” so‘zi kichkina yordam edi.",
-   "attachments": [
-    "https://turnirlar.uz/savollar/api/media/pub/archive/zakovatklubi/xfacb9369479206f7923f6a038b4ad98cccdfda52dd643fa2c1fa51bd5bb32d05.webp"
+   "text": "Tashkillashtirilgan taxminlardan biriga ko‘ra, UNING kelib chiqishi seriallardan birida stolga urilgan ikki zarba bilan bog‘liq. Toddy Yelinning aytishicha, ko‘rib chiqilgan variantlar orasida mashhur raqibga parodiya sifatidagi echki ma’rashi ham bor edi. Atoqli otdan foydalangan holda UNI nomlang.",
+   "answer": "Netflix kirish vaqtidagi intro ovozi / Netflix zastavkasi; Netflix introsi; tudum; Netflix sadosi",
+   "comment": "Kompaniya esda qoladigan tovush topishga harakat qilgan. Hosil bo‘lgan zastavka hattoki «tudum» nomini olgan va ba’zilarning fikricha, «Karta uychasi» serialida Frenk Andervudning stolga urgan zarbalaridan kelib chiqqan.",
+   "accepted": [
+    "Netflix zastavkasi; Netflix introsi; tudum; Netflix sadosi"
    ],
    "sources": [
-    "https://t.me/GuerrillaMarketing/10127",
-    "https://www.zakovatklubi.uz/open-question/view/29025"
+    "https://www.20k.org/episodes/netflix?rq=netflix – 08:52–09:00",
+    "https://economictimes.indiatimes.com/magazines/panache/netflix-mystery-…",
+    "https://gotquestions.online/packs/6683/1",
+    "https://www.20k.org/episodes/netflix?rq=netflix"
    ],
    "authors": [
-    "Umarxon Sharif Nurilla o‘g‘li"
+    "Aleksey Sheredega"
    ],
    "badges": [
-    "Rasmli"
+    "AI tarjima"
    ],
-   "created_at": 1775865600
+   "created_at": 1771286400
+  },
+  {
+   "id": 900313031,
+   "question_id": 313031,
+   "package_id": 906177,
+   "index": 1,
+   "round": 1,
+   "text": "Pirot gilami — xizmat qilish muddati uzaytirilgan yorqin gilam. Serbiyada ushbu gilamlar ULARGA ega deyishadi. Qaysi Rim xudosi ULAR bilan tasvirlangan?",
+   "answer": "Yanus",
+   "comment": "ULAR — ikki yuz (ikki bet). Pirot gilamida iplar asosni ikki tomondan ham qoplagani uchun ularning ikki yuzi bor deyiladi, shuning uchun ular ikki barobar uzoq xizmat qiladi. Ikki yuzli Rim xudosi — Yanus.",
+   "sources": [
+    "https://44serbia.ru/kovryi-iz-pirota-govoryashhie-ornamentyi/",
+    "https://gotquestions.online/packs/6389/1"
+   ],
+   "authors": [
+    "Mixail Naugolnov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1751846400
+  },
+  {
+   "id": 900521087,
+   "question_id": 521087,
+   "package_id": 906397,
+   "index": 1,
+   "round": 0,
+   "text": "Mashhur rassom o‘z xalqining milliy o‘zligiga katta e’tibor qaratgan. Shuning uchun, taxminlardan biriga ko‘ra, mashhur kartinada nisbatan to‘qroq terili va an’anaviy libosda rassom yaxshi ko‘radigan U tasvirlangan. UNI nomlang.",
+   "answer": "Frida Kalo / Kalo",
+   "comment": "Savolda gapirilgan rassom — Diyego Rivera, lekin kartinani u chizmagan. Gap Frida Kaloning navbatdagi xiyonati sababli ajrashish oldidan chizilgan qo‘sh avtoportreti haqida bormoqda. Bir talqinga ko‘ra, meksikalikga ko‘proq o‘xshash Frida — bu Diyego sevadigan Frida, ikkinchisi — yevropacha libosdagi va nisbatan oqroq terili Frida — Diyego tashlab ketgan Frida: shuning uchun u yuragidan oqayotgan qonni to‘xtatishga urinmoqda.",
+   "accepted": [
+    "Kalo"
+   ],
+   "sources": [
+    "https://www.kahlo.org/two-fridas/",
+    "Frida Kahlo‘s ‘The Two Fridas‘: Great Art Explained ( https://www.youtube.com/watch?v=rxKR2cHmlPY )",
+    "https://gotquestions.online/packs/6524/91",
+    "https://www.youtube.com/watch?v=rxKR2cHmlPY"
+   ],
+   "authors": [
+    "Mixail Ivanov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1712448000
+  },
+  {
+   "id": 900495481,
+   "question_id": 495481,
+   "package_id": 906244,
+   "index": 1,
+   "round": 1,
+   "text": "Turnirimizni boshlaymiz. Mashhur sprinter Jessi Ouens hatto otlar bilan poygada ham g‘olib chiqqan. Keyinchalik otlar UNING ovozi sababli yutqazgani isbotlangan. Uni ikki so‘z bilan nomlang.",
+   "answer": "start o‘qi / start o‘q uzilishi; start to‘pponchasi",
+   "comment": "Otlar start o‘qi uzilgan ovozdan qo‘rqib ketgan va darhol tezlik ololmagan, sprinter esa allaqachon marra sari yugurib ketgan edi.",
+   "accepted": [
+    "start o‘q uzilishi; start to‘pponchasi"
+   ],
+   "sources": [
+    "https://newrunners.ru/mag/razrushaem-mify-loshad-vs-chelovek/",
+    "https://gotquestions.online/packs/6484/1"
+   ],
+   "authors": [
+    "Valeriy Semyonov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1711670400
+  },
+  {
+   "id": 900348996,
+   "question_id": 348996,
+   "package_id": 906156,
+   "index": 1,
+   "round": 1,
+   "text": "«Odin» [Bir] — matematikning o‘g‘li Mixail Savvateyevning UNIDIR. Ushbu savol haqida ham xuddi shu gapni aytish mumkin. U nima?",
+   "answer": "birinchi so‘z / dastlabki so‘z",
+   "comment": "Matematikning o‘g‘li aytgan eng birinchi so‘z birinchi son — «bir» («odin») bo‘lgan. Ushbu savolning ham birinchi so‘zi «Odin» hisoblanadi.",
+   "accepted": [
+    "dastlabki so‘z"
+   ],
+   "sources": [
+    "https://youtu.be/6jxQG7YVnmI?si=ueE0E2Im1cAlbIIo+(01%3A47)",
+    "https://gotquestions.online/packs/6174/1",
+    "https://youtu.be/6jxQG7YVnmI?si=ueE0E2Im1cAlbIIo+%2801%3A47%29"
+   ],
+   "authors": [
+    "Ilya Orlov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1719705600
+  },
+  {
+   "id": 900353166,
+   "question_id": 353166,
+   "package_id": 906328,
+   "index": 1,
+   "round": 1,
+   "text": "Poda boquvchi itning sarguzashtlari haqidagi «U» filmining nomi mashhur kinotrilogiya nomidan biroz farq qiladi. Ikki so‘z bilan javob bering, U kim?",
+   "answer": "qo‘ylar hukmdori",
+   "comment": "Okko onlayn-kinoteatri itlar uchun «Dogumentalki» umumiy nomi ostida maxsus filmlar to‘plamini chiqardi. Savolda tilga olingan, podani boqayotgan korgi haqidagi film nomi mashhur «Uukuklar hukmdori» («Властелин колец») trilogiyasiga ishora qiladi.",
+   "sources": [
+    "https://okko.tv/serial/dogumentalki",
+    "https://gotquestions.online/packs/6499/1"
+   ],
+   "authors": [
+    "Pavel Stolyarov"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1759708800
+  },
+  {
+   "id": 900472413,
+   "question_id": 472413,
+   "package_id": 906335,
+   "index": 1,
+   "round": 1,
+   "text": "1924-yilda birinchi poytaxtga aylangan kurort shaharchasida vaqtida IKS o‘rniga ot va uzun arqondan foydalanishgan, bu bir martada bir nechta kishiga xizmat ko‘rsatish imkonini bergan. IKSni nomlang.",
+   "answer": "Ko‘targich / Funikulyor; Bugel; Osma yo‘l",
+   "comment": "Ushbu shahar — Qishki Olimpiya o‘yinlarining birinchi poytaxti bo‘lmish Alp tog‘laridagi Shamonidir. O‘sha paytlarda chang‘ichilar uchun mexanik ko‘targich bo‘lmagan, chang‘ichilarni ot arqon yordamida tepalikka tortib chiqargan.",
+   "accepted": [
+    "Funikulyor; Bugel; Osma yo‘l"
+   ],
+   "sources": [
+    "https://ru.wikipedia.org/wiki/Шамони-Мон-Блан",
+    "https://t.me/SM_ART_HISTORY/2463",
+    "https://gotquestions.online/packs/6544/1"
+   ],
+   "authors": [
+    "Aleksandr Kudryavtsev"
+   ],
+   "badges": [
+    "AI tarjima",
+    "Izohda rasm"
+   ],
+   "created_at": 1745107200
+  },
+  {
+   "id": 900200272,
+   "question_id": 200272,
+   "package_id": 906360,
+   "index": 1,
+   "round": 1,
+   "text": "Keling, boshlaymiz. Eduard Bezuglov ozishni istab, BU ISHNI QILIShga qaror qildi. Biz ham ushbu turda BU ISHNI QILIShga qaror qildik. BU ISHNI QILISH birikmasidagi hafta kuni nomini yozib bering.",
+   "answer": "Dushanba / Dushanbadan",
+   "comment": "Bezuglov vazn yo‘qotmoqchi bo‘lib, ko‘pchilik kabi ruhiy jihatdan qiyin jarayonni keyinga surgan holda ozishni dushanbadan boshlashga qaror qildi. Biz ham turimizni dushanba kuni boshlamoqdamiz.",
+   "accepted": [
+    "Dushanbadan"
+   ],
+   "sources": [
+    "https://www.sports.ru/health/blogs/3335287.htm",
+    "https://gotquestions.online/packs/6412/1"
+   ],
+   "authors": [
+    "Vyacheslav Garanovich"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1753574400
+  },
+  {
+   "id": 900278030,
+   "question_id": 278030,
+   "package_id": 906355,
+   "index": 1,
+   "round": 1,
+   "text": "1930-yillarda mavjud bo‘lgan Ivanovo Sanoat viloyati bir qancha zamonaviy subyektlarni o‘z ichiga olgan. Lyudmila Chernix ushbu viloyatda tug‘ilgan, shuning uchun u kashf etgan «asosiy halqa» turkumidagi asteroid U nomini olgan. Uni nomlang.",
+   "answer": "Yaroslavl",
+   "comment": "Lyudmila Ivanovna kashf etgan ko‘plab asteroidlardan birini o‘zining tug‘ilib o‘sgan Shuya shahridan unchalik uzoq bo‘lmagan shahar sharafiga nomlagan, halqaning eslatib o‘tilishi esa mashhur turistik marshrut («Oltin halqa») haqida o‘ylashga undashi mumkin edi.",
+   "sources": [
+    "https://ru.wikipedia.org/wiki/(15212)_Ярославль",
+    "https://ru.wikipedia.org/wiki/Черных,_Людмила_Ивановна",
+    "https://gotquestions.online/packs/6621/1"
+   ],
+   "authors": [
+    "Igor Demyantsev"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1746057600
+  },
+  {
+   "id": 900463444,
+   "question_id": 463444,
+   "package_id": 906202,
+   "index": 1,
+   "round": 0,
+   "text": "Aytishlaricha, ilgari ba’zi IKSlar raqobatchilarini ortda qoldirish uchun atayin radio-bozorlarga borishgan. Boshqa bir «IKS» esa Kongress kutubxonasi tomonidan muhim deb e’tirof etilgan. IKSni nomlang.",
+   "answer": "taksichi / taksi haydovchisi; taksist",
+   "comment": "Ilgari taksichilar buyurtmalarni ratsiya orqali olishgan va uzatgich kuchaytirgichlarini sotib olib raqobatchilarning ovozini bosib ketishgan. Ikkinchi holatda gap Martin Skorsezening «Taksichi» («Taxi Driver») filmi haqida bormoqda.",
+   "accepted": [
+    "taksi haydovchisi; taksist"
+   ],
+   "sources": [
+    "Как менялось такси от СССР до нулевых; https://youtu.be/TGvuA6x2ja8?t=1188",
+    "https://ru.wikipedia.org/wiki/Таксист_(фильм,_1976)",
+    "https://gotquestions.online/packs/6552/61",
+    "https://youtu.be/TGvuA6x2ja8?t=1188"
+   ],
+   "authors": [
+    "Andrey Skirenko"
+   ],
+   "badges": [
+    "AI tarjima"
+   ],
+   "created_at": 1750982400
   }
  ],
  "fields": [
@@ -513,5 +513,5 @@
   "sources",
   "text"
  ],
- "average_bytes": 859
+ "average_bytes": 922
 }

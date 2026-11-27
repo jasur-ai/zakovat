@@ -1,18 +1,36 @@
-[import] package 7732: no questions parsed (site says 0)
-[import] package 7733: no questions parsed (site says 0)
-[list] page 1: 30 cards · 42 pages · 1238 packages announced
-[list] 25/41 pages · 780 packages
-[list] 41/41 pages · 1238 packages
-[import] 1238 packages listed · 6562 already stored · 1236 to fetch
+[list] page 1: 30 cards · 219 pages · 6560 packages announced
+[list] 25/109 pages · 780 packages
+[list] 50/109 pages · 1530 packages
+[list] 75/109 pages · 2280 packages
+[list] 100/109 pages · 3030 packages
+[list] 109/109 pages · 3300 packages
+[import] 3300 packages listed · 0 already stored · 3300 to fetch
 [import] dedupe against 30378 known questions
-[import] 150 packages · 860 questions · 46 shards · 6444 duplicates skipped
-[import] 300 packages · 1950 questions · 47 shards · 11180 duplicates skipped
-[import] 450 packages · 2892 questions · 48 shards · 14146 duplicates skipped
-[import] 600 packages · 4031 questions · 49 shards · 16786 duplicates skipped
-[import] 750 packages · 5945 questions · 50 shards · 19919 duplicates skipped
-[import] done: {'packages': 842, 'questions': 6908, 'duplicates': 21481, 'failed': 0, 'empty': 392, 'images': 793, 'missing': 2}
-[import] sample → data/turnirlar/sample.json (18237 bytes)
-packages 7404 questions 228187 shards 51 bytes 67011853
-  {"id": 907785, "source_id": 7785, "title": "Professional va Birinchi liga kuzgi mavsumi 5-tur Espero jamoasi savollari", "questions": 4, "rounds": 1, "date": "10.10.2026", "section": "Professional", "origin": "Zakovat kl
-  {"id": 907783, "source_id": 7783, "title": "Professional va Birinchi liga kuzgi mavsumi 3-tur Magnum jamoasi savollari", "questions": 3, "rounds": 1, "date": "26.09.2026", "section": "Professional", "origin": "Zakovat kl
-  {"id": 906089, "source_id": 6089, "title": "LETIda bahor 2025", "questions": 15, "rounds": 1, "date": "09.03.2025", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6089", "images": 1
+[import] 150 packages · 7266 questions · 1 shards · 0 duplicates skipped
+[import] 300 packages · 13805 questions · 2 shards · 0 duplicates skipped
+[import] 450 packages · 20295 questions · 3 shards · 1 duplicates skipped
+[import] 600 packages · 26870 questions · 4 shards · 2 duplicates skipped
+[import] 750 packages · 33226 questions · 5 shards · 2 duplicates skipped
+[import] 900 packages · 39985 questions · 6 shards · 2 duplicates skipped
+[import] 1050 packages · 46520 questions · 7 shards · 2 duplicates skipped
+[import] 1200 packages · 53039 questions · 8 shards · 2 duplicates skipped
+[import] 1350 packages · 59539 questions · 9 shards · 2 duplicates skipped
+[import] 1500 packages · 65949 questions · 10 shards · 3 duplicates skipped
+[import] 1650 packages · 72572 questions · 11 shards · 3 duplicates skipped
+[import] 1800 packages · 80216 questions · 12 shards · 3 duplicates skipped
+[import] 1950 packages · 87683 questions · 13 shards · 3 duplicates skipped
+[import] 2100 packages · 95650 questions · 14 shards · 4 duplicates skipped
+[import] 2250 packages · 103414 questions · 15 shards · 4 duplicates skipped
+[import] 2400 packages · 112166 questions · 16 shards · 4 duplicates skipped
+[import] 2550 packages · 120733 questions · 17 shards · 4 duplicates skipped
+[import] 2700 packages · 128321 questions · 18 shards · 4 duplicates skipped
+[import] 2850 packages · 135741 questions · 19 shards · 4 duplicates skipped
+[import] 3000 packages · 141667 questions · 20 shards · 8 duplicates skipped
+[import] 3150 packages · 148175 questions · 21 shards · 16 duplicates skipped
+[import] 3300 packages · 154719 questions · 22 shards · 18 duplicates skipped
+[import] done: {'packages': 3300, 'questions': 154719, 'duplicates': 18, 'failed': 0, 'empty': 0, 'images': 10182, 'missing': 0}
+[import] sample → data/turnirlar/sample.json (16597 bytes)
+packages 3300 questions 154719 shards 22 bytes 47214742
+  {"id": 906457, "source_id": 6457, "title": "Draje-3", "questions": 36, "rounds": 3, "date": "16.04.2024", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6457", "images": 1, "shard":
+  {"id": 906146, "source_id": 6146, "title": "Sibir ligasi. IV tur", "questions": 36, "rounds": 1, "date": "23.02.2025", "section": "", "origin": "IQGA", "url": "https://turnirlar.uz/savollar/paket/6146", "images": 1, "sha
+  {"id": 906529, "source_id": 6529, "title": "OVSCH. 3-bosqich", "questions": 36, "rounds": 3, "date": "17.02.2026", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6529", "images": 4,
