@@ -3,4 +3,9 @@
 [import] 120 packages listed · 7404 already stored · 0 to fetch
 [import] dedupe against 30378 known questions
 [import] done: {'packages': 0, 'questions': 0, 'duplicates': 0, 'failed': 0, 'empty': 0, 'images': 0, 'missing': 0}
+[import] nothing new — the stored base is unchanged
 [import] sample → data/turnirlar/sample.json (4345 bytes)
+packages 7404 questions 388388 shards 50 bytes 112397517
+  {"id": 906457, "source_id": 6457, "title": "Draje-3", "questions": 36, "rounds": 3, "date": "16.04.2024", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6457", "images": 1, "shard":
+  {"id": 906146, "source_id": 6146, "title": "Sibir ligasi. IV tur", "questions": 36, "rounds": 1, "date": "23.02.2025", "section": "", "origin": "IQGA", "url": "https://turnirlar.uz/savollar/paket/6146", "images": 1, "sha
+  {"id": 906529, "source_id": 6529, "title": "OVSCH. 3-bosqich", "questions": 36, "rounds": 3, "date": "17.02.2026", "section": "", "origin": "Got Questions", "url": "https://turnirlar.uz/savollar/paket/6529", "images": 4,
