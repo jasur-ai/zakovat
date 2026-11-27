@@ -218,6 +218,22 @@ jobs:
           done
           cd "$GITHUB_WORKSPACE"
           gh release upload savollar-bazasi data/turnirlar/manifest.json --clobber
+          if [ "${{ steps.opts.outputs.fresh }}" = "true" ]; then
+            # A fresh build replaces the whole base, so any shard it did not
+            # write belongs to a superseded parser: drop it, or the next run
+            # would restore questions this build knows are incomplete.
+            gh release view savollar-bazasi --json assets --jq '.assets[].name' > /tmp/stored.txt
+            ls data/turnirlar/shards > /tmp/local.txt 2>/dev/null || true
+            while read -r name; do
+              case "$name" in
+                turnirlar-*.json.gz)
+                  if ! grep -qx "$name" /tmp/local.txt; then
+                    echo "removing the stale shard $name"
+                    gh release delete-asset savollar-bazasi "$name" --yes || true
+                  fi ;;
+              esac
+            done < /tmp/stored.txt
+          fi
 
       # The sandbox cannot read Actions logs, so the run log travels back the
       # same way the digest does: committed to the branch.
