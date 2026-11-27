@@ -247,7 +247,7 @@ def _fake_store_transport(store: dict, *, fail_first: bool = False):
             calls["jsonblob"] += 1
             store["https://jsonblob.com/api/jsonBlob/990011"] = body
             return httpx.Response(201, headers={"location": "/api/jsonBlob/990011"}, text="created")
-        if url == "https://kvdb.io/" and request.method == "POST":
+        if request.url.host == "kvdb.io" and request.url.path == "/" and request.method == "POST":
             calls["kvdb"] += 1
             if fail_first:                      # the first service in the list refuses
                 return httpx.Response(503, text="<html>blocked</html>")
