@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 from bot import messages as msg
 
@@ -18,6 +19,52 @@ class MessageTests(unittest.TestCase):
         for command in ("/solo", "/duel", "/packages", "/score", "/skip", "/accept", "/stop", "/rules"):
             self.assertIn(command, text)
         self.assertIn("admin", text)
+
+    def test_help_is_grouped_and_can_be_narrowed(self):
+        full = msg.help_text()
+        for heading in ("<b>O‘YIN</b>", "<b>TURNIR · RO‘YXATDAN O‘TISH</b>",
+                        "<b>TURNIR · SAVOL PAYTIDA</b>", "<b>KURATOR", "<b>BOT EGASI</b>"):
+            self.assertIn(heading, full)
+        self.assertLess(len(full), 4096)
+
+        narrow = msg.help_text("turnir")
+        self.assertIn("/jamoa", narrow)
+        self.assertNotIn("/solo", narrow)                 # one group means one group
+        self.assertNotIn("/help turnir", narrow)          # and no pointer to the others
+        self.assertEqual(msg.help_text("yo‘q"), full)     # an unknown word lists everything
+        self.assertNotIn("turnir", msg.help_text("oyin").lower())   # the polling bot's help
+
+    def test_the_whisper_copy_says_who_may_read_it(self):
+        usage = msg.whisper_usage()
+        self.assertIn("/pichoq matn", usage)
+        self.assertIn("Faqat o‘z jamoangiz", usage)
+        self.assertIn("Delete messages", usage)
+        self.assertIn("/pichoq jamoa matn", usage)        # the old copy dropped "pichoq"
+        refused = msg.whisper_outside("boshqa jamoada")
+        self.assertIn("YUBORILMADI", refused)
+        self.assertIn("boshqa jamoada", refused)
+        self.assertIn("/azolar", refused)
+        self.assertIn("o‘chira olmaydi", msg.whisper_dropped("Guruh"))
+        self.assertIn("o‘chirish huquqi yo‘q", msg.answer_dropped("Guruh"))
+        self.assertIn("turnir yo‘q", msg.whisper_no_tournament())
+
+    def test_the_member_list_is_team_shaped(self):
+        team = SimpleNamespace(name="Bilimdonlar", captain=101, size=2,
+                               members=[SimpleNamespace(user_id=101, name="Kapitan",
+                                                        username="kapitan"),
+                                        SimpleNamespace(user_id=102, name="A’zo", username="")])
+        text = msg.members_list([team], "Zakovat klubi", 102,
+                                extra=[{"id": 7, "name": "Kuzatuvchi", "username": "kuz"}])
+        self.assertIn("<b>A’ZOLAR</b> · Zakovat klubi", text)
+        self.assertIn("<b>Bilimdonlar</b> · 2 kishi", text)
+        self.assertIn("<code>101</code> @kapitan", text)
+        self.assertIn("kapitan", text)
+        self.assertIn("· siz", text)
+        self.assertIn("GURUHDA BOT KO‘RGANLAR", text)
+        self.assertIn("/pichoq matn", text)
+        empty = msg.members_list([], "Guruh", 1)
+        self.assertIn("Hali hech kim", empty)
+        self.assertNotIn("GURUHDA BOT KO‘RGANLAR", empty)
 
     def test_countdown_bar_shrinks(self):
         # Twenty segments: with a 60-second question one segment is three seconds,

@@ -77,31 +77,80 @@ def welcome(packages: int, questions: int) -> str:
     )
 
 
-def help_text() -> str:
-    return (
-        "<b>BUYRUQLAR</b>\n\n"
-        "<b>O‘yin</b>\n"
-        "/solo — yakka o‘yin\n"
-        "/duel — guruh o‘yini\n"
-        "/solo 959 — aniq paket bilan\n"
-        "/stop — o‘yinni to‘xtatish va yakuniy hisob\n\n"
-        "<b>Savol paytida</b>\n"
-        "Javob — savol xabariga reply qilib yoziladi\n"
-        "/score — joriy hisob va raund\n"
-        "/skip — savolni o‘tkazish va javobini ko‘rsatish (faqat admin)\n"
-        "/accept — javobni to‘g‘ri deb qabul qilish (faqat admin)\n"
-        "«Vaqtni yangilash» tugmasi — qolgan vaqtni ko‘rsatadi\n\n"
-        "<b>Ma’lumot</b>\n"
-        "/packages — barcha paketlar, sahifalab\n"
-        "/packages Zakovat — sarlavhadan qidirish\n"
-        "/packages sahifa 5 — aniq sahifa\n"
-        "/rules — qoidalar\n"
-        "/start — tanishtiruv\n\n"
-        "<b>HISOB QOIDASI</b>\n"
-        "To‘g‘ri javob — Bilimdonlar +1. Javobsiz, muddati o‘tgan yoki o‘tkazilgan "
-        "savol — Qarshi taraf +1. Ketma-ket uch savol javobsiz qolsa, o‘yin "
-        "avtomatik to‘xtatiladi."
-    )
+HELP_SECTIONS = (
+    ("oyin", "O‘YIN", (
+        "/solo — yakka o‘yin · /solo 959 — aniq paket bilan",
+        "/duel — guruh o‘yini",
+        "/packages — barcha paketlar, sahifalab · /packages Zakovat — qidirish",
+        "/score — joriy hisob va raund",
+        "/skip — savolni o‘tkazish va javobini ko‘rsatish (faqat admin)",
+        "/accept — javobni to‘g‘ri deb qabul qilish (faqat admin)",
+        "/stop — o‘yinni to‘xtatish va yakuniy hisob",
+    )),
+    ("turnir", "TURNIR · RO‘YXATDAN O‘TISH", (
+        "/turnir — turnir ochish (faqat admin yoki kurator)",
+        "/jamoa Nom — yangi jamoa (yozgan odam kapitan bo‘ladi)",
+        "/qoshil Nom — jamoaga qo‘shilish · /chiqish — chiqib ketish",
+        "/tayyor — «Men tayyorman» (har jamoadan kamida 2 kishi)",
+        "/azolar — o‘z jamoangiz a’zolari va ularning id’si",
+    )),
+    ("savol", "TURNIR · SAVOL PAYTIDA", (
+        "/yakuniy matn — jamoaning bitta yakuniy javobi (tasmaga reply qilib)",
+        "/bekor — yakuniy javobni olib tashlash",
+        "/pichoq matn — o‘z jamoangizga maxfiy xabar (guruhda ko‘rinmaydi)",
+        "/jadval — ochkolar va o‘rinlar",
+    )),
+    ("kurator", "KURATOR (faqat kurator va admin)", (
+        "/tanlov [so‘z] — savollar ro‘yxati: bosib olish yoki chiqarish",
+        "/olish 12345 — savolni tanlovga olish · /chiqarish 12345 — chiqarish",
+        "/savol 12345 — bitta savolni ko‘rish",
+        "/kurator 123456789 — kurator tayinlash · … olib — tayinlovni olish",
+        "/turnirstop — turnirni to‘xtatish va yakuniy jadval",
+    )),
+    ("ega", "BOT EGASI", (
+        "/stats — statistika paneli · /access — Mini App ruxsatlari",
+        "/grant 123456789 Ism — ruxsat berish · /revoke 123456789 — olish",
+    )),
+)
+
+HELP_ALIASES = {
+    "oyin": "oyin", "o‘yin": "oyin", "o'yin": "oyin", "game": "oyin", "solo": "oyin",
+    "duel": "oyin",
+    "turnir": "turnir", "tournament": "turnir", "jamoa": "turnir", "ro‘yxat": "turnir",
+    "savol": "savol", "yakuniy": "savol", "pichoq": "savol", "maxfiy": "savol",
+    "kurator": "kurator", "curator": "kurator", "tanlov": "kurator",
+    "ega": "ega", "owner": "ega", "stats": "ega", "statistika": "ega",
+}
+
+
+def help_text(section: str = "") -> str:
+    """The command list, in groups. ``/help turnir`` narrows it to one group."""
+    key = HELP_ALIASES.get(str(section or "").strip().casefold(), "")
+    blocks = ["<b>BUYRUQLAR</b>" + (" · " + str(section).strip().upper() if key else "")]
+    for name, title, lines in HELP_SECTIONS:
+        if key and name != key:
+            continue
+        blocks.append("")
+        blocks.append(f"<b>{title}</b>")
+        blocks.extend(lines)
+    blocks += [
+        "",
+        "<b>MA’LUMOT</b>",
+        "/start — tanishtiruv · /rules — qoidalar · /help — shu ro‘yxat",
+    ]
+    if not key:
+        blocks.append("/help turnir · /help kurator — faqat bitta bo‘lim")
+    blocks += [
+        "",
+        "<b>HISOB QOIDASI</b>",
+        "Oddiy o‘yinda: to‘g‘ri javob — Bilimdonlar +1; javobsiz, muddati o‘tgan yoki "
+        "o‘tkazilgan savol — Qarshi taraf +1; ketma-ket uch savol javobsiz qolsa, o‘yin "
+        "avtomatik to‘xtatiladi.",
+    ]
+    if key in {"", "turnir", "savol", "kurator"}:
+        blocks.append("Turnirda: har savolga har jamoa bitta yakuniy javob beradi, to‘g‘ri "
+                      "javob — jamoaga +1, javob bermagan jamoa ochko yo‘qotmaydi.")
+    return "\n".join(blocks)
 
 
 def rules() -> str:
@@ -640,13 +689,18 @@ def tour_not_registered() -> str:
 def whisper_usage() -> str:
     return "\n".join([
         "<b>MAXFIY XABAR</b>",
-        "• /pichoq @username matn — bitta a’zoga shaxsiy xabar",
-        "• /pichoq 123456789 matn — id orqali",
-        "• /jamoa matn — o‘z jamoangizdagi hamma a’zolarga",
-        "• /azolar — guruh a’zolarining id va username ro‘yxati",
+        "• /pichoq matn — o‘z jamoangizdagi barcha a’zolarga",
+        "• /pichoq jamoa matn — xuddi shu, hammaga",
+        "• /pichoq @a’zo matn — bitta a’zoga (faqat o‘z jamoangizdan)",
+        "• /pichoq 123456789 matn — id orqali, yana o‘z jamoangizdan",
+        "• /azolar — jamoangiz a’zolari va ularning id’si",
         "",
-        "Guruhda xabar ko‘rinmaydi: bot uni o‘chiradi (agar huquqi bo‘lsa) va faqat "
-        "manzilga shaxsiy xabar yuboradi.",
+        "<b>KIM KO‘RADI</b>",
+        "• Faqat o‘z jamoangiz a’zolari — guruhda xabar ko‘rinmaydi, bot uni o‘chiradi",
+        "• Boshqa jamoalar, kuzatuvchilar va begona odamlar hech narsa ko‘rmaydi",
+        "• Kurator va admin istalgan jamoaga yoza oladi: /pichoq JamoaNomi matn",
+        "• Botda «Delete messages» huquqi bo‘lmasa, xabar yuborilmaydi — guruhda "
+        "ko‘rinib qolgan matn maxfiy bo‘lolmaydi",
     ])
 
 
@@ -679,21 +733,96 @@ def whisper_failed(reason: str) -> str:
 
 
 def whisper_dropped(chat_title: str) -> str:
-    """The neutral group line when a whisper could not be deleted."""
-    return (f"{esc(chat_title)} da maxfiy xabar yuborildi. Botda xabar o‘chirish huquqi "
-            "yo‘q, shuning uchun asl xabarni o‘chirib yuboring.")
+    """The neutral group line when a whisper could not be deleted.
+
+    Deliberately says nothing about who wrote what: the group must not learn
+    that somebody tried to talk in private.
+    """
+    return (f"{esc(chat_title)} da bot xabarlarni o‘chira olmaydi — maxfiy xabar "
+            "yuborilmadi. Admin botga «Delete messages» huquqini bersin.")
 
 
-def members_list(rows: list, title: str, me: int) -> str:
-    lines = [f"<b>GURUH A’ZOLARI</b> · {esc(title)}",
-             f"• Ko‘rsatilgan: {len(rows)} kishi (bot ko‘rgan a’zolar)"]
-    for row in rows[:40]:
-        mark = " · siz" if int(row.get("id") or 0) == int(me) else ""
-        username = f" @{row['username']}" if row.get("username") else ""
-        lines.append(f"• <code>{row.get('id')}</code>{username} — {esc(row.get('name') or '')}{mark}")
-    if len(rows) > 40:
-        lines.append(f"• … yana {len(rows) - 40} ta")
-    lines += ["", "Maxfiy xabar: /pichoq <code>id</code> matn"]
+def whisper_no_tournament() -> str:
+    """/pichoq outside a tournament: there is no team, so there is nobody to hide it for."""
+    return "\n".join([
+        "<b>MAXFIY XABAR</b>",
+        "Maxfiy xabar faqat turnir jamoasi ichida yuradi — hozir bu chatda turnir yo‘q.",
+        "",
+        "• /turnir — turnir ochish (admin yoki kurator)",
+        "• /jamoa Nom — jamoa yaratish · /qoshil Nom — jamoaga qo‘shilish",
+        "• Keyin: /pichoq matn — faqat o‘z jamoangiz ko‘radi",
+    ])
+
+
+def answer_dropped(chat_title: str) -> str:
+    """The neutral group line when an answer could not be deleted.
+
+    It says nothing about who answered or what they wrote — only that the group
+    still shows it and how to fix that for good.
+    """
+    return (f"{esc(chat_title)} da javob yuborildi, lekin botda xabar o‘chirish huquqi "
+            "yo‘q — javobingizni o‘zingiz o‘chirib tashlang. Admin botga «Delete "
+            "messages» huquqini bersa, javoblar faqat o‘z jamoangizga ko‘rinadi.")
+
+
+def whisper_not_private(text: str) -> str:
+    """Told to the sender when the group copy stayed readable."""
+    return "\n".join([
+        "<b>MAXFIY XABAR YUBORILMADI</b>",
+        "Bu guruhda bot xabarlarni o‘chira olmaydi, shuning uchun yozganingiz hali "
+        "guruhda ko‘rinib turibdi.",
+        "",
+        "• Xabaringizni guruhdan o‘chirib tashlang",
+        "• Admin botga «Delete messages» huquqini bersin — keyin /pichoq ishlaydi",
+        "",
+        f"Yozganingiz: {esc(text)[:300]}",
+    ])
+
+
+def whisper_outside(reason: str) -> str:
+    """A whisper that would leave the team is refused."""
+    return "\n".join([
+        "<b>MAXFIY XABAR YUBORILMADI</b>",
+        f"• {esc(reason)}",
+        "",
+        "Maxfiy xabar faqat o‘z jamoangiz a’zolariga ketadi:",
+        "• /pichoq matn — butun jamoaga",
+        "• /pichoq @a’zo matn — bitta a’zoga",
+        "• /azolar — kim qatnashayotgani va ularning id’si",
+    ])
+
+
+def members_list(teams: list, title: str, me: int, extra: list | None = None) -> str:
+    """Who may receive a whisper: your own team (a curator sees every team).
+
+    ``extra`` is the rest of the group the bot has seen — shown to a curator
+    only, because appointing one of them is the curator's job.
+    """
+    lines = [f"<b>A’ZOLAR</b> · {esc(title)}"]
+    shown = 0
+    for team in teams:
+        captain = int(getattr(team, "captain", 0) or 0)
+        lines.append("")
+        lines.append(f"<b>{esc(team.name)}</b> · {team.size} kishi")
+        for person in team.members:
+            mark = " · siz" if int(person.user_id) == int(me) else ""
+            if captain and int(person.user_id) == captain:
+                mark += " · kapitan"
+            username = f" @{person.username}" if getattr(person, "username", "") else ""
+            lines.append(f"• <code>{person.user_id}</code>{username} — "
+                         f"{esc(person.name or '')}{mark}")
+            shown += 1
+    if not shown:
+        lines.append("• Hali hech kim ro‘yxatdan o‘tmagan: /jamoa Nom")
+    if extra:
+        lines += ["", "<b>GURUHDA BOT KO‘RGANLAR</b> (faqat kuratorga)"]
+        for row in extra[:40]:
+            username = f" @{row['username']}" if row.get("username") else ""
+            lines.append(f"• <code>{row.get('id')}</code>{username} — "
+                         f"{esc(row.get('name') or '')}")
+        if len(extra) > 40:
+            lines.append(f"• … yana {len(extra) - 40} ta")
+    lines += ["", "Maxfiy xabar: /pichoq matn — o‘z jamoangizga"]
     return "\n".join(lines)
 
 
@@ -741,7 +870,7 @@ def tour_card_play(title: str, number: int, total: int, round_label: str, standi
              f"• Har savolga {timer} s · yakuniy javob bergan: {finals} / {teams} jamoa",
              "", standings, "",
              "Yakuniy javob: tasmaga reply qilib <code>/yakuniy javob</code>.",
-             "Jamoangizga maxfiy xabar: <code>/pichoq jamoa matn</code>."]
+             "Maxfiy xabar: <code>/pichoq matn</code> — faqat o‘z jamoangiz ko‘radi."]
     return "\n".join(lines)
 
 
@@ -890,9 +1019,9 @@ def tour_help() -> str:
         "<i>O‘yin paytida</i>",
         "• <code>/yakuniy javob</code> — jamoaning yakuniy javobi (tasmaga reply qilib)",
         "• <code>/bekor</code> — yakuniy javobni olib tashlash",
-        "• <code>/pichoq @username matn</code> — bitta a’zoga maxfiy xabar",
-        "• <code>/pichoq jamoa matn</code> — o‘z jamoangizga maxfiy xabar",
-        "• <code>/azolar</code> — guruh a’zolari (id va username)",
+        "• <code>/pichoq matn</code> — o‘z jamoangizga maxfiy xabar",
+        "• <code>/pichoq @a’zo matn</code> — bitta a’zoga (faqat o‘z jamoangizdan)",
+        "• <code>/azolar</code> — o‘z jamoangiz a’zolari va ularning id’si",
         "• <code>/jadval</code> — ochkolar jadvali",
     ])
 
@@ -908,6 +1037,10 @@ def tour_rules_text(sizes: dict) -> str:
         "• To‘g‘ri javob — jamoaga +1 ochko; bir savolda bir nechta jamoa ochko oladi",
         "• Javoblar guruhda ko‘rinmaydi: bot ularni o‘chiradi va faqat o‘z jamoangizga "
         "shaxsiy xabar bilan ko‘rsatadi",
+        "• <code>/pichoq matn</code> — faqat o‘z jamoangiz ko‘radi; boshqa jamoaga yoki "
+        "turnirda qatnashmayotgan odamga maxfiy xabar ketmaydi",
+        "• Bot guruhda xabar o‘chira olmasa, maxfiy xabar umuman yuborilmaydi — admin "
+        "botga «Delete messages» huquqini berishi kerak",
         "• Yakunda ochkolar jadvali e’lon qilinadi",
     ])
 

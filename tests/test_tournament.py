@@ -1100,21 +1100,81 @@ class PlayingFlowTests(unittest.TestCase):
         scores = {team.name: team.score for team in self.bot.card_state().teams}
         self.assertEqual(sum(scores.values()), 2)
 
-    def test_a_whisper_reaches_one_person_only(self):
+    def test_a_whisper_reaches_one_teammate_only(self):
         member = self.people["Zakovat"][0]
-        target = self.people["Bilimdonlar"][0]
-        message = TourMessage(f"/pichoq {target} maxfiy gap", user_id=member)
+        mate = self.people["Zakovat"][1]
+        message = TourMessage(f"/pichoq {mate} maxfiy gap", user_id=member)
         message.message_id = 901
-        self.context.args = [str(target), "maxfiy", "gap"]
+        self.context.args = [str(mate), "maxfiy", "gap"]
         asyncio.run(webhook.cmd_whisper(tour_update(message, user_id=member), self.context))
-        self.assertIn(901, self.bot.deleted)
-        self.assertIn("maxfiy gap", "\n".join(self.bot.private_texts(target)))
-        self.assertIn("MAXFIY XABAR", "\n".join(self.bot.private_texts(target)))
+        self.assertIn(901, self.bot.deleted)               # the group copy is gone
+        self.assertIn("maxfiy gap", "\n".join(self.bot.private_texts(mate)))
+        self.assertIn("MAXFIY XABAR", "\n".join(self.bot.private_texts(mate)))
         for name, members in self.people.items():
             for person in members:
-                if person not in (target, member):
+                if person not in (mate, member):
                     self.assertNotIn("maxfiy gap", "\n".join(self.bot.private_texts(person)))
         self.assertNotIn("maxfiy gap", "\n".join(self.bot.group_texts()))
+        self.assertEqual(message.replies, [])              # nothing is quoted back to the group
+
+    def test_a_plain_whisper_goes_to_the_whole_team(self):
+        """/pichoq matn — no address at all, so the team is the audience."""
+        member = self.people["Bilimdonlar"][0]
+        message = TourMessage("/pichoq tez javob bering", user_id=member, message_id=905)
+        self.context.args = ["tez", "javob", "bering"]
+        asyncio.run(webhook.cmd_whisper(tour_update(message, user_id=member), self.context))
+        for mate in self.people["Bilimdonlar"][1:]:
+            self.assertIn("tez javob bering", "\n".join(self.bot.private_texts(mate)))
+        for rival in self.people["Zakovat"]:
+            self.assertEqual(self.bot.private_texts(rival), [])
+        self.assertNotIn("tez javob", "\n".join(self.bot.group_texts()))
+
+    def test_a_whisper_never_leaves_the_team(self):
+        """A rival's id is refused, not delivered — and the group sees nothing."""
+        member = self.people["Zakovat"][0]
+        rival = self.people["Bilimdonlar"][0]
+        message = TourMessage(f"/pichoq {rival} maxfiy gap", user_id=member, message_id=902)
+        self.context.args = [str(rival), "maxfiy", "gap"]
+        asyncio.run(webhook.cmd_whisper(tour_update(message, user_id=member), self.context))
+        self.assertEqual(self.bot.private_texts(rival), [])
+        self.assertIn("boshqa jamoada", "\n".join(self.bot.private_texts(member)))
+        self.assertIn(902, self.bot.deleted)               # the group copy still goes
+        self.assertNotIn("maxfiy gap", "\n".join(self.bot.group_texts()))
+        self.assertEqual(message.replies, [])
+
+    def test_a_stranger_outside_the_tournament_is_refused(self):
+        member = self.people["Intellekt"][0]
+        message = TourMessage("/pichoq 424242 kim u", user_id=member, message_id=903)
+        self.context.args = ["424242", "kim", "u"]
+        asyncio.run(webhook.cmd_whisper(tour_update(message, user_id=member), self.context))
+        self.assertEqual(self.bot.private_texts(424242), [])
+        self.assertIn("qatnashmaydi", "\n".join(self.bot.private_texts(member)))
+
+    def test_the_curator_may_write_to_any_team(self):
+        message = TourMessage("/pichoq Zakovat boshladik", user_id=ADMIN, message_id=904)
+        self.context.args = ["Zakovat", "boshladik"]
+        asyncio.run(webhook.cmd_whisper(tour_update(message, user_id=ADMIN), self.context))
+        for mate in self.people["Zakovat"]:
+            self.assertIn("boshladik", "\n".join(self.bot.private_texts(mate)))
+        for rival in self.people["Bilimdonlar"]:
+            self.assertNotIn("boshladik", "\n".join(self.bot.private_texts(rival)))
+
+    def test_without_delete_rights_a_whisper_is_not_sent_at_all(self):
+        bot = TourBot(can_delete=False)
+        context = tour_context(bot, self.archive)
+        tour = self.bot.card_state()
+        tour.can_delete = False
+        member = self.people["Zakovat"][0]
+        mate = self.people["Zakovat"][1]
+        message = TourMessage("/pichoq jamoa maxfiy", user_id=member, message_id=906)
+        context.args = ["jamoa", "maxfiy"]
+        with mock.patch.object(webhook, "tour_state", mock.AsyncMock(return_value=tour)):
+            asyncio.run(webhook.cmd_whisper(tour_update(message, user_id=member), context))
+        self.assertEqual(bot.deleted, [])
+        self.assertEqual(bot.private_texts(mate), [])      # nothing reaches the team
+        group = "\n".join(visible(record.get("text") or "") for record in bot.sent)
+        self.assertIn("o‘chira olmaydi", group)            # and the group is told why
+        self.assertIn("YUBORILMADI", "\n".join(bot.private_texts(member)))
 
     def test_a_whisper_to_the_whole_team(self):
         member = self.people["Intellekt"][0]
@@ -1144,13 +1204,26 @@ class PlayingFlowTests(unittest.TestCase):
         texts = "\n".join(visible(record.get("text") or "") for record in bot.sent)
         self.assertIn("o‘chirish huquqi yo‘q", texts)
 
-    def test_the_member_list_shows_ids_and_usernames(self):
+    def test_the_member_list_shows_your_own_team(self):
         member = self.people["Bilimdonlar"][0]
         message = TourMessage("/azolar", user_id=member)
         asyncio.run(webhook.cmd_members(tour_update(message, user_id=member), self.context))
         shown = visible(message.replies[0])
-        self.assertIn("GURUH A’ZOLARI", shown)
+        self.assertIn("A’ZOLAR", shown)
+        self.assertIn("<b>Bilimdonlar</b>", shown)
         self.assertIn(str(member), shown)
+        self.assertIn("siz", shown)
+        self.assertNotIn("<b>Zakovat</b>", shown)          # another team's ids are not yours
+        for rival in self.people["Zakovat"]:
+            self.assertNotIn(str(rival), shown)
+
+    def test_the_curator_sees_every_team(self):
+        message = TourMessage("/azolar", user_id=ADMIN)
+        asyncio.run(webhook.cmd_members(tour_update(message, user_id=ADMIN), self.context))
+        shown = visible(message.replies[0])
+        for name in self.people:
+            self.assertIn(f"<b>{name}</b>", shown)
+        self.assertIn("GURUHDA BOT KO‘RGANLAR", shown)     # who could still be appointed
         self.assertIn("user101", shown)
 
     def test_stopping_prints_the_table(self):

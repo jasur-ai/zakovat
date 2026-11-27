@@ -137,7 +137,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.effective_message.reply_text(msg.help_text(), parse_mode=ParseMode.HTML)
+    await update.effective_message.reply_text(msg.help_text("oyin"), parse_mode=ParseMode.HTML)
 
 
 async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -626,7 +626,7 @@ async def on_command_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE
     name = parts[0][1:].split("@")[0].lower()
     callback = COMMANDS.get(name)
     if callback is None:
-        await update.effective_message.reply_text(msg.help_text(), parse_mode=ParseMode.HTML)
+        await update.effective_message.reply_text(msg.help_text("oyin"), parse_mode=ParseMode.HTML)
         return
     context.args = parts[1:]
     await callback(update, context)
