@@ -28,6 +28,11 @@ import httpx
 OWNER_ID = int(os.getenv("ZAKOVAT_OWNER_ID", "8004724563"))
 STORE_URL = os.getenv("ZAKOVAT_STATS_URL", "").strip()
 STORE_TOKEN = os.getenv("ZAKOVAT_STATS_TOKEN", "").strip()
+# Vercel Blob: connecting a store to the project injects this token, so nothing
+# else has to be configured — the bot finds its own storage.
+BLOB_TOKEN = os.getenv("BLOB_READ_WRITE_TOKEN", "").strip()
+BLOB_PATH = os.getenv("ZAKOVAT_STATS_BLOB_PATH", "zakovat-stats.json").strip()
+BLOB_WRITE_URL = "https://blob.vercel-storage.com/"
 FLUSH_SECONDS = max(5, int(os.getenv("ZAKOVAT_STATS_FLUSH", "20")))
 DRY_RUN = False        # the self-test counts, but never writes to the store
 EVENT_LIMIT = 30
@@ -76,6 +81,16 @@ _instance: dict = {"c": Counter(), "u": set(), "h": set(), "p": set(), "started"
 _last_flush = 0.0
 _remote: dict = {}
 _remote_at = 0.0
+_blob_url = ""          # the public address of our blob, learned on first write
+
+
+def backend() -> str:
+    """Which storage this copy writes to: ``blob``, ``http`` or ``lokal``."""
+    if STORE_URL:
+        return "http"
+    if BLOB_TOKEN:
+        return "blob"
+    return "lokal"
 
 
 def section_of(title: str) -> str:
@@ -235,10 +250,10 @@ def _cap(counter: Counter) -> dict:
     return {key: int(amount) for key, amount in counter.most_common(MAP_LIMIT)}
 
 
-async def sync(force: bool = False) -> bool:
+async def sync(force: bool = False, transport=None) -> bool:
     """Read the document, fold our pending deltas in and write it back."""
     global _remote, _remote_at, _last_flush
-    if not STORE_URL or DRY_RUN:
+    if backend() == "lokal" or DRY_RUN:
         return False
     if not force and time.time() - _last_flush < FLUSH_SECONDS:
         return False
@@ -249,20 +264,30 @@ async def sync(force: bool = False) -> bool:
     document = _normalise(_remote) if _remote else {"c": Counter(), "u": Counter(),
                                                     "h": Counter(), "p": Counter(), "e": []}
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0)) as client:
-            response = await client.get(STORE_URL, headers=_headers())
-            if response.status_code == 200 and response.text.strip():
-                document = _normalise(_try_json(response.text))
+        async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0),
+                                     transport=transport) as client:
+            if backend() == "blob":
+                status, text = await blob_read(client)
+            else:
+                response = await client.get(STORE_URL, headers=_headers())
+                status, text = response.status_code, response.text
+            if status == 200 and text.strip():
+                document = _normalise(_try_json(text))
             body = _merge(document, deltas)
             payload = {"v": 1, "s": int(time.time()), "c": dict(body["c"]),
                        "u": _cap(body["u"]), "h": _cap(body["h"]), "p": _cap(body["p"]),
                        "e": body["e"][:EVENT_LIMIT]}
             body_text = json.dumps(payload, ensure_ascii=False)
-            written = await client.put(STORE_URL, content=body_text, headers=_headers())
-            if written.status_code in (405, 501):
-                # Some stores (a Google Apps Script, a plain function) take POST only.
-                written = await client.post(STORE_URL, content=body_text, headers=_headers())
-        if written.status_code >= 400:
+            if backend() == "blob":
+                status, _ = await blob_write(client, body_text)
+            else:
+                written = await client.put(STORE_URL, content=body_text, headers=_headers())
+                if written.status_code in (405, 501):
+                    # Some stores (a Google Apps Script, a plain function) take POST only.
+                    written = await client.post(STORE_URL, content=body_text,
+                                                headers=_headers())
+                status = written.status_code
+        if status >= 400:
             return False
     except Exception:
         logging.getLogger(__name__).debug("stats sync failed", exc_info=True)
@@ -277,6 +302,52 @@ async def sync(force: bool = False) -> bool:
     _remote = payload
     _remote_at = time.time()
     return True
+
+
+def _blob_headers(method: str) -> dict:
+    headers = {"authorization": f"Bearer {BLOB_TOKEN}", "x-api-version": "7"}
+    if method == "put":
+        headers["content-type"] = "application/json"
+        headers["x-content-type"] = "application/json"
+        headers["x-add-random-suffix"] = "0"     # keep one stable address
+    return headers
+
+
+async def blob_write(client, payload: str) -> tuple[int, str]:
+    """PUT the document into the connected Vercel Blob store."""
+    global _blob_url
+    written = await client.put(BLOB_WRITE_URL + BLOB_PATH, content=payload,
+                               headers=_blob_headers("put"))
+    if written.status_code < 400:
+        try:
+            _blob_url = str(written.json().get("url") or "") or _blob_url
+        except ValueError:
+            pass
+    return written.status_code, written.text[:120]
+
+
+async def blob_read(client) -> tuple[int, str]:
+    """Read the document back: the stored address, or a lookup by prefix."""
+    global _blob_url
+    if _blob_url:
+        response = await client.get(_blob_url, headers={"x-api-version": "7"})
+        if response.status_code == 200:
+            return 200, response.text
+    listed = await client.get(BLOB_WRITE_URL, params={"prefix": BLOB_PATH},
+                              headers=_blob_headers("get"))
+    if listed.status_code >= 400:
+        return listed.status_code, listed.text[:120]
+    try:
+        blobs = listed.json().get("blobs") or []
+    except ValueError:
+        return listed.status_code, listed.text[:120]
+    match = next((item for item in blobs if item.get("pathname") == BLOB_PATH), None)
+    url = str((match or {}).get("url") or "")
+    if not url:
+        return 404, "hujjat topilmadi"
+    _blob_url = url
+    response = await client.get(url, headers={"x-api-version": "7"})
+    return response.status_code, response.text
 
 
 def _try_json(text: str):
@@ -498,17 +569,23 @@ async def create_store(transport=None) -> dict:
 
 async def probe(transport=None) -> dict:
     """Check the configured store end to end without losing what it holds."""
-    if not STORE_URL:
-        return {"ok": False, "reason": "ZAKOVAT_STATS_URL berilmagan — hisob faqat shu nusxada",
-                "rejim": "lokal"}
+    if backend() == "lokal":
+        return {"ok": False, "rejim": "lokal",
+                "reason": ("saqlash ulanmagan — hisob faqat shu nusxada. Vercel'da Storage → "
+                           "Blob do‘konini loyihaga ulang (BLOB_READ_WRITE_TOKEN paydo "
+                           "bo‘ladi) yoki ZAKOVAT_STATS_URL bering")}
     marker = f"probe-{int(time.time())}"
-    host = STORE_URL.split("//")[-1].split("/")[0]
+    host = "Vercel Blob" if backend() == "blob" else STORE_URL.split("//")[-1].split("/")[0]
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=4.0),
                                      follow_redirects=True, transport=transport) as client:
             # Keep whatever is already stored: a check must not erase history.
-            before = await client.get(STORE_URL, headers=_headers())
-            existing = _normalise(_try_json(before.text)) if before.status_code == 200 else {}
+            if backend() == "blob":
+                before_code, before_text = await blob_read(client)
+            else:
+                before = await client.get(STORE_URL, headers=_headers())
+                before_code, before_text = before.status_code, before.text
+            existing = _normalise(_try_json(before_text)) if before_code == 200 else {}
             document = {"v": 1, "s": int(time.time()),
                         "c": {str(k): int(v) for k, v in (existing.get("c") or {}).items()},
                         "u": _cap(Counter(existing.get("u") or {})),
@@ -516,11 +593,17 @@ async def probe(transport=None) -> dict:
                         "p": _cap(Counter(existing.get("p") or {})),
                         "e": ([{"t": int(time.time()), "k": "probe", "x": marker}]
                               + list(existing.get("e") or []))[:EVENT_LIMIT]}
-            written = await _put(client, STORE_URL, json.dumps(document, ensure_ascii=False))
-            read = await client.get(STORE_URL, headers=_headers())
-        found = marker in read.text
-        return {"ok": written.status_code < 400 and found, "manzil": host,
-                "yozish": written.status_code, "oqish": read.status_code,
+            body_text = json.dumps(document, ensure_ascii=False)
+            if backend() == "blob":
+                write_code, _ = await blob_write(client, body_text)
+                read_code, read_text = await blob_read(client)
+            else:
+                written = await _put(client, STORE_URL, body_text)
+                read = await client.get(STORE_URL, headers=_headers())
+                write_code, read_code, read_text = written.status_code, read.status_code, read.text
+        found = marker in read_text
+        return {"ok": write_code < 400 and found, "manzil": host, "rejim": backend(),
+                "yozish": write_code, "oqish": read_code,
                 "qayta_o‘qildi": found, "saqlangan_hisoblar": document["c"],
                 "izoh": ("saqlash ishlaydi: yozildi va qayta o‘qildi"
                          if found else "yozildi, lekin qayta o‘qishda topilmadi")}
@@ -532,7 +615,7 @@ async def snapshot(archive=None, force: bool = True) -> dict:
     """Everything the panel shows: stored totals, this copy's totals, archive."""
     global _remote, _remote_at
     stored = False
-    if STORE_URL and not DRY_RUN:
+    if backend() != "lokal" and not DRY_RUN:
         try:
             stored = await sync(force=force)
         except Exception:
@@ -540,9 +623,13 @@ async def snapshot(archive=None, force: bool = True) -> dict:
         if not stored and not _remote:
             try:
                 async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0)) as client:
-                    response = await client.get(STORE_URL, headers=_headers())
-                if response.status_code == 200:
-                    _remote = _normalise(_try_json(response.text))
+                    if backend() == "blob":
+                        status, text = await blob_read(client)
+                    else:
+                        response = await client.get(STORE_URL, headers=_headers())
+                        status, text = response.status_code, response.text
+                if status == 200:
+                    _remote = _normalise(_try_json(text))
                     _remote_at = time.time()
             except Exception:
                 logging.getLogger(__name__).debug("stats read failed", exc_info=True)
@@ -577,8 +664,9 @@ async def snapshot(archive=None, force: bool = True) -> dict:
         },
         "accuracy": round(totals["answers_correct"] * 100 / asked) if asked else 0,
         "asked": asked,
-        "storage": STORE_URL or "",
-        "stored": bool(STORE_URL),
+        "storage": STORE_URL or ("Vercel Blob: " + BLOB_PATH if BLOB_TOKEN else ""),
+        "stored": backend() != "lokal",
+        "backend": backend(),
         "dry_run": DRY_RUN,
         "synced": stored,
         "remote_age": int(time.time() - _remote_at) if _remote_at else None,
@@ -588,7 +676,7 @@ async def snapshot(archive=None, force: bool = True) -> dict:
 
 def reset() -> None:
     """Test helper: drop everything this instance has counted."""
-    global _last_flush, _remote, _remote_at
+    global _last_flush, _remote, _remote_at, _blob_url
     _pending["c"] = Counter()
     _pending["u"] = Counter()
     _pending["h"] = Counter()
@@ -602,3 +690,4 @@ def reset() -> None:
     _last_flush = 0.0
     _remote = {}
     _remote_at = 0.0
+    _blob_url = ""
