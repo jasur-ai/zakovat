@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import html
 import json
+import logging
 import os
 import re
 import secrets
@@ -33,7 +34,11 @@ from .quiz import CORRECT, FOREIGN, IGNORED, WRONG, Session
 
 MARKER = "\n\n#ZS "
 TIMER = int(os.getenv("ZAKOVAT_TIMER_SECONDS", "60"))
-ARCHIVE = Archive(os.getenv("ZAKOVAT_ARCHIVE_DIR", "data/all"))
+ROOT = Path(__file__).resolve().parent.parent
+ARCHIVE = Archive(
+    ROOT / os.getenv("ZAKOVAT_ARCHIVE_DIR", "data/all"),
+    ROOT / "data" / "zakovat-959.flat.json",
+)
 SECRET = os.getenv("WEBHOOK_SECRET", "")
 
 
@@ -218,7 +223,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await start_game(update, context, "solo", context.args[0])
         return
     packages, questions = ARCHIVE.counts()
-    miniapp = os.getenv("MINIAPP_URL") or os.getenv("VERCEL_URL") or ""
+    miniapp = os.getenv("MINIAPP_URL") or public_base_url()
     await update.effective_message.reply_text(
         msg.welcome(packages, questions, miniapp),
         parse_mode=ParseMode.HTML,
@@ -337,12 +342,68 @@ async def cmd_accept(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await update.effective_message.reply_text("Bu javob hali mos kelmadi.")
 
 
-def build_telegram_app() -> Application:
-    token = os.getenv("BOT_TOKEN", "")
-    if not token:
-        raise RuntimeError("BOT_TOKEN environment variable is not set in Vercel")
-    application = ApplicationBuilder().token(token).updater(None).build()
+_recent_errors: list[str] = []
+
+
+async def on_handler_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Keep the last few handler errors so they can be shown on /api/index."""
+    error = context.error
+    entry = f"{time.strftime('%H:%M:%S')} {type(error).__name__}: {error}"
+    _recent_errors.insert(0, entry)
+    _recent_errors[:] = _recent_errors[:5]
+    logging.getLogger(__name__).exception("Handler failed", exc_info=error)
+
+
+COMMANDS = {
+    "start": cmd_start,
+    "help": cmd_start,
+    "rules": cmd_rules,
+    "packages": cmd_packages,
+    "solo": cmd_solo,
+    "quiz": cmd_solo,
+    "duel": cmd_duel,
+    "score": cmd_score,
+    "skip": cmd_skip,
+    "stop": cmd_stop,
+    "accept": cmd_accept,
+}
+
+
+async def on_command_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /commands that arrive without a bot_command entity.
+
+    PTB's CommandHandler only matches when Telegram attaches the entity, so a
+    message from an unusual client would otherwise fall through to small talk
+    and stay unanswered.
+    """
+    text = (update.effective_message.text or "").strip()
+    if not text.startswith("/"):
+        return
+    parts = text.split()
+    name = parts[0][1:].split("@")[0].lower()
+    callback = COMMANDS.get(name)
+    if callback is None:
+        await update.effective_message.reply_text(
+            msg.rules() if name in {"menu", "commands"} else msg.welcome(*ARCHIVE.counts(), public_base_url()),
+            parse_mode=ParseMode.HTML,
+        )
+        return
+    context.args = parts[1:]
+    await callback(update, context)
+
+
+def build_app(bot=None) -> Application:
+    builder = ApplicationBuilder().updater(None)
+    if bot is not None:
+        builder = builder.bot(bot)
+    else:
+        token = os.getenv("BOT_TOKEN", "")
+        if not token:
+            raise RuntimeError("BOT_TOKEN environment variable is not set in Vercel")
+        builder = builder.token(token)
+    application = builder.build()
     application.bot_data["archive"] = ARCHIVE
+    application.add_error_handler(on_handler_error)
     application.add_handlers([
         CommandHandler("start", cmd_start),
         CommandHandler("help", cmd_start),
@@ -357,9 +418,15 @@ def build_telegram_app() -> Application:
         CommandHandler("accept", cmd_accept),
         ChatMemberHandler(on_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER),
         MessageHandler(filters.StatusUpdate.WEB_APP_DATA, on_web_app_data),
+        MessageHandler(filters.Regex(r"^/"), on_command_fallback),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_text),
     ])
     return application
+
+
+def build_telegram_app() -> Application:
+    """Real Telegram application used by the deployed webhook."""
+    return build_app()
 
 
 _application: Application | None = None
@@ -375,8 +442,25 @@ def get_application() -> Application:
     return _application
 
 
+def public_base_url() -> str:
+    """A URL Telegram and users can actually reach.
+
+    VERCEL_URL is the generated deployment URL, which Vercel's Standard
+    Deployment Protection guards with a login page — Telegram gets a 401 there
+    and no update is ever delivered. VERCEL_PROJECT_PRODUCTION_URL is the public
+    production domain and is always set, so it is preferred.
+    """
+    for name in ("WEBHOOK_URL", "VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_BRANCH_URL", "VERCEL_URL"):
+        value = (os.getenv(name) or "").strip()
+        if value:
+            if not value.startswith("http"):
+                value = "https://" + value
+            return value.rstrip("/")
+    return ""
+
+
 async def ensure_webhook(application: Application, force: bool = False) -> None:
-    """Register the webhook using Vercel's own URL env var."""
+    """Register the webhook on Vercel's public production domain."""
     global _webhook_ready, _setup_error, _setup_attempted
     if (_webhook_ready or _setup_attempted) and not force:
         return
@@ -384,18 +468,15 @@ async def ensure_webhook(application: Application, force: bool = False) -> None:
     if not os.getenv("BOT_TOKEN"):
         _setup_error = "BOT_TOKEN environment variable is not set"
         return
-    base = os.getenv("WEBHOOK_URL") or os.getenv("VERCEL_URL") or ""
+    base = public_base_url()
     if not base:
-        _setup_error = "WEBHOOK_URL / VERCEL_URL environment variable is not set"
+        _setup_error = "WEBHOOK_URL / VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL is not set"
         return
-    if not base.startswith("http"):
-        base = "https://" + base
     try:
         await application.bot.set_webhook(
-            url=base.rstrip("/") + "/api/index",
+            url=base + "/api/index",
             secret_token=SECRET or None,
             allowed_updates=["message", "my_chat_member"],
-            drop_pending_updates=True,
         )
         _webhook_ready = True
         _setup_error = ""
@@ -420,7 +501,8 @@ app = FastAPI()
 
 @app.middleware("http")
 async def bootstrap(request: Request, call_next):
-    await bootstrap_webhook()
+    if request.method == "GET":
+        await bootstrap_webhook()
     return await call_next(request)
 
 
@@ -431,6 +513,17 @@ def status_page(title: str, lines: list[str], status_code: int = 200) -> HTMLRes
         f"<h1>{msg.esc(title)}</h1><pre>{body}</pre>",
         status_code=status_code,
     )
+
+
+def archive_lines() -> list[str]:
+    packages, questions = ARCHIVE.counts()
+    loaded = len(ARCHIVE._load()) if hasattr(ARCHIVE, "_load") else 0
+    root = ARCHIVE.root.resolve()
+    return [
+        f"Arxiv manifesti: {packages} paket, {questions} savol",
+        f"Arxiv katalogi: {root} ({'bor' if root.exists() else 'YO‘Q — fayllar deploy bo‘lmagan'})",
+        f"Yuklangan paketlar: {loaded}",
+    ]
 
 
 @app.get("/api/setup")
@@ -449,6 +542,7 @@ async def setup():
         return status_page("Webhook", [
             f"Webhook o‘rnatildi: {info.url}",
             f"{info.pending_update_count} kutilayotgan xabar",
+            f"Oxirgi xatolik: {info.last_error_message or 'yo‘q'}",
         ])
     except Exception as exc:
         return status_page("Xatolik", [str(exc)], 500)
@@ -460,9 +554,13 @@ async def status():
     lines = [
         f"BOT_TOKEN: {'set' if os.getenv('BOT_TOKEN') else 'MISSING'}",
         f"WEBHOOK_SECRET: {'set' if SECRET else 'MISSING'}",
-        f"VERCEL_URL: {os.getenv('VERCEL_URL') or '(yo‘q)'}",
+        f"VERCEL_ENV: {os.getenv('VERCEL_ENV') or '(lokal)'}",
+        f"VERCEL_PROJECT_PRODUCTION_URL: {os.getenv('VERCEL_PROJECT_PRODUCTION_URL') or '(yo‘q)'}",
+        f"VERCEL_URL (himoyalangan bo‘lishi mumkin): {os.getenv('VERCEL_URL') or '(yo‘q)'}",
+        f"Webhook uchun tanlangan manzil: {public_base_url() or '(yo‘q)'}",
         f"So‘nggi o‘rnatish xatoligi: {_setup_error or 'yo‘q'}",
     ]
+    lines += archive_lines()
     if os.getenv("BOT_TOKEN"):
         try:
             application = get_application()
@@ -473,17 +571,35 @@ async def status():
                 await application.shutdown()
             lines.append(f"Telegram webhook: {info.url or '(o‘rnatilmagan)'}")
             lines.append(f"Kutilayotgan xabarlar: {info.pending_update_count}")
+            if info.last_error_message:
+                lines.append(f"Telegram oxirgi xatoligi: {info.last_error_message}")
         except Exception as exc:
             lines.append(f"Telegram xatoligi: {exc}")
+    if _recent_errors:
+        lines.append("So‘nggi handler xatolari:")
+        lines += [f"  {entry}" for entry in _recent_errors]
     return status_page("Bot holati", lines)
 
 
 @app.get("/api/index")
 async def index(request: Request):
     """Vercel exposes api/index.py at this path; it doubles as a diagnostics page."""
-    if request.query_params.get("setup") == "1":
+    mode = request.query_params.get("test") or request.query_params.get("setup")
+    if request.query_params.get("setup") == "1" or mode == "setup":
         return await setup()
+    if mode == "1":
+        return status_page("O‘z-o‘zini sinash", await self_test())
     return await status()
+
+
+async def self_test() -> list[str]:
+    """Run synthetic updates through the real handlers without touching Telegram."""
+    from .selftest import run_self_test
+
+    try:
+        return await run_self_test(build_app)
+    except Exception as exc:
+        return [f"Sinov xatoligi: {type(exc).__name__}: {exc}"]
 
 
 @app.get("/")
@@ -511,7 +627,6 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None 
     application = get_application()
     await application.initialize()
     try:
-        await ensure_webhook(application)
         await application.process_update(update)
     finally:
         await application.shutdown()
