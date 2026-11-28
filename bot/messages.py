@@ -120,6 +120,8 @@ HELP_SECTIONS = (
         "/olish 12345 — savolni tanlovga olish · /chiqarish 12345 — chiqarish",
         "/kurator 123456789 — kurator tayinlash · … olib — tayinlovni olish",
         "/turnirstop — turnirni to‘xtatish va yakuniy jadval",
+        "Har savoldan keyin javoblar ro‘yxati shu yerga keladi: har jamoa yonidagi "
+        "tugma xulosani o‘zgartiradi, «TASDIQLASH» natijani guruhga yozadi",
     )),
     ("ega", "BOT EGASI", (
         "/stats — statistika paneli · /access — Mini App ruxsatlari",
@@ -161,6 +163,10 @@ def help_text(section: str = "") -> str:
         "Oddiy o‘yinda: to‘g‘ri javob — Bilimdonlar +1; javobsiz, muddati o‘tgan yoki "
         "o‘tkazilgan savol — Qarshi taraf +1; ketma-ket uch savol javobsiz qolsa, o‘yin "
         "avtomatik to‘xtatiladi.",
+        "Tekshirish: guruhda javob darhol hisoblanmaydi — bot xulosasi admin yoki "
+        "kuratorga ro‘yxat bo‘lib boradi, ochko «TASDIQLASH» dan keyin beriladi "
+        "(30 va 90 sekundda eslatma, 180 sekundda «avtomatik» e’lon). Sozlamalarda "
+        "o‘chiriladi; shaxsiy chatda so‘rovchi yo‘q, o‘yin avvalgidek yuradi.",
     ]
     if key in {"", "turnir", "savol", "kurator"}:
         blocks.append("Turnirda: har savolga har jamoa bitta yakuniy javob beradi, to‘g‘ri "
@@ -184,7 +190,11 @@ def rules() -> str:
         "boshlagan kishi.\n"
         "8. Har savoldan keyin to‘g‘ri javob va izoh ko‘rsatiladi.\n"
         "9. Ketma-ket uch savolga hech qanday taxmin yozilmasa, o‘yin avtomatik "
-        "to‘xtatiladi va yakuniy hisob e’lon qilinadi."
+        "to‘xtatiladi va yakuniy hisob e’lon qilinadi.\n"
+        "10. Guruhda javobni admin tasdiqlaydi: bot xulosasi taklif sifatida "
+        "adminga shaxsiy xabarda ko‘rsatiladi, ochko «TASDIQLASH» bosilgach "
+        "beriladi. 30 va 90 sekundda eslatma keladi, 180 sekundda bot o‘z "
+        "xulosasini «avtomatik» deb e’lon qiladi. Sozlamalarda o‘chiriladi."
     )
 
 
@@ -201,7 +211,7 @@ def group_hello() -> str:
 
 
 def settings_panel(package_id: int, title: str, available: int, rounds: int, per_round: int,
-                   timer: int, mode: str, total: int) -> str:
+                   timer: int, mode: str, total: int, confirm: bool = True) -> str:
     label = "Yakka o‘yin" if mode == "solo" else "Guruh o‘yini"
     per_round_text = "barcha savol" if per_round <= 0 else f"{per_round} savol"
     total_text = f"{total} savol" if total else "barcha savol"
@@ -212,8 +222,12 @@ def settings_panel(package_id: int, title: str, available: int, rounds: int, per
         f"Raundlar: {rounds}\n"
         f"Har raundda: {per_round_text}\n"
         f"Har savolga: {timer} sekund\n"
-        f"Jami: {total_text}\n\n"
-        "Qiymatlarni tugmalardan tanlang, so‘ng «Boshlash» ni bosing."
+        f"Jami: {total_text}\n"
+        + ("Javobni tasdiqlash: YOQIQ — guruhda javobni admin tekshiradi va ochko "
+           "tasdiqdan keyin beriladi (shaxsiy chatda so‘rovchi yo‘q, bot o‘zi "
+           "hisoblaydi).\n" if confirm else
+           "Javobni tasdiqlash: O‘CHIQ — bot o‘z xulosasini darhol hisoblaydi.\n")
+        + "\nQiymatlarni tugmalardan tanlang, so‘ng «Boshlash» ni bosing."
     )
 
 
@@ -397,6 +411,9 @@ EVENT_LABELS = {
     "tour_package_swapped": "paket almashtirildi",
     "tour_plan_dropped": "rejadan chiqarildi",
     "tour_cancelled": "turnir rejasi bekor qilindi",
+    "review_opened": "javoblar tekshiruvga olindi",
+    "review_confirmed": "javoblar tasdiqlandi",
+    "review_auto": "javoblar avtomatik e’lon qilindi",
 }
 
 
@@ -633,8 +650,16 @@ def tour_final_seen(number: int, total: int, finals: list, teams: int) -> str:
 
 
 def tour_result(number: int, total: int, answer: str, comment: str, winners: list,
-                finals: list, standings_line: str) -> str:
+                finals: list, standings_line: str, decided: str = "") -> str:
+    """The published result.
+
+    ``decided`` says who stood behind the verdicts — a curator's name, or that the
+    bot published on its own because nobody confirmed in time. A score nobody can
+    trace to a person is not a professional score.
+    """
     lines = [f"<b>SAVOL {number} / {total} YAKUNI</b>"]
+    if decided:
+        lines.append(f"• {esc(decided)}")
     if winners:
         lines.append("• Ochko oldi: " + " · ".join(esc(name) for name in winners))
     else:
@@ -648,6 +673,8 @@ def tour_result(number: int, total: int, answer: str, comment: str, winners: lis
         for row in finals:
             mark = "to‘g‘ri" if row.get("correct") else ("javob bermadi" if not row.get("answer")
                                                          else "noto‘g‘ri")
+            if row.get("changed"):
+                mark += " (o‘zgartirildi)"
             answer_text = esc(row.get("answer") or "—")
             lines.append(f"• {esc(row.get('team'))}: {answer_text} — {mark}")
     if standings_line:
@@ -1045,6 +1072,191 @@ def tour_package_unknown(text: str) -> str:
 def tour_package_locked() -> str:
     return ("O‘yin boshlangan — paketni almashtirib bo‘lmaydi. Avval <code>/turnirstop</code> "
             "bilan to‘xtating, keyin yangi turnir oching.")
+
+
+def review_snippet(answer: str, limit: int = 0) -> str:
+    """One answer as it appears in a list: whole when short, cut with a mark."""
+    value = " ".join(str(answer or "").split())
+    limit = int(limit or tn.ANSWER_SNIPPET)
+    if len(value) <= limit:
+        return value
+    return value[:limit - 1].rstrip() + "…"
+
+
+def tour_review_waiting(number: int, total: int, answers: int, teams: int,
+                        seconds: int) -> str:
+    """What the group sees while the verdicts are being checked.
+
+    No answer and no verdict is published here: the list goes to the curator, and
+    the group only learns that the question closed and how many answers there are.
+    """
+    lines = [f"<b>SAVOL {int(number)} / {int(total)} YAKUNLANDI</b>",
+             f"• Yakuniy javoblar: {int(answers)} / {int(teams)} jamoa"]
+    lines.append("• Javoblar kuratorga tekshirish uchun yuborildi — tasdiqlangach "
+                 "natija shu yerga yoziladi.")
+    if int(seconds) > 0:
+        lines.append(f"• Kurator javob bermasa, {int(seconds)} sekunddan keyin bot "
+                     "o‘z xulosasini e’lon qiladi.")
+    return "\n".join(lines)
+
+
+def tour_review_list(number: int, total: int, answer: str, rows: list, left: int,
+                     reminded: int = 0) -> str:
+    """The confirmation list itself — one line per team, verdict included.
+
+    The curator sees the right answer too: judging a borderline spelling without
+    it is guesswork, and this message goes only to people who may run the game.
+    """
+    answered = sum(1 for row in rows if str(row.get("answer") or "").strip())
+    lines = [f"<b>SAVOL {int(number)} / {int(total)} — TEKSHIRISH</b>",
+             f"• To‘g‘ri javob: <b>{esc(answer or '—')}</b>",
+             f"• Javob berdi: {int(answered)} / {len(rows)} jamoa",
+             "",
+             "<b>RO‘YXAT</b>"]
+    for row in rows:
+        position = int(row.get("position") or 0) + 1
+        name = esc(row.get("team") or "—")
+        given = str(row.get("answer") or "").strip()
+        if not given:
+            lines.append(f"{position}. {name} — javob bermadi")
+            continue
+        mark = "TO‘G‘RI" if row.get("correct") else "NOTO‘G‘RI"
+        if row.get("changed"):
+            mark += " · o‘zgartirildi"
+        lines.append(f"{position}. {name} — «{esc(review_snippet(given))}» — <b>{mark}</b>")
+    lines += ["",
+              "• Xulosani o‘zgartirish: jamoa yonidagi tugmani bosing",
+              "• «TASDIQLASH» ochkolarni beradi va natijani guruhga yozadi"]
+    if int(left) > 0:
+        lines.append(f"• Qolgan vaqt: {clock(int(left))} — keyin bot o‘zi e’lon qiladi")
+    if int(reminded):
+        lines.append(f"• Eslatma: {int(reminded)} marta yuborildi")
+    return "\n".join(lines)
+
+
+def tour_review_nudge(number: int, left: int) -> str:
+    """A reminder to the curator who has not confirmed yet."""
+    if int(left) <= 0:
+        return (f"Savol {int(number)} javoblari hali tasdiqlanmagan — bot o‘z xulosasini "
+                "e’lon qiladi.")
+    return (f"Savol {int(number)} javoblari hali tasdiqlanmagan. Qolgan vaqt: "
+            f"{clock(int(left))} — keyin bot o‘zi e’lon qiladi.")
+
+
+def tour_review_flip(name: str, correct: bool) -> str:
+    """The toast after one mark is turned over."""
+    return f"{name} — {'TO‘G‘RI' if correct else 'NOTO‘G‘RI'}"
+
+
+def tour_review_closed(number: int, total: int, winners: list, decided: str) -> str:
+    """What a confirmation list turns into once the verdicts are final.
+
+    The buttons go with it: a list that can still be pressed after the result was
+    published is a way to change a score nobody would notice.
+    """
+    lines = [f"<b>SAVOL {int(number)} / {int(total)} — TASDIQLANDI</b>"]
+    if winners:
+        lines.append("• Ochko oldi: " + " · ".join(esc(name) for name in winners))
+    else:
+        lines.append("• Hech qaysi jamoa ochko olmadi.")
+    if decided:
+        lines.append(f"• {esc(decided)}")
+    lines.append("• Ro‘yxat yopildi — natija guruhga yozildi.")
+    return "\n".join(lines)
+
+
+def tour_review_decided(name: str, auto: bool = False) -> str:
+    """The line the group sees under a published result."""
+    if auto:
+        return "Xulosa avtomatik e’lon qilindi (kurator tasdiqlamadi)"
+    return f"Javoblarni tasdiqladi: {name}"
+
+
+def tour_review_state(left: int, answers: int = 0) -> str:
+    """One line for the pinned card while a confirmation list is open."""
+    held = f" · {int(answers)} javob kutilmoqda" if int(answers) else ""
+    if int(left) > 0:
+        return f"● Javoblar tekshirilmoqda — tasdiq kutilmoqda ({clock(int(left))}){held}"
+    return f"● Javoblar tekshirilmoqda{held}"
+
+
+def tour_confirm_note(on: bool) -> str:
+    """What the curator panel says about the confirmation switch."""
+    if on:
+        return ("Javobni tasdiqlash: YOQIQ — har savoldan keyin ro‘yxat kuratorga "
+                "yuboriladi, ochko tasdiqdan keyin beriladi.")
+    return ("Javobni tasdiqlash: O‘CHIQ — bot o‘z xulosasini darhol e’lon qiladi "
+            "(/solo dagi kabi).")
+
+
+# ------------------------------------------------------------------ game copy
+def game_review_card(name: str, answer: str, number: int, total: int, left: int,
+                     correct: bool) -> str:
+    """One answer of an ordinary game, waiting for an admin's word."""
+    lines = ["<b>JAVOB TEKSHIRILMOQDA</b>",
+             f"• Savol: {int(number)} / {int(total)}"]
+    if str(answer or "").strip():
+        lines += [f"• Kim: {esc(name or '—')}",
+                  f"• Javob: «{esc(review_snippet(answer, 200))}»"]
+    else:
+        lines.append("• Javob berilmadi — ochko Qarshi tarafga ketishi kerak")
+    lines += [f"• Bot xulosasi: <b>{'TO‘G‘RI' if correct else 'NOTO‘G‘RI'}</b>",
+              "",
+              "• «TASDIQLASH» — bot xulosasi to‘g‘ri: shu bilan hisoblanadi",
+              "• «RAD ETISH» — xulosa noto‘g‘ri: teskari qaror qabul qilinadi"]
+    if int(left) > 0:
+        lines.append(f"• Qolgan vaqt: {clock(int(left))} — keyin bot o‘zi hisoblaydi")
+    return "\n".join(lines)
+
+
+def game_review_waiting(name: str, number: int, total: int, left: int) -> str:
+    """What the group sees while an admin checks one answer."""
+    who = f" — {esc(name)} javobi" if str(name or "").strip() else " — javob"
+    line = f"● Savol {int(number)} / {int(total)}{who} admin tekshiruvida"
+    if int(left) > 0:
+        line += f" · {clock(int(left))} keyin avtomatik"
+    return line
+
+
+def game_review_nudge(number: int, left: int) -> str:
+    if int(left) <= 0:
+        return f"Savol {int(number)} javobi hali tasdiqlanmagan — bot o‘zi hisoblaydi."
+    return (f"Savol {int(number)} javobi hali tasdiqlanmagan. Qolgan vaqt: "
+            f"{clock(int(left))}.")
+
+
+def game_confirm_note(on: bool) -> str:
+    """What the settings panel says about the confirmation step of a game."""
+    if on:
+        return ("Javobni tasdiqlash: YOQIQ. Guruh o‘yinida har javob adminga shaxsiy "
+                "xabarda ko‘rsatiladi, ochko tasdiqdan keyin beriladi. 30 va 90 "
+                "sekundda eslatma bor, 180 sekundda bot o‘z xulosasini «avtomatik» "
+                "deb e’lon qiladi. Shaxsiy chatda so‘rovchi yo‘q — o‘yin "
+                "avvalgidek davom etadi.")
+    return ("Javobni tasdiqlash: O‘CHIQ. Bot o‘z xulosasini darhol hisoblaydi — "
+            "avvalgi tartib. /accept buyrug‘i baribir ishlaydi.")
+
+
+def game_review_closed(number: int, total: int, decided: str, score: str) -> str:
+    """A parked answer of an ordinary game, after somebody has decided it.
+
+    The buttons go with the verdict: a card that can still be pressed once the
+    point has been given is a way to change a score nobody would notice.
+    """
+    lines = [f"<b>SAVOL {int(number)} / {int(total)} — TEKSHIRUV YOPILDI</b>"]
+    if decided:
+        lines.append(f"• {esc(decided)}")
+    if score:
+        lines.append(f"• Hisob: {esc(score)}")
+    return "\n".join(lines)
+
+
+def game_review_decided(name: str, auto: bool = False, rejected: bool = False) -> str:
+    if rejected:
+        return f"Javob rad etildi: {name}"
+    if auto:
+        return "Javob avtomatik tasdiqlandi (admin javob bermadi)"
+    return f"Javobni tasdiqladi: {name}"
 
 
 def tour_question_card(question: dict, show_answer: bool, used: bool = False,

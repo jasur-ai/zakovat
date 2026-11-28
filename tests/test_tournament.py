@@ -173,6 +173,18 @@ def tour_update(message=None, callback=None, chat_id=CHAT, chat_type="supergroup
     )
 
 
+def auto_score(bot, archive) -> None:
+    """Turn the confirmation step off — the switch lives in the curator's panel.
+
+    Half of these tests describe the path where the bot's own verdict is published
+    at once; the confirmation path has a class of its own (``AnswerReviewTests``).
+    """
+    tour = bot.card_state(archive)
+    tour.needs_confirm = False
+    tour.bump()
+    asyncio.run(webhook.tour_persist(bot, archive, tour))
+
+
 def tour_context(bot, archive, args=None):
     return SimpleNamespace(bot=bot, args=list(args or []),
                            application=SimpleNamespace(bot_data={"archive": archive}))
@@ -902,6 +914,7 @@ class PlayingFlowTests(unittest.TestCase):
         press = callback_query(st.tour_data(st.TEAM_START), self._card_text(), user_id=ADMIN)
         asyncio.run(webhook.on_team_button(tour_update(callback=press, user_id=ADMIN),
                                            self.context))
+        auto_score(self.bot, self.archive)
         self.sent_before = len(self.bot.sent)
 
     def tearDown(self):
@@ -1276,6 +1289,7 @@ class TournamentTickTests(unittest.TestCase):
                                self.bot.sent[self.bot.pinned[CHAT] - 1]["text"], user_id=ADMIN)
         asyncio.run(webhook.on_team_button(tour_update(callback=press, user_id=ADMIN),
                                            self.context))
+        auto_score(self.bot, self.archive)
 
     def tearDown(self):
         for patch in self._patches:
@@ -1663,6 +1677,398 @@ class PackageSwapRulesTests(unittest.TestCase):
         self.assertIsNotNone(self.loose("a"))
         self.assertIsNotNone(self.loose("9"))
         self.assertIsNotNone(self.loose("olimpiada"))
+
+
+class ClosedDmBot(TourBot):
+    """A group whose admins never pressed /start: every private message is refused."""
+
+    async def send_message(self, **kwargs):
+        if int(kwargs.get("chat_id") or 0) > 0:
+            raise webhook.TelegramError("Forbidden: bot can't initiate conversation")
+        return await super().send_message(**kwargs)
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class AnswerReviewTests(unittest.TestCase):
+    """Nobody's points are published until a person has looked at the list.
+
+    The clock running out used to mean ``tour.close`` scored every final answer
+    and the result went straight to the group: a checker that misreads one
+    spelling decided the game. Now the same moment produces a *proposal* — one
+    line per team, with the right answer beside it — which goes to the curators in
+    private, waits for their marks and only then becomes a score.
+    """
+
+    TEAMS = (("Bilimdonlar", 101), ("Zakovat", 111), ("Intellekt", 121))
+
+    def setUp(self):
+        stats.reset()
+        self.archive = Archive("data/all")
+        webhook._tour_probe.clear()
+        self._patches = [
+            mock.patch.object(webhook, "TICKS_ENABLED", False),
+            mock.patch.object(stats, "backend", lambda: "lokal"),
+        ]
+        for patch in self._patches:
+            patch.start()
+        self._build(TourBot())
+
+    def tearDown(self):
+        for patch in self._patches:
+            patch.stop()
+        stats.reset()
+        webhook._tour_probe.clear()
+
+    # ------------------------------------------------------------------ building
+    def _build(self, bot):
+        """A whole tournament on ``bot``: registered, started, one answer each."""
+        self.bot = bot
+        self.context = tour_context(bot, self.archive)
+        self.application = SimpleNamespace(bot=bot, bot_data={"archive": self.archive},
+                                           initialize=mock.AsyncMock(),
+                                           shutdown=mock.AsyncMock())
+        self._open_tournament()
+        self._register_teams()
+        self._start()
+        self.right = str(self.archive.question(self.tour().question_id).get("answer") or "")
+        self.assertTrue(self.right, "the test package needs an answer to check against")
+        self.wrong = "Qirq yettinchi shahar ko‘chasi"
+        self.assertNotIn(self.right.lower(), self.wrong.lower())
+
+    def _open_tournament(self):
+        message = TourMessage("/turnir", user_id=ADMIN)
+        self.context.args = [str(PACKAGE)]
+        asyncio.run(webhook.cmd_tour(tour_update(message, user_id=ADMIN), self.context))
+        self.context.args = []
+
+    def _register_teams(self):
+        for name, captain in self.TEAMS:
+            message = TourMessage(f"/jamoa {name}", user_id=captain)
+            self.context.args = [name]
+            asyncio.run(webhook.cmd_team(tour_update(message, user_id=captain), self.context))
+            for extra in (1, 2):
+                member = captain + extra
+                join = TourMessage("/qoshil", user_id=member)
+                self.context.args = [name]
+                asyncio.run(webhook.cmd_join(tour_update(join, user_id=member), self.context))
+                ready = TourMessage("/tayyor", user_id=member)
+                asyncio.run(webhook.cmd_ready(tour_update(ready, user_id=member), self.context))
+        self.context.args = []
+
+    def _start(self):
+        press = callback_query(st.tour_data(st.TEAM_START), self._card_text(), user_id=ADMIN)
+        asyncio.run(webhook.on_team_button(tour_update(callback=press, user_id=ADMIN),
+                                           self.context))
+
+    def _card_text(self) -> str:
+        return self.bot.sent[self.bot.pinned[CHAT] - 1]["text"]
+
+    def tour(self) -> "tn.Tournament":
+        return self.bot.card_state(self.archive)
+
+    def _answer(self, who: int, text: str):
+        tour = self.tour()
+        tour.submit_final(who, text, int(time.time()))
+        tour.bump()
+        asyncio.run(webhook.tour_persist(self.bot, self.archive, tour, merge_finals=True))
+
+    def _close(self):
+        """The clock runs out and the tick closes the question."""
+        tour = self.tour()
+        tour.deadline = int(time.time()) - 1
+        tour.bump()
+        asyncio.run(webhook.tour_persist(self.bot, self.archive, tour))
+        with mock.patch.object(webhook, "get_application", lambda: self.application):
+            return asyncio.run(webhook.tick_work(tour.body(), CHAT))
+
+    def _hop(self, tour=None):
+        """One more hop of the same chain, while the list is open."""
+        state = tour or self.tour()
+        with mock.patch.object(webhook, "get_application", lambda: self.application):
+            return asyncio.run(webhook.tick_work(state.body(), CHAT))
+
+    def _list_record(self, who=ADMIN):
+        """The confirmation list, whether it is still open or already decided."""
+        return next(record for record in self.bot.sent
+                    if record.get("chat_id") == int(who)
+                    and any(word in visible(record.get("text") or "")
+                            for word in ("TEKSHIRISH", "TASDIQLANDI")))
+
+    def _press(self, action: str, value="", user_id=ADMIN, chat_id=CHAT, group=CHAT):
+        """A press on the confirmation list — in the curator's private chat."""
+        press = callback_query(st.review_data(group, action, value),
+                               self._list_record()["text"], user_id=user_id, chat_id=chat_id)
+        asyncio.run(webhook.on_review_button(
+            tour_update(callback=press, user_id=user_id, chat_id=chat_id, chat_type="private"),
+            self.context))
+        return press
+
+    def _buttons(self, record: dict) -> list:
+        board = record.get("reply_markup")
+        rows = getattr(board, "inline_keyboard", None) or []
+        return [button for row in rows for button in row]
+
+    def _reviewing(self, answers: dict):
+        """One team right, one wrong, one silent — the shape a real question ends in.
+
+        ``False`` stands for a wrong answer: deliberately far from anything a bank
+        answer could be, so the test does not turn red on a question that happens
+        to mention it.
+        """
+        for (name, captain), given in zip(self.TEAMS, answers):
+            if given is None:
+                continue
+            self._answer(captain, self.wrong if given is False else given)
+
+    # ---------------------------------------------------------------- the window
+    def test_a_closed_question_waits_for_a_person(self):
+        self._reviewing((self.right, False, None))
+        result = self._close()
+        self.assertTrue(result.get("ok"))
+        self.assertIn("review", result)                     # no score yet, a window opened
+
+        tour = self.tour()
+        self.assertTrue(tour.reviewing())
+        self.assertEqual(tour.review_marks, "100")          # right, wrong, no answer
+        self.assertEqual([team.score for team in tour.teams], [0, 0, 0])
+        self.assertGreater(tour.review_left(int(time.time())), 0)
+
+        group = "\n".join(self.bot.group_texts())
+        self.assertIn("YAKUNLANDI", group)
+        self.assertIn("kuratorga tekshirish uchun yuborildi", group)
+        self.assertNotIn("YAKUNI", group)                   # the result is not published
+        self.assertNotIn(self.right, group)                 # and neither is the answer
+        self.assertIn("Javoblar tekshirilmoqda", self.bot.card())
+
+    def test_the_list_goes_to_the_curator_alone(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        listed = visible(self._list_record()["text"])
+        self.assertIn("TEKSHIRISH", listed)
+        self.assertIn(self.right[:20], listed)              # what to judge against
+        self.assertIn("Bilimdonlar", listed)
+        self.assertIn("TO‘G‘RI", listed)
+        self.assertIn("NOTO‘G‘RI", listed)
+        self.assertIn("javob bermadi", listed)
+        self.assertNotIn("\n".join(self.bot.group_texts()), listed)
+        self.assertNotIn(self.wrong, "\n".join(self.bot.group_texts()))
+        labels = [button.text for button in self._buttons(self._list_record())]
+        self.assertEqual(len(labels), 3)                    # two verdicts + TASDIQLASH
+        self.assertIn("TASDIQLASH", labels)
+
+    def test_a_team_without_an_answer_gets_no_button(self):
+        self._reviewing((self.right, None, None))
+        self._close()
+        labels = [button.text for button in self._buttons(self._list_record())]
+        self.assertEqual(len(labels), 2)                    # one verdict + TASDIQLASH
+        self.assertIn("Bilimdonlar", labels[0])
+
+    def test_a_flip_changes_the_verdict_for_everybody(self):
+        self._reviewing((self.right, False, None))       # the checker says no
+        self._close()
+        record = self._list_record()
+        press = self._press(st.REVIEW_FLIP, "1")
+
+        self.assertEqual(press._answers[-1]["show_alert"], False)
+        self.assertIn("Zakovat", press._answers[-1]["text"])
+        tour = self.tour()
+        self.assertEqual(tour.review_edit[1], "1")
+        self.assertEqual(tour.review_marks[1], "0")         # the bot's word is kept
+        self.assertEqual([team.score for team in tour.teams], [0, 0, 0])
+        self.assertTrue(self.bot.edits_of(record["message_id"]))   # the DM was rewritten
+        self.assertIn("o‘zgartirildi", visible(self.bot.edits_of(record["message_id"])[-1]["text"]))
+
+    def test_confirming_publishes_exactly_the_marks(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        record = self._list_record()
+        self._press(st.REVIEW_FLIP, "1")                    # the curator disagrees
+        self._press(st.REVIEW_CONFIRM)
+
+        tour = self.tour()
+        self.assertFalse(tour.reviewing())
+        self.assertEqual([team.score for team in tour.teams], [1, 1, 0])
+        self.assertEqual(tour.history[-1]["by"], ADMIN)     # who stood behind it
+        self.assertNotIn("auto", tour.history[-1])
+        marks = {row["team"]: row for row in tour.history[-1]["finals"]}
+        self.assertTrue(marks["Zakovat"]["correct"])
+        self.assertTrue(marks["Zakovat"]["changed"])
+
+        group = "\n".join(self.bot.group_texts())
+        self.assertIn("YAKUNI", group)
+        self.assertIn("o‘zgartirildi", group)
+        self.assertIn("tasdiqladi", group.lower())
+        self.assertIn("SAVOL 2 /", group)                   # the game moved on
+        closed = visible(self.bot.edits_of(record["message_id"])[-1]["text"])
+        self.assertIn("TASDIQLANDI", closed)
+        self.assertIsNone(self.bot.edits_of(record["message_id"])[-1]["reply_markup"])
+
+    def test_nobody_confirming_means_the_bot_publishes_itself(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        tour = self.tour()
+        tour.review_due = int(time.time()) - 1              # the window ran out
+        tour.bump()
+        asyncio.run(webhook.tour_persist(self.bot, self.archive, tour))
+        self._hop()
+
+        tour = self.tour()
+        self.assertFalse(tour.reviewing())
+        self.assertEqual([team.score for team in tour.teams], [1, 0, 0])
+        self.assertEqual(tour.history[-1].get("auto"), 1)
+        self.assertNotIn("by", tour.history[-1])
+        group = "\n".join(self.bot.group_texts())
+        self.assertIn("YAKUNI", group)
+        self.assertIn("avtomatik", group.lower())
+        self.assertIn("SAVOL 2 /", group)
+
+    def test_a_reminder_goes_out_once_per_step(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        nudges = len(self.bot.private_texts(ADMIN))
+
+        tour = self.tour()
+        tour.review_at = int(time.time()) - (tn.REVIEW_REMIND[0] + 1)
+        tour.bump()
+        asyncio.run(webhook.tour_persist(self.bot, self.archive, tour))
+        self._hop()
+        self.assertEqual(self.tour().review_noted, 1)
+        self.assertEqual(len(self.bot.private_texts(ADMIN)), nudges + 1)
+        self.assertIn("hali tasdiqlanmagan", self.bot.private_texts(ADMIN)[-1])
+
+        self._hop()                                          # the same step, again
+        self.assertEqual(self.tour().review_noted, 1)
+        self.assertEqual(len(self.bot.private_texts(ADMIN)), nudges + 1)
+
+        tour = self.tour()
+        tour.review_at = int(time.time()) - (tn.REVIEW_REMIND[1] + 1)
+        tour.bump()
+        asyncio.run(webhook.tour_persist(self.bot, self.archive, tour))
+        self._hop()
+        self.assertEqual(self.tour().review_noted, 2)
+        self.assertEqual(len(self.bot.private_texts(ADMIN)), nudges + 2)
+        self.assertTrue(self.tour().reviewing())             # still waiting for a person
+
+    def test_a_question_nobody_answered_needs_no_confirmation(self):
+        """No answer, no verdict to check: the game carries on without waiting."""
+        self._reviewing((None, None, None))
+        result = self._close()
+        self.assertTrue(result.get("resolved"))
+        tour = self.tour()
+        self.assertFalse(tour.reviewing())
+        self.assertEqual([team.score for team in tour.teams], [0, 0, 0])
+        group = "\n".join(self.bot.group_texts())
+        self.assertIn("YAKUNI", group)
+        self.assertNotIn("kuratorga tekshirish uchun", group)
+        self.assertIn("SAVOL 2 /", group)
+        with self.assertRaises(StopIteration):
+            self._list_record()
+
+    # --------------------------------------------------------------- who decides
+    def test_a_team_member_cannot_confirm_the_verdicts(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        press = self._press(st.REVIEW_CONFIRM, user_id=101, chat_id=101)
+        self.assertTrue(press._answers[-1]["show_alert"])
+        tour = self.tour()
+        self.assertTrue(tour.reviewing())
+        self.assertEqual([team.score for team in tour.teams], [0, 0, 0])
+        self.assertNotIn("YAKUNI", "\n".join(self.bot.group_texts()))
+
+    def test_a_forged_group_id_reaches_nothing(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        press = self._press(st.REVIEW_CONFIRM, group=-100999)
+        self.assertTrue(press._answers[-1]["show_alert"])
+        self.assertTrue(self.tour().reviewing())
+        self.assertNotIn("YAKUNI", "\n".join(self.bot.group_texts()))
+
+    def test_a_closed_list_cannot_be_pressed_again(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        self._press(st.REVIEW_CONFIRM)
+        again = self._press(st.REVIEW_CONFIRM)
+        self.assertTrue(again._answers[-1]["show_alert"])
+        self.assertEqual([team.score for team in self.tour().teams], [1, 0, 0])
+
+    def test_stopping_the_tournament_takes_the_list_away(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        record = self._list_record()
+        message = TourMessage("/turnirstop", user_id=ADMIN)
+        asyncio.run(webhook.cmd_tour_stop(tour_update(message, user_id=ADMIN), self.context))
+        last = self.bot.edits_of(record["message_id"])[-1]
+        self.assertIsNone(last["reply_markup"])              # no live buttons left behind
+        self.assertFalse(self.tour().reviewing())
+        self.assertIn("TO‘XTATILDI", "\n".join(self.bot.group_texts()))
+
+    # ------------------------------------------------------------------ the switch
+    def test_the_curator_can_turn_the_confirmation_off(self):
+        press = callback_query(st.curator_data(st.CONFIRM_TOGGLE, "0"), self._card_text(),
+                               user_id=ADMIN)
+        asyncio.run(webhook.on_curator_button(tour_update(callback=press, user_id=ADMIN),
+                                              self.context))
+        self.assertTrue(press._answers)
+        tour = self.tour()
+        self.assertFalse(tour.needs_confirm)
+        self.assertIn("O‘CHIQ", press._answers[-1]["text"])
+
+        self._reviewing((self.right, False, None))
+        before = len(self.bot.private_texts(ADMIN))
+        self._close()
+        self.assertFalse(self.tour().reviewing())            # straight to the result
+        self.assertEqual([team.score for team in self.tour().teams], [1, 0, 0])
+        self.assertEqual(len(self.bot.private_texts(ADMIN)), before)
+        group = "\n".join(self.bot.group_texts())
+        self.assertIn("YAKUNI", group)
+        self.assertNotIn("avtomatik", group.lower())
+
+    def test_the_switch_is_back_on_again(self):
+        for value, wanted in (("0", False), ("1", True)):
+            press = callback_query(st.curator_data(st.CONFIRM_TOGGLE, value), self._card_text(),
+                                   user_id=ADMIN)
+            asyncio.run(webhook.on_curator_button(tour_update(callback=press, user_id=ADMIN),
+                                                  self.context))
+            self.assertEqual(self.tour().needs_confirm, wanted)
+
+    # ------------------------------------------------------------- reaching people
+    def test_a_group_nobody_can_be_dmed_carries_the_list_itself(self):
+        self._build(ClosedDmBot())                           # a fresh tournament, no DMs
+        self._reviewing((self.right, False, None))
+        self._close()
+
+        tour = self.tour()
+        self.assertTrue(tour.reviewing())
+        self.assertEqual(tour.review_to, [])                 # nobody was reachable
+        self.assertTrue(tour.review_msg)                     # so the group holds the list
+        listed = next(record for record in self.bot.sent
+                      if record["message_id"] == tour.review_msg)
+        self.assertIn("TEKSHIRISH", visible(listed["text"]))
+        self.assertTrue(self._buttons(listed))
+
+    def test_the_review_survives_a_cold_instance(self):
+        self._reviewing((self.right, False, None))
+        self._close()
+        self._press(st.REVIEW_FLIP, "1")
+        cold = tn.Tournament.from_body(self.tour().body())
+        self.assertTrue(cold.reviewing())
+        self.assertEqual(cold.review_marks, "100")
+        self.assertEqual(cold.review_edit, "110")
+        self.assertEqual(cold.review_to, self.tour().review_to)
+        self.assertEqual(cold.review_due, self.tour().review_due)
+        self.assertTrue(cold.needs_confirm)
+
+    def test_a_review_list_never_pushes_the_card_over_the_limit(self):
+        tour = self.tour()
+        tour.propose(webhook.checker_for([]), int(time.time()))
+        tour.review_to = [[ADMIN + index, 900 + index] for index in range(tn.REVIEW_TARGETS + 4)]
+        for index in range(tn.SELECTION_LIMIT):
+            tour.include.append(900000000 + index)
+        body = tour.body(level=4)
+        again = tn.Tournament.from_body(body)
+        self.assertLessEqual(len(body), 4000)
+        self.assertEqual(len(again.review_to), tn.REVIEW_TARGETS)
+        self.assertTrue(again.needs_confirm)
 
 
 if __name__ == "__main__":

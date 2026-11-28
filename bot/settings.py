@@ -24,6 +24,9 @@ WHOLE_BASE_WORDS = frozenset({
     "big", "all", "huge", "full",
 })
 
+# Javobni admin tasdiqlashi: o‘yin sozlamalaridagi tugma.
+ACTION_CONFIRM = "cf"
+
 ACTION_PER_ROUND = "q"
 ACTION_TIMER = "t"
 ACTION_SHUFFLE = "n"
@@ -35,6 +38,8 @@ GAME_REFRESH = "zt|f"
 GAME_SKIP = "zt|k"
 GAME_SCORE = "zt|c"
 GAME_STOP = "zt|x"
+GAME_CONFIRM = "zt|y"       # javobni tasdiqlash (admin)
+GAME_REJECT = "zt|z"        # javobni rad etish (admin)
 PREFIX_STATS = "zs"
 STATS_REFRESH = "zs|r"
 STATS_SECTIONS = "zs|b"
@@ -72,6 +77,12 @@ TEAM_QUESTION = "so"        # ro‘yxatdagi bitta savolni ochish
 TEAM_MANAGE = "mn"          # kurator boshqaruv oynasi
 TEAM_PLAN = "pl"            # rejadagi boshlanish vaqti haqida xabar
 
+# Tekshiruv ro‘yxati: bu tugmalar kuratorning **shaxsiy chatida** ham bosiladi,
+# shuning uchun ular guruh id sini o‘zi bilan olib yuradi (holat xabarda emas).
+REVIEW_FLIP = "rv"          # bitta jamoaning xulosasini ag‘darish
+REVIEW_CONFIRM = "rc"       # ro‘yxatni tasdiqlash
+CONFIRM_TOGGLE = "cf"       # kurator panelida: tasdiqlash YOQIQ/O‘CHIQ
+
 
 def _default(name: str, fallback: int) -> int:
     try:
@@ -88,6 +99,8 @@ class GameConfig:
     per_round: int = 0
     timer: int = 0
     seed: int = 0
+    needs_confirm: bool = True      # to‘g‘ri javobni admin tasdiqlaydimi
+
 
     def __post_init__(self) -> None:
         self.rounds = self.rounds or _default("ZAKOVAT_ROUNDS", 3)
@@ -102,11 +115,18 @@ class GameConfig:
         values = {
             "package_id": self.package_id, "mode": self.mode, "rounds": self.rounds,
             "per_round": self.per_round, "timer": self.timer, "seed": self.seed,
+            "needs_confirm": self.needs_confirm,
         }
         values.update(changes)
         return GameConfig(**values)
 
     def encode(self, action: str = "", value: str = "") -> str:
+        """Callback data of one settings button.
+
+        The confirmation flag rides last, and the action and value slots are
+        always there, so a button pressed before an update is still read the same
+        way after it: missing parts mean the old defaults.
+        """
         parts = [
             PREFIX_CONFIG,
             "s" if self.mode == "solo" else "g",
@@ -115,11 +135,10 @@ class GameConfig:
             str(self.per_round),
             str(self.timer),
             str(self.seed),
+            str(action or ""),
+            str(value or ""),
+            "1" if self.needs_confirm else "0",
         ]
-        if action:
-            parts.append(action)
-            if value:
-                parts.append(value)
         data = "|".join(parts)
         return data[:64]
 
@@ -142,6 +161,7 @@ def decode(data: str | None) -> tuple[GameConfig, str, str] | None:
         )
     except ValueError:
         return None
+    config.needs_confirm = parts[9] != "0" if len(parts) > 9 else True
     action = parts[7] if len(parts) > 7 else ""
     value = parts[8] if len(parts) > 8 else ""
     return config, action, value
@@ -180,6 +200,13 @@ def settings_keyboard(config: GameConfig):
         row(ACTION_ROUNDS, ROUNDS, config.rounds, lambda v: f"{v} raund"),
         row(ACTION_PER_ROUND, PER_ROUND, config.per_round, lambda v: "hammasi" if v == 0 else f"{v} savol"),
         row(ACTION_TIMER, TIMERS, config.timer, lambda v: f"{v} s"),
+        [
+            InlineKeyboardButton(
+                ("● " if config.needs_confirm else "○ ") + "Javobni tasdiqlash",
+                callback_data=config.encode(ACTION_CONFIRM, "0" if config.needs_confirm else "1")),
+            InlineKeyboardButton(
+                "Batafsil", callback_data=config.encode(ACTION_CONFIRM, "?")),
+        ],
         [
             InlineKeyboardButton("Boshlash", callback_data=config.encode(ACTION_START)),
             InlineKeyboardButton("Boshqa paket", callback_data=config.encode(ACTION_SHUFFLE)),
@@ -221,6 +248,57 @@ def tour_data(action: str, value: str | int = "") -> str:
 def curator_data(action: str, value: str | int = "") -> str:
     """Callback data of a curator button (package, rounds, selection…)."""
     return f"{PREFIX_TOUR}|{action}" + (f"|{value}" if value != "" else "")
+
+
+def review_data(chat_id: int, action: str, value: str | int = "") -> str:
+    """Callback data of a confirmation button.
+
+    The list is read in the curator's private chat, where the message carries no
+    tournament of its own, so the group id travels inside the button.
+    """
+    data = f"{PREFIX_TOUR}|{action}|{int(chat_id)}"
+    if value != "":
+        data += f"|{int(value)}"
+    return data[:64]
+
+
+def review_keyboard(chat_id: int, rows: list, confirm: str = "TASDIQLASH") -> "object":
+    """One button per answered team, then the confirmation itself.
+
+    Teams that sent no answer have nothing to judge, so they are not on the board:
+    a point without an answer would only look like a mistake later.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    board = []
+    for row in rows:
+        if not str(row.get("answer") or "").strip():
+            continue
+        position = int(row.get("position") or 0)
+        name = " ".join(str(row.get("team") or "—").split())[:20]
+        mark = "TO‘G‘RI" if row.get("correct") else "NOTO‘G‘RI"
+        if row.get("changed"):
+            mark = "O‘ZGARTIRILDI · " + mark
+        label = f"{position + 1}. {name} — {mark}"
+        board.append([InlineKeyboardButton(
+            label[:64], callback_data=review_data(chat_id, REVIEW_FLIP, position))])
+    board.append([InlineKeyboardButton(confirm,
+                                       callback_data=review_data(chat_id, REVIEW_CONFIRM))])
+    return InlineKeyboardMarkup(board)
+
+
+def game_review_keyboard() -> "object":
+    """TASDIQLASH / RAD ETISH under one answer of an ordinary game.
+
+    These buttons hang on a message that carries the game state itself, so they
+    need no chat id: ``restore()`` reads everything from the message.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("TASDIQLASH", callback_data=GAME_CONFIRM),
+        InlineKeyboardButton("RAD ETISH", callback_data=GAME_REJECT),
+    ]])
 
 
 def tour_keyboard(teams: list, phase: str = "register", can_start: bool = False,
@@ -388,7 +466,7 @@ def selection_keyboard(page: int, pages: int, rows: list, chosen: set, dropped: 
 
 
 def curator_keyboard(rounds: int, per_round: int, timer: int, package_id: int,
-                     seed: int, bank: int, total: int) -> "object":
+                     seed: int, bank: int, total: int, confirm: bool = True) -> "object":
     """The curator's panel: how many rounds, how many questions, how long each."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -410,6 +488,11 @@ def curator_keyboard(rounds: int, per_round: int, timer: int, package_id: int,
         [
             InlineKeyboardButton("Savol tanlash", callback_data=tour_data(TEAM_PICK)),
             InlineKeyboardButton(f"Jami: {total} savol", callback_data=curator_data("c")),
+        ],
+        [
+            InlineKeyboardButton(
+                ("● " if confirm else "○ ") + "Javobni tasdiqlash",
+                callback_data=curator_data(CONFIRM_TOGGLE, "0" if confirm else "1")),
         ],
         [InlineKeyboardButton("Yopish", callback_data=tour_data(TEAM_REFRESH))],
     ]

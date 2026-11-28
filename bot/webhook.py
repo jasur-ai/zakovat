@@ -62,6 +62,12 @@ MAX_TICK_HORIZON = 900          # a countdown never runs longer than this
 # function time, so it only lives through the last minutes before the start. The
 # card in the group carries the whole plan, so nothing is lost when no hop runs.
 REMINDER_ARM = max(60, int(os.getenv("ZAKOVAT_REMINDER_ARM", str(sched.ARM_WINDOW))))
+
+# Javobni tekshirish oynasi: bot xulosani taklif qiladi, kurator tasdiqlaydi.
+REVIEW_HOP = max(2, int(os.getenv("ZAKOVAT_REVIEW_HOP", "10")))   # bir qadam (sekund)
+REVIEW_AUTO = max(30, int(os.getenv("ZAKOVAT_REVIEW_AUTO", str(tn.REVIEW_AUTO))))
+GAME_CONFIRM_ACTION = st.GAME_CONFIRM.split("|", 1)[1]     # «TASDIQLASH»
+GAME_REJECT_ACTION = st.GAME_REJECT.split("|", 1)[1]       # «RAD ETISH»
 PROBE_WAIT = 4                  # seconds used by the ?bgprobe= diagnostic
 
 # Work queued while handling a request, run after the response has been sent.
@@ -118,12 +124,41 @@ def pack_state(session: Session, deadline: int, latest: str | None = None, alias
         1 if session.can_delete else 0,
     ]
     core = "|".join(str(value) for value in fields)
+    review = session_review_payload(session)
+    if latest is None:
+        # The last guess rides along: when the clock runs out, the person who has
+        # to decide sees what was actually tried, not just "nobody answered".
+        latest = session.latest_answer
     extra = ""
-    if latest or aliases:
-        raw = json.dumps({"l": latest, "a": aliases or []}, ensure_ascii=False,
-                         separators=(",", ":")).encode("utf-8")
+    if latest or aliases or review or not session.needs_confirm:
+        payload: dict = {"l": latest, "a": aliases or []}
+        if latest and session.latest_user:
+            payload["lu"] = int(session.latest_user)
+        if not session.needs_confirm:
+            payload["cf"] = 0
+        if review:
+            payload["rv"] = review
+            # The confirmation buttons are read in a private chat, so the state has
+            # to say which group the game — and the result — belongs to.
+            payload["h"] = int(session.chat_id or 0)
+        raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         extra = "|" + base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
     return core + extra
+
+
+def session_review_payload(session: Session) -> list:
+    """One parked answer, compact enough to travel inside a message.
+
+    Empty when nothing is waiting: an ordinary game carries no review bytes at all.
+    """
+    if not session.reviewing():
+        return []
+    return [int(session.review_at), int(session.review_due), str(session.review_mark),
+            str(session.review_text), int(session.review_user), str(session.review_name),
+            int(session.review_noted),
+            [[int(row[0]), int(row[1])] for row in (session.review_to or [])
+             if isinstance(row, (list, tuple)) and len(row) == 2][:tn.REVIEW_TARGETS],
+            int(session.review_msg or 0), str(session.review_kind or "answer")]
 
 
 def encode_invisible(body: str) -> str:
@@ -191,7 +226,8 @@ def parse_body(body: str) -> dict | None:
             "o": int(parts[5]), "q": int(parts[6]), "d": int(parts[7]), "r": int(parts[8]),
             "n": int(parts[9]), "t": int(parts[10]), "s": int(parts[11]),
             "k": int(parts[12]) or None, "z": int(parts[13]), "y": int(parts[14]),
-            "x": bool(int(parts[15])), "l": None, "a": [],
+            "x": bool(int(parts[15])), "l": None, "a": [], "lu": 0, "cf": 1, "rv": [],
+            "h": 0,
         }
     except ValueError:
         return None
@@ -201,6 +237,10 @@ def parse_body(body: str) -> dict | None:
             extra = json.loads(raw.decode("utf-8"))
             payload["l"] = extra.get("l")
             payload["a"] = extra.get("a") or []
+            payload["lu"] = int(extra.get("lu") or 0)
+            payload["cf"] = 1 if extra.get("cf", 1) else 0
+            payload["rv"] = extra.get("rv") or []
+            payload["h"] = int(extra.get("h") or 0)
         except (ValueError, UnicodeDecodeError):
             pass
     return payload
@@ -365,6 +405,28 @@ def session_from_data(data: dict, chat_id: int, archive: Archive | None = None) 
     session.idle_limit = IDLE_LIMIT
     session.can_delete = bool(data.get("x", True))
     session.control_message_id = data.get("k")
+    session.latest_answer = data.get("l")
+    session.latest_user = int(data.get("lu") or 0) or None
+    session.needs_confirm = bool(data.get("cf", 1))
+    review = data.get("rv") or []
+    if len(review) >= 7:
+        try:
+            session.review_at = int(review[0] or 0)
+            session.review_due = int(review[1] or 0)
+            session.review_mark = "1" if str(review[2]) == "1" else "0"
+            session.review_text = str(review[3] or "")
+            session.review_user = int(review[4] or 0)
+            session.review_name = str(review[5] or "")
+            session.review_noted = int(review[6] or 0)
+            if len(review) > 7:
+                session.review_to = [[int(row[0]), int(row[1])] for row in (review[7] or [])
+                                     if isinstance(row, (list, tuple)) and len(row) == 2]
+            if len(review) > 8:
+                session.review_msg = int(review[8] or 0)
+            if len(review) > 9:
+                session.review_kind = str(review[9] or "answer")
+        except (TypeError, ValueError):
+            session.clear_review()
     return session
 
 
@@ -580,7 +642,8 @@ async def post_tick(body: str, chat_id: int, wait: int, mode: str | None = None)
 
 
 async def schedule_tick(session: Session, deadline: int, aliases: list[str] | None = None,
-                        wait: int | None = None, mode: str | None = None) -> None:
+                        wait: int | None = None, mode: str | None = None,
+                        need_delete: bool = True) -> None:
     """Keep the countdown moving: wait, repaint, resolve, chain the next hop.
 
     Serverless functions freeze between requests, so the timer is a chain of
@@ -590,7 +653,9 @@ async def schedule_tick(session: Session, deadline: int, aliases: list[str] | No
     # Without delete rights a resolved strip cannot be removed, so a late tick
     # would repaint a question that is already closed. Those chats keep the
     # manual "Vaqtni yangilash" button instead.
-    if not TICKS_ENABLED or not session.control_message_id or not session.can_delete:
+    if not TICKS_ENABLED or not session.control_message_id:
+        return
+    if need_delete and not session.can_delete:
         return
     remaining = deadline - int(time.time())
     if remaining <= 0:
@@ -793,6 +858,11 @@ async def tick_work(body: str, chat_id: int) -> dict:
         remaining = deadline - int(time.time())
         aliases = list(data.get("a") or [])
 
+        if session.reviewing():
+            # The question is closed but the point is not given yet: this hop
+            # belongs to the confirmation window, not to the countdown.
+            return await game_review_tick(bot, chat_id, session, aliases)
+
         if remaining > 0:
             try:
                 await paint_strip(bot, chat_id, session, remaining, deadline, aliases)
@@ -913,7 +983,8 @@ async def render_settings(context: ContextTypes.DEFAULT_TYPE, config: st.GameCon
     per_round = config.per_round if config.per_round > 0 else available
     total = config.rounds * per_round
     text = msg.settings_panel(config.package_id, title, available, config.rounds,
-                              config.per_round, config.timer, config.mode, total)
+                              config.per_round, config.timer, config.mode, total,
+                              confirm=bool(config.needs_confirm))
     if available and total > available:
         text += "\n\n" + msg.repeat_notice(available, total - available)
     keyboard = st.settings_keyboard(config)
@@ -971,6 +1042,7 @@ async def start_from_config(context: ContextTypes.DEFAULT_TYPE, config: st.GameC
     )
     session.begin()
     session.idle_limit = IDLE_LIMIT
+    session.needs_confirm = bool(getattr(config, "needs_confirm", True))
     chat_type = getattr(chat, "type", "private") or "private"
     session.can_delete = await detect_can_delete(context.bot, chat_id, chat_type)
     label = "Yakka o‘yin" if config.mode == "solo" else "Guruh o‘yini"
@@ -1093,6 +1165,16 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
             pass
         return
 
+    if action == st.ACTION_CONFIRM:
+        if value == "?":
+            await query.answer(msg.game_confirm_note(config.needs_confirm)[:200],
+                               show_alert=True)
+            return
+        config = config.replace(needs_confirm=value != "0")
+        await query.answer(msg.game_confirm_note(config.needs_confirm)[:200], show_alert=True)
+        await render_settings(context, config, query=query)
+        return
+
     if action == st.ACTION_SHUFFLE:
         config = config.replace(package_id=archive.random_package_id(), seed=random.randrange(1, 999999))
     elif action in (st.ACTION_ROUNDS, st.ACTION_PER_ROUND, st.ACTION_TIMER):
@@ -1112,6 +1194,277 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
                             chat=query.message.chat)
 
 
+async def game_review_targets(bot, session: Session, chat_id: int,
+                              answerer: int = 0) -> list[int]:
+    """Who confirms one answer of an ordinary game.
+
+    Somebody other than the person who answered. A game in a private chat has
+    nobody to ask — the player is alone, and a player confirming their own guess is
+    not a check — so it keeps playing exactly as it did before, and ``/accept``
+    still exists for the moments when a person wants to overrule the checker there.
+    """
+    if int(chat_id) > 0:
+        return []
+    wanted: list[int] = []
+    owner = int(session.owner_id or 0)
+    if owner and owner != int(answerer or 0):
+        wanted.append(owner)
+    if len(wanted) < tn.REVIEW_TARGETS:
+        try:
+            members = await bot.get_chat_administrators(int(chat_id))
+        except (TelegramError, AttributeError, TypeError):
+            members = []
+        for member in members or []:
+            person = getattr(member, "user", None)
+            if person is None or getattr(person, "is_bot", False):
+                continue
+            number = int(getattr(person, "id", 0) or 0)
+            if not number or number == int(answerer or 0) or number in wanted:
+                continue
+            wanted.append(number)
+            if len(wanted) >= tn.REVIEW_TARGETS:
+                break
+    return wanted[:tn.REVIEW_TARGETS]
+
+
+async def game_review_allowed(bot, chat_id: int, user_id: int, session: Session) -> bool:
+    """May this person decide the parked answer?
+
+    The button is usually pressed in a private chat, so the rights are read from
+    the group the game belongs to — not from the chat the button sits in.
+    """
+    number = int(user_id or 0)
+    if not number:
+        return False
+    if number == int(session.owner_id or 0):
+        return True
+    if any(int(row[0]) == number for row in (session.review_to or [])):
+        return True                      # the bot handed this person the card
+    if int(chat_id) > 0:
+        return False                     # a private game: only its owner decides
+    try:
+        member = await bot.get_chat_member(int(chat_id), number)
+    except TelegramError:
+        return False
+    return str(getattr(member, "status", "") or "") in ("creator", "administrator")
+
+
+async def paint_review_strip(bot, chat_id: int, session: Session,
+                             aliases: list[str] | None = None) -> None:
+    """The group's own line while an answer is being checked.
+
+    No answer and no verdict here: the card with those goes to the admins. The
+    countdown is replaced by the confirmation clock, and this message becomes the
+    strip, so the hops that keep the window alive have something to hold.
+    """
+    left = session.review_left(int(time.time()))
+    body = with_state(msg.game_review_waiting(session.review_name or "—", session.number,
+                                              session.total, left),
+                      pack_state(session, session.review_due, aliases=aliases))
+    if session.control_message_id:
+        try:
+            await bot.edit_message_text(chat_id=chat_id,
+                                        message_id=int(session.control_message_id),
+                                        text=body, parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=None)
+            return
+        except TelegramError:
+            pass
+    try:
+        sent = await bot.send_message(chat_id=chat_id, text=body[:4090],
+                                      parse_mode=ParseMode.HTML,
+                                      disable_web_page_preview=True)
+        session.control_message_id = int(getattr(sent, "message_id", 0) or 0) or None
+    except TelegramError:
+        session.control_message_id = None
+
+
+async def game_review_open(bot, chat_id: int, session: Session, aliases: list[str] | None,
+                           answer: str = "", user_id: int = 0, name: str = "",
+                           correct: bool = False, kind: str = "answer") -> bool:
+    """Park one answer and hand it to a person; True when the caller must stop.
+
+    False means "carry on as before": confirmation is off, somebody is already
+    checking, or there is simply nobody to ask. A game must never stall because a
+    private message could not be delivered.
+    """
+    if not session.needs_confirm or session.reviewing() or session.question is None:
+        return False
+    if not str(answer or "").strip():
+        return False            # nobody guessed: the rules decide this one, not a person
+    targets = await game_review_targets(bot, session, chat_id, user_id)
+    if not targets:
+        return False
+    now = int(time.time())
+    session.park_review(now, now + REVIEW_AUTO, answer, user_id, name, correct, kind)
+    left = session.review_left(now)
+    body = with_state(msg.game_review_card(name or "—", session.review_text, session.number,
+                                           session.total, left, session.review_mark == "1"),
+                      pack_state(session, session.review_due, aliases=aliases))
+    delivered = []
+    for person in targets:
+        try:
+            sent = await bot.send_message(chat_id=int(person), text=body[:4090],
+                                          parse_mode=ParseMode.HTML,
+                                          disable_web_page_preview=True,
+                                          reply_markup=st.game_review_keyboard())
+        except TelegramError:
+            continue
+        message_id = int(getattr(sent, "message_id", 0) or 0)
+        if message_id:
+            delivered.append([int(person), message_id])
+    if not delivered:
+        session.clear_review()
+        return False
+    session.review_to = delivered
+    # The cards went out before the list of copies existed, so each one still says
+    # it is alone. They are repainted with the whole list: whichever admin decides,
+    # every copy loses its buttons and nobody can score the question twice.
+    body = with_state(msg.game_review_card(name or "—", session.review_text, session.number,
+                                           session.total, left, session.review_mark == "1"),
+                      pack_state(session, session.review_due, aliases=aliases))
+    for person, message_id in delivered:
+        try:
+            await bot.edit_message_text(chat_id=int(person), message_id=int(message_id),
+                                        text=body[:4090], parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True,
+                                        reply_markup=st.game_review_keyboard())
+        except TelegramError:
+            continue
+    note("review_opened", chat_id=chat_id, package_id=session.package_id,
+         detail=f"{session.mode} · savol {session.number} · {len(delivered)} admin · "
+                f"{'to‘g‘ri' if correct else 'noto‘g‘ri'} xulosa")
+    await paint_review_strip(bot, chat_id, session, aliases)
+    await schedule_tick(session, session.review_due, aliases, wait=REVIEW_HOP,
+                        need_delete=False)
+    return True
+
+
+async def game_review_remind(bot, session: Session, aliases: list[str] | None = None) -> int:
+    """A nudge that arrives: a fresh card, because an edit is easy to miss."""
+    body = with_state(msg.game_review_nudge(session.number, session.review_left(int(time.time()))),
+                      pack_state(session, session.review_due, aliases=aliases))
+    reached = 0
+    for person, _message in list(session.review_to or []):
+        try:
+            await bot.send_message(chat_id=int(person), text=body[:4090],
+                                   parse_mode=ParseMode.HTML,
+                                   disable_web_page_preview=True,
+                                   reply_markup=st.game_review_keyboard())
+            reached += 1
+        except TelegramError:
+            continue
+    return reached
+
+
+async def game_review_close(bot, chat_id: int, session: Session, decided: str,
+                            targets: list | None = None, group_message: int = 0) -> None:
+    """Take the buttons away from every copy of the card."""
+    text = msg.game_review_closed(session.number, session.total, decided, session.score_text())
+    rows = targets if targets is not None else [list(row) for row in (session.review_to or [])]
+    for person, message_id in rows:
+        try:
+            await bot.edit_message_text(chat_id=int(person), message_id=int(message_id),
+                                        text=text[:4090], parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=None)
+        except TelegramError:
+            continue
+    fallback = int(group_message or session.review_msg or 0)
+    if fallback and fallback != int(session.control_message_id or 0):
+        try:
+            await bot.edit_message_text(chat_id=chat_id, message_id=fallback, text=text[:4090],
+                                        parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=None)
+        except TelegramError:
+            pass
+    session.review_to = []
+    session.review_msg = 0
+
+
+async def game_review_publish(bot, chat_id: int, session: Session,
+                              aliases: list[str] | None, user_id: int = 0, name: str = "",
+                              auto: bool = False, flip: bool = False) -> bool:
+    """The verdict becomes a point, the group sees it and the game moves on."""
+    if not session.reviewing():
+        return False
+    targets = [list(row) for row in (session.review_to or [])]
+    group_message = int(session.review_msg or 0)
+    answerer = session.review_name
+    had_answer = bool(session.review_text)
+    kind = session.review_kind or "answer"
+    if not await close_strip(bot, chat_id, session):
+        return False                      # somebody decided it a moment ago
+    result = session.decide(user_id=user_id, auto=auto, flip=flip)
+    correct = result == CORRECT
+    decided = msg.game_review_decided("" if auto else str(name or ""), bool(auto),
+                                      rejected=not correct and had_answer)
+    if correct:
+        headline = f"To‘g‘ri! {_esc(answerer or name)} Bilimdonlar uchun ochko qozondi."
+        note("correct", user_id=session.history[-1].get("user_id"), chat_id=chat_id,
+             package_id=session.package_id, answers_correct=1, log=False)
+    elif kind == "skip":
+        headline = "O‘tkazildi — hech kim javobni topmadi."
+        note("unanswered", chat_id=chat_id, package_id=session.package_id, unanswered=1,
+             skips=1, detail=f"{session.mode} · savol {session.number}", log=False)
+    elif had_answer:
+        headline = f"Noto‘g‘ri. {_esc(answerer)} javobi hisoblanmadi — ochko Qarshi tarafga."
+        note("wrong", user_id=session.history[-1].get("user_id"), chat_id=chat_id,
+             package_id=session.package_id, answers_wrong=1, log=False)
+    else:
+        headline = "Vaqt tugadi. Ochko Qarshi tarafga."
+        note("unanswered", chat_id=chat_id, package_id=session.package_id, unanswered=1,
+             detail=f"{session.mode} · savol {session.number}", log=False)
+    note("review_auto" if auto else "review_confirmed", chat_id=chat_id,
+         package_id=session.package_id, user_id=int(user_id or 0) or None,
+         detail=f"{session.mode} · savol {session.number} · "
+                f"{'to‘g‘ri' if correct else 'noto‘g‘ri'}" + (" · avtomatik" if auto else ""))
+    await game_review_close(bot, chat_id, session, decided, targets, group_message)
+    await next_question(bot, chat_id, session, f"{headline}\n{_esc(decided)}", aliases)
+    return True
+
+
+async def game_review_tick(bot, chat_id: int, session: Session,
+                           aliases: list[str] | None) -> dict:
+    """One hop of a confirmation window: remind, publish or keep waiting."""
+    now = int(time.time())
+    if session.review_nudge(now):
+        session.review_noted = int(session.review_noted) + 1
+        await game_review_remind(bot, session, aliases)
+    if now >= int(session.review_due or 0):
+        await game_review_publish(bot, chat_id, session, aliases, auto=True)
+        return {"ok": True, "review": "auto"}
+    await paint_review_strip(bot, chat_id, session, aliases)
+    await schedule_tick(session, session.review_due, aliases, wait=REVIEW_HOP,
+                        need_delete=False)
+    return {"ok": True, "review": session.review_left(now)}
+
+
+async def game_review_button(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                             session: Session, state: dict, action: str) -> None:
+    """«TASDIQLASH» and «RAD ETISH» under one parked answer.
+
+    TASDIQLASH publishes the bot's verdict; RAD ETISH turns it over, which is how
+    a person says "that spelling was right after all" without typing an alias.
+    """
+    query = update.callback_query
+    group = int(state.get("h") or 0) or int(query.message.chat_id)
+    user_id = int(getattr(query.from_user, "id", 0) or 0)
+    session.chat_id = group
+    if not session.reviewing():
+        await query.answer("Tekshiruv oynasi yopilib bo‘lgan — javob hisoblangan.",
+                           show_alert=True)
+        return
+    if not await game_review_allowed(context.bot, group, user_id, session):
+        await query.answer(msg.admin_only("javobni tasdiqlash"), show_alert=True)
+        return
+    aliases = list(state.get("a") or [])
+    name = str(getattr(query.from_user, "first_name", "") or "")
+    reject = action == GAME_REJECT_ACTION
+    await query.answer("Rad etildi — xulosa o‘zgartirildi" if reject else "Tasdiqlandi")
+    await game_review_publish(context.bot, group, session, aliases, user_id=user_id,
+                              name=name, flip=reject)
+
+
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if await tour_prompt_text(update, context):
         return
@@ -1128,11 +1481,36 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     deadline = int(data.get("d", 0))
     chat_id = update.effective_chat.id
 
+    user_id = int(getattr(update.effective_user, "id", 0) or 0)
+    if session.reviewing():
+        # An answer is already with an admin: a second guess must not change it,
+        # and the window keeps its hops even if this chat's timer chain was lost.
+        await update.message.reply_text(
+            msg.game_review_waiting(session.review_name or "—", session.number, session.total,
+                                    session.review_left(int(time.time()))),
+            parse_mode=ParseMode.HTML)
+        await schedule_tick(session, session.review_due, aliases, wait=REVIEW_HOP,
+                            need_delete=False)
+        return
+
     if int(time.time()) > deadline:
+        if await game_review_open(context.bot, chat_id, session, aliases,
+                                  str(session.latest_answer or ""),
+                                  int(session.latest_user or 0), "", False, "timeout"):
+            return
         if await close_strip(context.bot, chat_id, session) and close_question(session):
             await next_question(context.bot, chat_id, session,
                                 "Vaqt tugadi. Ochko Qarshi tarafga.", aliases)
         return
+
+    if session.needs_confirm and not session.answered:
+        # Judged before it is scored: a right answer is proposed to a person and
+        # only becomes a point when somebody confirms it.
+        verdict = session.judge(user_id, update.message.text, checker_for(aliases))
+        if verdict == CORRECT and await game_review_open(
+                context.bot, chat_id, session, aliases, update.message.text, user_id,
+                str(getattr(update.effective_user, "first_name", "") or ""), True, "answer"):
+            return
 
     result = session.submit(update.effective_user.id, update.message.text, checker_for(aliases))
     if result == CORRECT:
@@ -1144,6 +1522,19 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
     elif result == FOREIGN:
         await update.message.reply_text("Bu yakka o‘yin — faqat boshlagan kishi javob yozadi.")
+    elif result == WRONG and session.mode != "solo" and session.control_message_id:
+        # A duel does not answer a wrong guess out loud — the other side may still
+        # steal. The guess itself is written into the strip, so that a question
+        # nobody finishes still shows the person confirming what was tried.
+        note("wrong", user_id=user_id, chat_id=chat_id, package_id=session.package_id,
+             answers_wrong=1, log=False)
+        session.latest_answer = update.message.text
+        session.latest_user = user_id
+        try:
+            await paint_strip(context.bot, chat_id, session, max(0, deadline - int(time.time())),
+                              deadline, aliases)
+        except TelegramError:
+            pass
     elif result == WRONG and session.mode == "solo":
         note("wrong", user_id=update.effective_user.id, chat_id=chat_id,
              package_id=session.package_id, answers_wrong=1, log=False)
@@ -1164,6 +1555,11 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await query.answer("O‘yin holati topilmadi. /solo bilan qayta boshlang.", show_alert=True)
         return
     session, state = restored
+    if action in (GAME_CONFIRM_ACTION, GAME_REJECT_ACTION):
+        # Read before the strip is adopted: this button usually sits in a private
+        # chat, and the game it decides lives in the group named by the state.
+        await game_review_button(update, context, session, state, action)
+        return
     session.control_message_id = query.message.message_id
     chat_id = query.message.chat_id
     aliases = list(state.get("a") or [])
@@ -1173,6 +1569,13 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if action == "f":
         note("refresh", user_id=getattr(query.from_user, "id", None), chat_id=chat_id,
              package_id=session.package_id, refreshes=1, log=False)
+        if session.reviewing():
+            left = session.review_left(int(time.time()))
+            await query.answer(f"Javob tekshirilmoqda · {msg.clock(left)} keyin avtomatik")
+            await paint_review_strip(context.bot, chat_id, session, aliases)
+            await schedule_tick(session, session.review_due, aliases, wait=REVIEW_HOP,
+                                need_delete=False)
+            return
         if remaining > 0 and not session.answered:
             await query.answer(f"Qolgan vaqt: {msg.clock(remaining)}")
             session.control_message_id = query.message.message_id
@@ -1192,7 +1595,15 @@ async def on_game_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         if not await is_admin(update, context, session):
             await query.answer("O‘tkazish faqat admin uchun", show_alert=True)
             return
+        if session.reviewing():
+            await query.answer("Javob admin tekshiruvida — o‘tkazib bo‘lmaydi.",
+                               show_alert=True)
+            return
         await query.answer("O‘tkazildi")
+        if await game_review_open(context.bot, chat_id, session, aliases,
+                                  str(session.latest_answer or ""),
+                                  int(session.latest_user or 0), "", False, "skip"):
+            return
         if await close_strip(context.bot, chat_id, session) and close_question(session, "skip"):
             await next_question(context.bot, chat_id, session,
                                 "O‘tkazildi — hech kim javobni topmadi.", aliases)
@@ -1238,7 +1649,18 @@ async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await is_admin(update, context, session):
         await update.effective_message.reply_text(msg.admin_only("/skip"), parse_mode=ParseMode.HTML)
         return
-    claimed = await close_strip(context.bot, update.effective_chat.id, session)
+    chat_id = update.effective_chat.id
+    aliases = list(data.get("a") or [])
+    if session.reviewing():
+        await update.effective_message.reply_text(
+            msg.game_review_nudge(session.number, session.review_left(int(time.time()))),
+            parse_mode=ParseMode.HTML)
+        return
+    if await game_review_open(context.bot, chat_id, session, aliases,
+                              str(session.latest_answer or ""), int(session.latest_user or 0),
+                              "", False, "skip"):
+        return
+    claimed = await close_strip(context.bot, chat_id, session)
     if not claimed or not close_question(session, "skip"):
         await update.effective_message.reply_text("Bu savol allaqachon yechilgan.")
         return
@@ -1421,9 +1843,15 @@ def tour_card_text(archive: Archive, tour: tn.Tournament, curator: bool = False)
                     "«Savol tanlash» — aniq savollarni olish yoki chiqarish."
         return text
     if tour.phase == tn.PHASE_PLAY:
-        return msg.tour_card_play(tour.title, tour.number, tour.total, tour_round_label(tour),
+        text = msg.tour_card_play(tour.title, tour.number, tour.total, tour_round_label(tour),
                                   msg.tour_standings(tour.standings(), heading="JADVAL"),
                                   tour_final_count(tour), len(tour.teams), int(tour.timer))
+        if tour.reviewing():
+            text += "\n\n" + msg.tour_review_state(tour.review_left(int(time.time())),
+                                                     tour_final_count(tour))
+        elif tour.needs_confirm:
+            text += "\n\n○ Javoblarni kurator tasdiqlaydi — ochko tasdiqdan keyin beriladi."
+        return text
     return msg.tour_over(tour.title, tour.standings(), tour.asked, int(tour.rounds or 1))
 
 
@@ -1612,6 +2040,44 @@ def tour_sender(user) -> str:
     return (first or username or f"id {getattr(user, 'id', 0)}").strip()
 
 
+def tour_person(tour: tn.Tournament, user_id: int) -> str:
+    """Who a confirmation came from, by name when the tournament remembers it."""
+    number = int(user_id or 0)
+    if not number:
+        return ""
+    for row in tour.directory or []:
+        try:
+            if int(row[0]) == number:
+                return str(row[1] or row[2] or f"id {number}").strip()
+        except (TypeError, ValueError, IndexError):
+            continue
+    return f"id {number}"
+
+
+async def tour_curator_id(bot, chat_id: int, user_id: int,
+                          tour: tn.Tournament | None = None) -> bool:
+    """``tour_curator`` by id — for buttons pressed in a private chat.
+
+    The confirmation list lives in the curator's own chat, so ``effective_chat``
+    says nothing about the group: the rights have to be read from the group.
+    """
+    number = int(user_id or 0)
+    if not number:
+        return False
+    if int(stats.OWNER_ID or 0) and number == int(stats.OWNER_ID):
+        return True
+    if tour is not None:
+        if number == int(tour.creator or 0):
+            return True
+        if tour.is_curator(number):
+            return True
+    try:
+        member = await bot.get_chat_member(int(chat_id), number)
+    except TelegramError:
+        return False
+    return str(getattr(member, "status", "") or "") in ("creator", "administrator")
+
+
 async def tour_delete(bot, chat_id: int, message_id: int | None, allowed: bool) -> bool:
     """Remove a message from the group when the bot is allowed to.
 
@@ -1730,13 +2196,297 @@ async def send_tour_question(bot, archive: Archive, chat_id: int,
     await schedule_tour_tick(tour, deadline)
 
 
-async def tour_resolve(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> None:
-    """Close the open question: score every final answer, then move on."""
+async def tour_review_targets(bot, tour: tn.Tournament, chat_id: int) -> list[int]:
+    """Who may confirm: appointed curators, the creator, then the group's admins.
+
+    The bot's owner is *not* added: a tournament in somebody else's group is not
+    theirs to judge, and a message per question would only be noise.
+    """
+    wanted: list[int] = []
+    for person in list(tour.curators or []) + [int(tour.creator or 0)]:
+        number = int(person or 0)
+        if number and number not in wanted:
+            wanted.append(number)
+    if len(wanted) < tn.REVIEW_TARGETS:
+        try:
+            members = await bot.get_chat_administrators(int(chat_id))
+        except TelegramError:
+            members = []
+        for member in members or []:
+            person = getattr(member, "user", None)
+            if person is None or getattr(person, "is_bot", False):
+                continue
+            number = int(getattr(person, "id", 0) or 0)
+            if number and number not in wanted:
+                wanted.append(number)
+            if len(wanted) >= tn.REVIEW_TARGETS:
+                break
+    return wanted[:tn.REVIEW_TARGETS]
+
+
+def tour_review_text(bot_archive_answer: str, tour: tn.Tournament, rows: list) -> str:
+    """The list itself, with the right answer the curator is judging against."""
+    return msg.tour_review_list(tour.number, tour.total, bot_archive_answer, rows,
+                                tour.review_left(int(time.time())), int(tour.review_noted))
+
+
+async def tour_review_dm(bot, tour: tn.Tournament, answer: str, user_id: int):
+    """One curator's private copy of the list; ``[who, message]`` when it lands."""
+    rows = tour.review_rows()
+    body = tour_state_text(tour_review_text(answer, tour, rows), tour)[:4096]
+    try:
+        sent = await bot.send_message(chat_id=int(user_id), text=body,
+                                      parse_mode=ParseMode.HTML,
+                                      disable_web_page_preview=True,
+                                      reply_markup=st.review_keyboard(tour.chat_id, rows))
+    except TelegramError:
+        return None
+    message_id = int(getattr(sent, "message_id", 0) or 0)
+    return [int(user_id), message_id] if message_id else None
+
+
+async def tour_review_open(bot, archive: Archive, chat_id: int, tour: tn.Tournament,
+                           now: int = 0) -> bool:
+    """Time is up: hold the points and hand the verdicts to a person.
+
+    The group is told only that the question closed and how many answers there
+    are — no answer and no verdict, because those are still a proposal. The list
+    itself goes to the curators in private; when nobody can be reached it is
+    posted in the group instead, so a game never stalls on a closed DM.
+    """
+    now = int(now or time.time())
     checker = checker_for([])
-    now = int(time.time())
-    result = tour.close(checker, now)
+    rows = tour.propose(checker, now, now + REVIEW_AUTO)
+    answer = str((tour.question or {}).get("answer") or "")
+    answered = sum(1 for row in rows if str(row.get("answer") or "").strip())
+    if not rows or not answered:
+        # Not one team answered: there is no verdict to check and no point at
+        # stake, so making a person press a button would only hold the game up.
+        tour.clear_review()
+        result = tour.close(checker, now)
+        tour.bump()
+        await tour_publish(bot, archive, chat_id, tour, result, now)
+        return False
+    await bot.send_message(
+        chat_id=chat_id,
+        text=tour_state_text(msg.tour_review_waiting(tour.number, tour.total, answered,
+                                                     len(rows), REVIEW_AUTO), tour)[:4090],
+        parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    delivered = []
+    for person in await tour_review_targets(bot, tour, chat_id):
+        row = await tour_review_dm(bot, tour, answer, person)
+        if row:
+            delivered.append(row)
+    tour.review_to = delivered
+    if delivered:
+        # Every copy learns about the others: whichever curator decides, all the
+        # lists lose their buttons, so a second press cannot score twice.
+        await tour_review_render(bot, archive, tour, answer)
+    if not delivered:
+        # Nobody could be reached in private: the group carries the list instead.
+        try:
+            sent = await bot.send_message(
+                chat_id=chat_id,
+                text=tour_state_text(tour_review_text(answer, tour, tour.review_rows()),
+                                     tour)[:4096],
+                parse_mode=ParseMode.HTML, disable_web_page_preview=True,
+                reply_markup=st.review_keyboard(chat_id, tour.review_rows()))
+            tour.review_msg = int(getattr(sent, "message_id", 0) or 0)
+        except TelegramError:
+            tour.review_msg = 0
     tour.bump()
-    await tour_claim_strip(bot, chat_id, tour)
+    await tour_persist(bot, archive, tour)
+    note("review_opened", chat_id=chat_id, package_id=tour.package_id,
+         detail=f"turnir · savol {tour.number} · {answered}/{len(rows)} javob · "
+                f"{len(delivered)} kurator")
+    await schedule_tour_review(tour, tour.review_due)
+    return True
+
+
+async def tour_review_render(bot, archive: Archive, tour: tn.Tournament,
+                             answer: str = "") -> int:
+    """Rewrite every open copy of the list — one mark changed, all of them show it.
+
+    Two curators may be looking at the same list; whichever of them flips a
+    verdict, the other must see the same thing before pressing «TASDIQLASH».
+    """
+    rows = tour.review_rows()
+    answer = answer or str((tour.question or {}).get("answer") or "")
+    body = tour_state_text(tour_review_text(answer, tour, rows), tour)[:4096]
+    keyboard = st.review_keyboard(int(tour.chat_id), rows)
+    edited = 0
+    keep = []
+    for person, message_id in list(tour.review_to or []):
+        try:
+            await bot.edit_message_text(chat_id=int(person), message_id=int(message_id),
+                                        text=body, parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=keyboard)
+            keep.append([int(person), int(message_id)])
+            edited += 1
+        except TelegramError:
+            fresh = await tour_review_dm(bot, tour, answer, int(person))
+            if fresh:
+                keep.append(fresh)
+                edited += 1
+    tour.review_to = keep[-tn.REVIEW_TARGETS:]
+    if int(tour.review_msg or 0):
+        try:
+            await bot.edit_message_text(chat_id=int(tour.chat_id),
+                                        message_id=int(tour.review_msg), text=body,
+                                        parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=keyboard)
+            edited += 1
+        except TelegramError:
+            tour.review_msg = 0
+    return edited
+
+
+async def tour_review_remind(bot, tour: tn.Tournament, answer: str = "") -> int:
+    """A nudge that actually arrives: a new short message, not a silent edit."""
+    rows = tour.review_rows()
+    left = tour.review_left(int(time.time()))
+    text = msg.tour_review_nudge(tour.number, left)
+    keyboard = st.review_keyboard(int(tour.chat_id), rows, confirm="TASDIQLASH")
+    reached = 0
+    for person, _message in list(tour.review_to or []):
+        try:
+            await bot.send_message(chat_id=int(person), text=text[:4090],
+                                   parse_mode=ParseMode.HTML, reply_markup=keyboard)
+            reached += 1
+        except TelegramError:
+            continue
+    if not tour.review_to and int(tour.review_msg or 0):
+        try:
+            await bot.edit_message_text(chat_id=int(tour.chat_id),
+                                        message_id=int(tour.review_msg),
+                                        text=tour_state_text(
+                                            tour_review_text(answer, tour, rows) + "\n\n" + text,
+                                            tour)[:4096],
+                                        parse_mode=ParseMode.HTML, reply_markup=keyboard)
+            reached += 1
+        except TelegramError:
+            pass
+    return reached
+
+
+async def tour_review_close(bot, tour: tn.Tournament, result: dict, auto: bool,
+                            name: str, targets: list | None = None,
+                            group_message: int = 0) -> None:
+    """Take the buttons away: the list is decided, pressing more must do nothing.
+
+    ``targets`` and ``group_message`` are the messages the list was sent to. They
+    are passed in because confirming clears the review first — the messages do not
+    disappear with it, and leaving live buttons behind is how a score gets changed
+    after everybody has seen it.
+    """
+    decided = msg.tour_review_decided(name, auto)
+    text = msg.tour_review_closed(tour.number, tour.total, list(result.get("winners") or []),
+                                  decided)
+    rows = targets if targets is not None else [list(row) for row in (tour.review_to or [])]
+    fallback = int(group_message or tour.review_msg or 0)
+    for person, message_id in rows:
+        try:
+            await bot.edit_message_text(chat_id=int(person), message_id=int(message_id),
+                                        text=text[:4090], parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=None)
+        except TelegramError:
+            continue
+    tour.review_to = []
+    if fallback:
+        try:
+            await bot.edit_message_text(chat_id=int(tour.chat_id), message_id=fallback,
+                                        text=text[:4090], parse_mode=ParseMode.HTML,
+                                        disable_web_page_preview=True, reply_markup=None)
+        except TelegramError:
+            pass
+    tour.review_msg = 0
+
+
+async def tour_review_publish(bot, archive: Archive, chat_id: int, tour: tn.Tournament,
+                              user_id: int = 0, auto: bool = False) -> None:
+    """The marks become points, the group sees the result, the game moves on."""
+    now = int(time.time())
+    rows = tour.review_rows()
+    changed = sum(1 for row in rows if row.get("changed"))
+    confirmed = 0 if auto else int(user_id or 0)
+    name = "" if auto else tour_person(tour, confirmed)
+    targets = [list(row) for row in (tour.review_to or [])]
+    group_message = int(tour.review_msg or 0)
+    result = tour.confirm(confirmed, now, auto=bool(auto))
+    tour.bump()
+    await tour_review_close(bot, tour, result, bool(auto), name, targets, group_message)
+    await tour_persist(bot, archive, tour)
+    note("review_auto" if auto else "review_confirmed", chat_id=chat_id,
+         package_id=tour.package_id, user_id=confirmed or None,
+         detail=f"turnir · savol {tour.number} · {changed} o‘zgartirish"
+                + (" · avtomatik" if auto else ""))
+    await tour_publish(bot, archive, chat_id, tour, result, now)
+
+
+async def tour_review_tick(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> dict:
+    """One hop of the confirmation window: remind, publish or keep waiting."""
+    now = int(time.time())
+    if tour.review_nudge(now):
+        tour.review_noted = int(tour.review_noted) + 1
+        await tour_review_remind(bot, tour)
+        tour.bump()
+        await tour_persist(bot, archive, tour)
+    if now >= int(tour.review_due or 0):
+        await tour_review_publish(bot, archive, chat_id, tour, auto=True)
+        return {"ok": True, "review": "auto"}
+    await schedule_tour_review(tour, int(tour.review_due))
+    return {"ok": True, "review": int(tour.review_due) - now}
+
+
+async def tour_review_state(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
+                            query=None) -> tn.Tournament | None:
+    """The tournament a confirmation button belongs to.
+
+    The button may sit in a private chat, where the group's pinned card is not
+    reachable through ``effective_chat``: the group id comes from the button and
+    the card is read with it. The message the button hangs on is the backup.
+    """
+    archive = _archive_of(context)
+    tour = await tour_from_pin(context.bot, archive, int(chat_id))
+    if tour is not None:
+        return tour
+    message = getattr(query, "message", None)
+    if message is None:
+        return None
+    found = unpack_tournament(getattr(message, "text", None) or getattr(message, "caption", None))
+    if found is None:
+        return None
+    return tn.rebuild(found, archive.questions(found.package_id))
+
+
+async def schedule_tour_review(tour: tn.Tournament, due: int) -> None:
+    """Keep the confirmation window alive hop by hop.
+
+    Unlike a countdown there is no strip to repaint, so nothing here depends on
+    one — the window has to survive even in a group where the bot may not delete
+    messages, and the hops are longer than a countdown's because a verdict does
+    not need five-second precision.
+    """
+    if not TICKS_ENABLED:
+        return
+    remaining = int(due) - int(time.time())
+    if remaining <= 0:
+        return
+    step = max(1, min(int(REVIEW_HOP), remaining, 50))
+    body = tour.body()
+    chat_id = tour.chat_id
+    if TICK_MODE == "bg" and bg_add(lambda: tour_tick_after_wait(body, chat_id, step)):
+        return
+    await post_tick(body, chat_id, step)
+
+
+async def tour_publish(bot, archive: Archive, chat_id: int, tour: tn.Tournament,
+                       result: dict, now: int) -> None:
+    """One closed question, published: result, then the next question or the end.
+
+    Scoring happened before this — either by the checker alone or by a curator's
+    marks — so everything here is only telling the group and moving the game on.
+    """
     if not result.get("asked"):
         return
     question = archive.question(int(result.get("question_id") or 0)) or {}
@@ -1747,10 +2497,16 @@ async def tour_resolve(bot, archive: Archive, chat_id: int, tour: tn.Tournament)
         note("unanswered", chat_id=chat_id, package_id=tour.package_id, unanswered=1,
              detail=f"turnir · savol {tour.number}", log=False)
     finals = [{"team": row.get("team"), "answer": row.get("answer"),
-               "correct": bool(row.get("correct"))} for row in result.get("finals") or []]
+               "correct": bool(row.get("correct")), "changed": bool(row.get("changed"))}
+              for row in result.get("finals") or []]
+    decided = ""
+    if int(result.get("confirmed_by") or 0):
+        decided = msg.tour_review_decided(tour_person(tour, int(result["confirmed_by"])))
+    elif result.get("auto"):
+        decided = msg.tour_review_decided("", True)
     text = msg.tour_result(tour.number, tour.total, str(result.get("answer") or ""),
                            str(question.get("comment") or ""), list(result.get("winners") or []),
-                           finals, tour_standings_line(tour))
+                           finals, tour_standings_line(tour), decided)
     await bot.send_message(chat_id=chat_id, text=text[:4090], parse_mode=ParseMode.HTML,
                            disable_web_page_preview=True)
     pictures = [a for a in (question.get("answer_attachments") or [])
@@ -1780,6 +2536,24 @@ async def tour_resolve(bot, archive: Archive, chat_id: int, tour: tn.Tournament)
                                                           tour_standings_line(tour)),
                                parse_mode=ParseMode.HTML)
     await send_tour_question(bot, archive, chat_id, tour)
+
+
+async def tour_resolve(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> None:
+    """Close the open question — through a curator's confirmation when one is wanted.
+
+    This is the single point where a tournament question ends, whether the clock
+    ran out, the curator pressed «O‘tkazish» or a countdown hop arrived late.
+    """
+    if tour.reviewing():
+        return                       # the list is already with the curators
+    await tour_claim_strip(bot, chat_id, tour)
+    now = int(time.time())
+    if not tour.needs_confirm:
+        result = tour.close(checker_for([]), now)
+        tour.bump()
+        await tour_publish(bot, archive, chat_id, tour, result, now)
+        return
+    await tour_review_open(bot, archive, chat_id, tour, now)
 
 
 async def tour_start(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> bool:
@@ -1816,6 +2590,11 @@ async def tour_stop(bot, archive: Archive, chat_id: int, tour: tn.Tournament,
                     headline: str) -> None:
     """Stop the tournament and publish the table."""
     await tour_claim_strip(bot, chat_id, tour)
+    if tour.reviewing():
+        # Nobody should be left holding a list that can still change a finished game.
+        result = {"winners": [row["team"] for row in tour.review_rows() if row.get("correct")]}
+        await tour_review_close(bot, tour, result, False, "")
+        tour.clear_review()
     tour.phase = tn.PHASE_DONE
     tour.finished = True
     tour.bump()
@@ -2004,6 +2783,10 @@ async def tour_tick_work(body: str, chat_id: int) -> dict:
         if tour.phase != tn.PHASE_PLAY:
             _ticks_stopped += 1
             return {"ok": True, "stopped": "not playing"}
+        if tour.reviewing():
+            # The question is closed and the verdicts are with a person: this hop
+            # belongs to the confirmation window, not to the countdown any more.
+            return await tour_review_tick(bot, archive, chat_id, tour)
         deadline = int(tour.deadline or 0)
         if deadline - int(time.time()) > MAX_TICK_HORIZON:
             return {"ok": False, "reason": "deadline too far ahead"}
@@ -2033,6 +2816,10 @@ async def tour_tick_work(body: str, chat_id: int) -> dict:
             return {"ok": True, "stopped": "already resolved"}
         _ticks_resolved += 1
         await tour_resolve(bot, archive, chat_id, tour)
+        if tour.reviewing():
+            # The question is closed but nothing is published yet: the verdicts
+            # are waiting for a person, and the window has its own hops now.
+            return {"ok": True, "review": True, "left": tour.review_left(int(time.time()))}
         return {"ok": True, "resolved": True}
     finally:
         await application.shutdown()
@@ -2097,7 +2884,7 @@ async def tour_render_curator_panel(context: ContextTypes.DEFAULT_TYPE, bot,
                                   len(tour.curators))[:4000]
     keyboard = st.curator_keyboard(int(tour.rounds or 1), int(tour.per_round or 0),
                                    int(tour.timer), int(tour.package_id), int(tour.seed), bank,
-                                   tour_total(archive, tour))
+                                   tour_total(archive, tour), bool(tour.needs_confirm))
     body = tour_state_text(text, tour)
     if query is not None and allow_edit:
         try:
@@ -2241,6 +3028,8 @@ async def cmd_tour(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"• Jamolar: ko‘pi bilan {tour.team_limit} ta · yaratish: «Yangi jamoa» tugmasi "
         "yoki <code>/jamoa nom</code>",
         "• Sozlamalar va savol tanlash: kartadagi tugmalar (faqat kurator)",
+        "• Har savoldan keyin javoblar ro‘yxati kuratorga boradi va ochko "
+        "tasdiqdan keyin beriladi (sozlamalarda o‘chiriladi)",
         "• Savollar va e’lon qilingan javoblar guruhdagi hammaga ko‘rinadi: "
         "<code>/savollar</code>",
         "• Qoidalar: <code>/turnir qoidalar</code>",
@@ -3266,6 +4055,64 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.answer()
 
 
+async def on_review_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """«TO‘G‘RI/NOTO‘G‘RI» and «TASDIQLASH» on a confirmation list.
+
+    The list is usually read in the curator's private chat, so the group id rides
+    inside the button and the rights are checked against that group — pressing a
+    button in a DM must not become a way to score somebody else's tournament.
+    """
+    query = update.callback_query
+    parts = (query.data or "").split("|")
+    if len(parts) < 3 or parts[0] != st.PREFIX_TOUR \
+            or parts[1] not in (st.REVIEW_FLIP, st.REVIEW_CONFIRM):
+        return
+    try:
+        chat_id = int(parts[2])
+    except ValueError:
+        await query.answer("Ro‘yxat buzilgan — kartadan qayta oching.", show_alert=True)
+        return
+    action = parts[1]
+    raw = parts[3] if len(parts) > 3 else ""
+    position = int(raw) if raw.lstrip("-").isdigit() else -1
+    tour = await tour_review_state(context, chat_id, query)
+    if tour is None or int(tour.chat_id or 0) != int(chat_id):
+        # Callback data can be forged by a modified client, so the group the
+        # button names and the group the list belongs to have to be the same one.
+        await query.answer("Turnir holati topilmadi. /turnir bilan qayta oching.",
+                           show_alert=True)
+        return
+    user_id = int(getattr(update.effective_user, "id", 0) or 0)
+    if not await tour_curator_id(context.bot, chat_id, user_id, tour):
+        await query.answer(msg.tour_denied_action("javobni tasdiqlash"), show_alert=True)
+        return
+    archive = _archive_of(context)
+    if not tour.reviewing():
+        await query.answer("Tekshiruv oynasi yopilib bo‘lgan — natija guruhda.",
+                           show_alert=True)
+        return
+    if tour.pending_of()[0]:
+        tour.clear_pending()
+
+    if action == st.REVIEW_FLIP:
+        rows = tour.review_rows()
+        if not 0 <= position < len(rows) or not str(rows[position].get("answer") or "").strip():
+            await query.answer("Bu jamoaning javobi yo‘q — belgilash ham yo‘q.",
+                               show_alert=True)
+            return
+        mark = tour.flip(position)
+        tour.bump()
+        await tour_review_render(context.bot, archive, tour)
+        await tour_persist(context.bot, archive, tour)
+        await schedule_tour_review(tour, int(tour.review_due))
+        await query.answer(msg.tour_review_flip(str(rows[position].get("team") or ""),
+                                                bool(mark)))
+        return
+
+    await query.answer("Tasdiqlandi — natija guruhga yozildi")
+    await tour_review_publish(context.bot, archive, chat_id, tour, user_id=user_id)
+
+
 async def on_curator_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Curator panel and picker buttons: rounds, per-round, timer, include, exclude."""
     query = update.callback_query
@@ -3309,6 +4156,15 @@ async def on_curator_button(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await query.answer("Saqlandi")
         await tour_persist(context.bot, archive, tour)
         await tour_render_curator_panel(context, context.bot, tour, query=query, allow_edit=editable)
+        return
+
+    if action == st.CONFIRM_TOGGLE and value in ("0", "1"):
+        tour.needs_confirm = value == "1"
+        tour.bump()
+        await query.answer(msg.tour_confirm_note(tour.needs_confirm)[:200], show_alert=True)
+        await tour_persist(context.bot, archive, tour)
+        await tour_render_curator_panel(context, context.bot, tour, query=query,
+                                        allow_edit=editable)
         return
 
     if action == "s":
@@ -3819,6 +4675,8 @@ def build_app(bot=None) -> Application:
         CallbackQueryHandler(on_game_button, pattern="^" + st.PREFIX_GAME + r"\|"),
         CallbackQueryHandler(on_stats_button, pattern="^" + st.PREFIX_STATS + r"\|"),
         CallbackQueryHandler(on_team_button, pattern="^" + st.PREFIX_TEAM + r"\|"),
+        CallbackQueryHandler(on_review_button,
+                             pattern="^" + st.PREFIX_TOUR + r"\|r[vc]\|"),
         CallbackQueryHandler(on_curator_button, pattern="^" + st.PREFIX_TOUR + r"\|"),
         MessageHandler(filters.Regex(r"^/"), on_command_fallback),
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_text),
@@ -4252,6 +5110,69 @@ async def index(request: Request):
     return await status_report(request)
 
 
+def review_probe() -> dict:
+    """Prove the confirmation step end to end, without Telegram and without a game.
+
+    A throwaway tournament is built in memory, one team answers right and one
+    wrong, the verdicts are proposed, one of them is turned over by hand and the
+    list is confirmed — then the same thing is left alone to publish itself. If
+    any of that breaks, the deployed function is not the code that was tested.
+    """
+    now = int(time.time())
+    report: dict = {"ok": False, "oyna": int(REVIEW_AUTO), "qadam": int(REVIEW_HOP),
+                    "eslatmalar": list(tn.REVIEW_REMIND),
+                    "kuratorlar": int(tn.REVIEW_TARGETS)}
+
+    class Checker:
+        def is_correct(self, question_id, expected, given):
+            return str(given or "").strip().casefold() == str(expected or "").strip().casefold()
+
+    def build(qid: int, answers: dict) -> tn.Tournament:
+        tour = tn.Tournament(chat_id=-1, title="probe", package_id=0, creator=1, rounds=1,
+                             per_round=1, timer=60, seed=1)
+        for index, name in enumerate(("Bilimdon", "Zakovat", "Iqtidor")):
+            tour.add_team(name, 100 + index, f"Kapitan{index}")
+        tour.phase = tn.PHASE_PLAY
+        tour.questions = [{"id": qid, "text": "probe", "answer": "Parnas"}]
+        tour.index = 0
+        tour.question_id = qid
+        tour.deadline = now + 60
+        for index, name in enumerate(("Bilimdon", "Zakovat", "Iqtidor")):
+            if answers.get(name):
+                tour.team(name).submit(100 + index, answers[name], now)
+        return tour
+
+    try:
+        tour = build(1, {"Bilimdon": "Parnas", "Zakovat": "Olimp"})
+        rows = tour.propose(Checker(), now, now + REVIEW_AUTO)
+        report["qatorlar"] = len(rows)
+        report["xulosa"] = tour.review_marks
+        report["flip"] = bool(tour.flip(1)) and tour.review_edit == "110"
+        result = tour.confirm(7, now)
+        report["tasdiq"] = (sorted(result["winners"]) == ["Bilimdon", "Zakovat"]
+                            and result["confirmed_by"] == 7 and not result["auto"]
+                            and not tour.reviewing())
+        cold = build(2, {"Bilimdon": "Parnas"})
+        cold.propose(Checker(), now, now + REVIEW_AUTO)
+        carried = tn.Tournament.from_body(cold.body())
+        carried.questions = cold.questions
+        report["holat"] = (carried.reviewing() and carried.review_marks == "100"
+                           and carried.review_left(now) > 0)
+        auto = tn.Tournament.from_body(build(3, {"Iqtidor": "Parnas"}).body())
+        auto.questions = [{"id": 3, "text": "probe", "answer": "Parnas"}]
+        auto.propose(Checker(), now, now + 1)
+        late = auto.confirm(0, now + REVIEW_AUTO + 1, auto=True)
+        report["avtomatik"] = bool(late["auto"]) and late["winners"] == ["Iqtidor"]
+        off = build(4, {"Bilimdon": "Parnas"})
+        off.needs_confirm = False
+        report["ochiq"] = off.close(Checker(), now)["winners"] == ["Bilimdon"]
+        report["ok"] = all(bool(report[key]) for key in
+                           ("flip", "tasdiq", "holat", "avtomatik", "ochiq"))
+    except Exception as exc:  # the probe must never break the app
+        report["xato"] = f"{type(exc).__name__}: {exc}"
+    return report
+
+
 def browse_probe() -> dict:
     """The panel's browser, end to end: three shapes and one local package.
 
@@ -4354,6 +5275,7 @@ async def app_probe(menu: bool = False) -> dict:
                  "ishlatilgan": int((body.get("used") or {}).get("count") or 0),
                  "rejalar": len(body.get("plans") or []),
                  "guruhlar": len(body.get("groups") or [])}
+        checks["javobni_tasdiqlash"] = bool(review_probe().get("ok"))
         browse = browse_probe()
         composer = await composer_probe(owner)
     except Exception as exc:

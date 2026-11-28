@@ -50,6 +50,12 @@ PROMPT_SEARCH = "qidiruv"      # savol tanlash oynasidagi qidiruv so‘zi
 PROMPT_PACKAGE = "paket"       # turnirni boshqa paketga o‘tkazish
 PROMPT_KINDS = (PROMPT_TEAM, PROMPT_SEARCH, PROMPT_PACKAGE)
 
+# Javobni tekshirish: bot taklif qiladi, kurator tasdiqlaydi.
+REVIEW_REMIND = (30, 90)      # shu sekundlarda eslatma yuboriladi
+REVIEW_AUTO = 180             # shuncha sekunddan keyin bot o‘zi e’lon qiladi
+REVIEW_TARGETS = 4            # nechta kuratorga shaxsiy ro‘yxat boradi
+ANSWER_SNIPPET = 70           # ro‘yxatdagi javobning ko‘rinadigan uzunligi
+
 
 @dataclass
 class Member:
@@ -200,6 +206,17 @@ class Tournament:
     start_at: int = 0                # rejadagi boshlanish vaqti (0 = hoziroq mumkin)
     max_teams: int = MAX_TEAMS       # nechta jamoa o‘ynashi mumkin
     announced: int = 0               # eslatma xabari yuborilgan payt
+    needs_confirm: bool = True       # javoblarni kurator tasdiqlaydimi
+
+    # Tekshiruv oynasi: bot xulosasi taklif, ochko faqat tasdiqdan keyin.
+    review_at: int = 0               # ro‘yxat tuzilgan payt (0 = tekshiruv yo‘q)
+    review_due: int = 0              # avtomatik e’lon chegarasi
+    review_marks: str = ""           # botning xulosasi: har jamoaga "1"/"0"
+    review_edit: str = ""            # kurator belgilari — tasdiqda shu ishlaydi
+    review_by: int = 0               # kim tasdiqladi (0 = avtomatik)
+    review_noted: int = 0            # yuborilgan eslatmalar soni
+    review_to: list[list] = field(default_factory=list)   # [[kim, xabar id], …]
+    review_msg: int = 0              # guruhdagi ro‘yxat (shaxsiy chat ochilmaganda)
 
     # ----------------------------------------------------------------- prompts
     def ask(self, kind: str, user_id: int) -> None:
@@ -254,6 +271,16 @@ class Tournament:
             if twin is None or int(twin.final_at) <= int(team.final_at):
                 continue
             team.final, team.final_by, team.final_at = twin.final, twin.final_by, twin.final_at
+            taken += 1
+        # A confirmation list another request opened must not be lost: the newer
+        # one wins, and with it every mark the curator already made.
+        if int(other.review_at) > int(self.review_at):
+            self.needs_confirm = bool(other.needs_confirm)
+            self.review_at, self.review_due = other.review_at, other.review_due
+            self.review_marks, self.review_edit = other.review_marks, other.review_edit
+            self.review_by, self.review_noted = other.review_by, other.review_noted
+            self.review_to = [list(row) for row in other.review_to]
+            self.review_msg = int(other.review_msg or 0)
             taken += 1
         return taken
 
@@ -545,31 +572,151 @@ class Tournament:
         problem = group.submit(user_id, text, now)
         return group, problem
 
-    def close(self, checker: Any, now: int = 0) -> dict:
-        """Score the open question and remember what happened."""
+    def answer_rows(self) -> list[dict]:
+        """Every team's final answer for the open question, in roster order.
+
+        The rows are what the confirmation list is built from, so they carry the
+        position as well: a mark is a position, never a name, and names repeat.
+        """
+        return [{"position": index, "team": group.name, "answer": group.final.strip(),
+                 "by": int(group.final_by or 0)}
+                for index, group in enumerate(self.teams)]
+
+    def judge(self, checker: Any) -> list[dict]:
+        """What the checker thinks of each answer — a proposal, not a score."""
+        question = self.question
+        if question is None:
+            return []
+        expected = str(question.get("answer", ""))
+        rows = []
+        for row in self.answer_rows():
+            answer = str(row.get("answer") or "")
+            rows.append({**row, "correct": bool(answer) and checker.is_correct(
+                int(question["id"]), expected, answer)})
+        return rows
+
+    def score(self, rows: list[dict], now: int = 0, confirmed_by: int = 0,
+              auto: bool = False) -> dict:
+        """Award exactly what the rows say, and remember who decided it.
+
+        ``rows`` may be the checker's own verdicts (``judge``) or the curator's
+        marks (``review_rows``): scoring never judges anything itself, which is
+        what makes a human decision the last word.
+        """
         question = self.question
         if question is None:
             return {"asked": False, "winners": [], "finals": []}
-        expected = str(question.get("answer", ""))
         winners: list[str] = []
         finals: list[dict] = []
-        for group in self.teams:
-            answer = group.final.strip()
-            finals.append({"team": group.name, "answer": answer,
-                           "by": int(group.final_by or 0),
-                           "correct": bool(answer) and checker.is_correct(
-                               int(question["id"]), expected, answer)})
-            if finals[-1]["correct"]:
+        for row in rows:
+            position = int(row.get("position", -1))
+            group = self.teams[position] if 0 <= position < len(self.teams) else None
+            name = str(row.get("team") or (group.name if group is not None else ""))
+            correct = bool(row.get("correct"))
+            finals.append({"team": name, "answer": str(row.get("answer") or ""),
+                           "by": int(row.get("by") or 0), "correct": correct})
+            if bool(row.get("changed")):
+                finals[-1]["changed"] = True
+            if correct and group is not None:
                 group.score += 1
-                group.solved.append(int(question["id"]))
-                winners.append(group.name)
+                team_question = int(question["id"])
+                if team_question not in group.solved:
+                    group.solved.append(team_question)
+                winners.append(name)
         self.asked += 1
-        self.history.append({"id": int(question["id"]), "round": self.current_round,
-                             "winners": winners, "finals": finals[:MAX_TEAMS],
-                             "at": int(now or 0)})
+        entry: dict = {"id": int(question["id"]), "round": self.current_round,
+                       "winners": winners, "finals": finals[:MAX_TEAMS],
+                       "at": int(now or 0)}
+        if int(confirmed_by or 0):
+            entry["by"] = int(confirmed_by)          # who pressed «Tasdiqlash»
+        if auto:
+            entry["auto"] = 1                        # nobody confirmed in time
+        self.history.append(entry)
         self.history = self.history[-60:]
         return {"asked": True, "winners": winners, "finals": finals,
-                "answer": expected, "question_id": int(question["id"])}
+                "answer": str(question.get("answer", "")),
+                "question_id": int(question["id"]),
+                "confirmed_by": int(confirmed_by or 0), "auto": bool(auto)}
+
+    def close(self, checker: Any, now: int = 0) -> dict:
+        """Judge and score in one step — the path that needs no confirmation."""
+        return self.score(self.judge(checker), now)
+
+    # ------------------------------------------------------------------ review
+    def reviewing(self) -> bool:
+        """True while a confirmation list is open and the points are still held."""
+        return bool(self.review_at) and self.phase == PHASE_PLAY
+
+    def propose(self, checker: Any, now: int, due: int = 0) -> list[dict]:
+        """Freeze the checker's verdicts as a list the curator confirms.
+
+        Nothing is scored here. ``due`` is when the bot publishes on its own, so
+        a game can never stall on a curator who put the phone down.
+        """
+        rows = self.judge(checker)
+        self.review_marks = "".join("1" if row.get("correct") else "0" for row in rows)
+        self.review_edit = self.review_marks
+        self.review_at = int(now)
+        self.review_due = int(due or (int(now) + REVIEW_AUTO))
+        self.review_by = 0
+        self.review_noted = 0
+        self.review_to = []
+        self.review_msg = 0
+        return rows
+
+    def review_rows(self) -> list[dict]:
+        """The open list: the answers, the bot's verdict and the curator's marks."""
+        rows = []
+        for row in self.answer_rows():
+            index = int(row.get("position") or 0)
+            proposed = self.review_marks[index:index + 1] == "1"
+            marked = self.review_edit[index:index + 1] == "1"
+            rows.append({**row, "proposed": proposed, "correct": marked,
+                         "changed": proposed != marked})
+        return rows
+
+    def flip(self, position: int) -> bool | None:
+        """Turn one team's mark over; None when there is no such team."""
+        marks = list(self.review_edit or "")
+        index = int(position)
+        if not 0 <= index < len(marks):
+            return None
+        marks[index] = "0" if marks[index] == "1" else "1"
+        self.review_edit = "".join(marks)
+        return marks[index] == "1"
+
+    def review_left(self, now: int = 0) -> int:
+        """Seconds until the bot publishes by itself."""
+        if not self.reviewing():
+            return 0
+        return max(0, int(self.review_due) - int(now or 0))
+
+    def review_nudge(self, now: int = 0) -> bool:
+        """True when another reminder is due (once per step of REVIEW_REMIND)."""
+        if not self.reviewing():
+            return False
+        step = int(self.review_noted)
+        if step >= len(REVIEW_REMIND):
+            return False
+        return int(now or 0) - int(self.review_at) >= int(REVIEW_REMIND[step])
+
+    def confirm(self, user_id: int = 0, now: int = 0, auto: bool = False) -> dict:
+        """The marks become the score; the review window closes."""
+        rows = self.review_rows()
+        result = self.score(rows, now, confirmed_by=0 if auto else int(user_id or 0),
+                            auto=bool(auto))
+        self.review_by = 0 if auto else int(user_id or 0)
+        self.clear_review()
+        return result
+
+    def clear_review(self) -> None:
+        self.review_at = 0
+        self.review_due = 0
+        self.review_marks = ""
+        self.review_edit = ""
+        self.review_noted = 0
+        self.review_to = []
+        self.review_msg = 0
 
     def advance(self, now: int = 0) -> dict | None:
         """Move to the next question; None means the tournament is over."""
@@ -614,7 +761,12 @@ class Tournament:
             "hn": [int(x) for x in self.hinted][-DIRECTORY_LIMIT:],
             "rv": int(self.rev), "pn": 1 if self.can_pin else 0,
             "sa": int(self.start_at), "mt": int(self.team_limit),
-            "an": int(self.announced),
+            "an": int(self.announced), "cf": 1 if self.needs_confirm else 0,
+            "ra": int(self.review_at), "ru": int(self.review_due),
+            "rm": self.review_marks[:MAX_TEAMS], "re": self.review_edit[:MAX_TEAMS],
+            "rb": int(self.review_by), "rn": int(self.review_noted),
+            "rt": [[int(row[0]), int(row[1])] for row in self.review_to][-REVIEW_TARGETS:],
+            "rg": int(self.review_msg or 0),
         }
 
     def body(self, level: int = 0) -> str:
@@ -676,6 +828,18 @@ class Tournament:
         tour.start_at = int(data.get("sa") or 0)
         tour.max_teams = int(data.get("mt") or MAX_TEAMS)
         tour.announced = int(data.get("an") or 0)
+        tour.needs_confirm = bool(data.get("cf", 1))
+        tour.review_at = int(data.get("ra") or 0)
+        tour.review_due = int(data.get("ru") or 0)
+        tour.review_marks = str(data.get("rm") or "")[:MAX_TEAMS]
+        tour.review_edit = str(data.get("re") or "")[:MAX_TEAMS]
+        tour.review_by = int(data.get("rb") or 0)
+        tour.review_noted = int(data.get("rn") or 0)
+        tour.review_to = [[int(row[0]), int(row[1])] for row in (data.get("rt") or [])
+                          if isinstance(row, (list, tuple)) and len(row) >= 2][-REVIEW_TARGETS:]
+        tour.review_msg = int(data.get("rg") or 0)
+        if not tour.review_at:
+            tour.clear_review()
         tour.questions = list(questions or [])
         tour.finished = tour.phase == PHASE_DONE
         return tour
