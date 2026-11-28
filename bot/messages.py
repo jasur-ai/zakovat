@@ -9,7 +9,10 @@ from __future__ import annotations
 import html
 import re
 import time
+from datetime import datetime
 from typing import Sequence
+
+from . import schedule as sched
 
 BAR_WIDTH = 20
 IDLE_HINT = 3
@@ -96,12 +99,16 @@ HELP_SECTIONS = (
     )),
     ("turnir", "TURNIR · RO‘YXATDAN O‘TISH", (
         "/turnir — turnir ochish (faqat admin yoki kurator)",
+        "/turnir 959 vaqt=19:00 jamoa=6 tur=3 savol=10 — turnirni bir qatorda "
+        "shakllantirish (reja, jamolar soni, tuzilma)",
         "/jamoa Nom — yangi jamoa (yozgan odam kapitan bo‘ladi)",
         "/qoshil Nom — jamoaga qo‘shilish · /chiqish — chiqib ketish",
         "/tayyor — «Men tayyorman» (har jamoadan kamida 2 kishi)",
         "/azolar — o‘z jamoangiz a’zolari va ularning id’si",
     )),
     ("savol", "TURNIR · SAVOL PAYTIDA", (
+        "/savollar — turnir savollari ro‘yxati, sahifalab (hammaga ochiq)",
+        "/savol 12345 — bitta savol; javobi e’lon qilingach hammaga ko‘rinadi",
         "/yakuniy matn — jamoaning bitta yakuniy javobi (tasmaga reply qilib)",
         "/bekor — yakuniy javobni olib tashlash",
         "/pichoq matn — o‘z jamoangizga maxfiy xabar (guruhda ko‘rinmaydi)",
@@ -110,12 +117,12 @@ HELP_SECTIONS = (
     ("kurator", "KURATOR (faqat kurator va admin)", (
         "/tanlov [so‘z] — savollar ro‘yxati: bosib olish yoki chiqarish",
         "/olish 12345 — savolni tanlovga olish · /chiqarish 12345 — chiqarish",
-        "/savol 12345 — bitta savolni ko‘rish",
         "/kurator 123456789 — kurator tayinlash · … olib — tayinlovni olish",
         "/turnirstop — turnirni to‘xtatish va yakuniy jadval",
     )),
     ("ega", "BOT EGASI", (
         "/stats — statistika paneli · /access — Mini App ruxsatlari",
+        "/stats ishlatilgan — ishlatilgan savollar indeksi · /stats reja — turnir rejalari",
         "/grant 123456789 Ism — ruxsat berish · /revoke 123456789 — olish",
     )),
 )
@@ -455,12 +462,18 @@ def access_changed(target: int, name: str, granted: bool, saved: bool, menu: str
 
 # ------------------------------------------------------------------ turnir
 def tour_intro(title: str, package_title: str, rounds: int, per_round: int, timer: int,
-               total: int, sizes: dict) -> str:
+               total: int, sizes: dict, start_text: str = "", team_limit: int = 0) -> str:
     """The registration card: what is being played and what the rules require."""
     lines = [
         f"<b>TURNIR · {esc(title)}</b>",
         f"Paket: {esc(package_title or '(sarlavhasiz)')}",
         f"Tuzilma: {rounds} raund × {per_round} savol = {total} savol · har savolga {timer} s",
+        f"• Jamolar soni: ko‘pi bilan {int(team_limit or sizes['max_teams'])} ta",
+    ]
+    if start_text:
+        lines.append(f"• Boshlanish: <b>{esc(start_text)}</b> — o‘sha paytgacha ro‘yxatdan "
+                     "o‘tib, «Men tayyorman» tugmasini bosib qo‘ying")
+    lines += [
         "",
         "<b>RO‘YXATDAN O‘TISH</b>",
         f"• Kamida {sizes['min_teams']} ta jamoa, har birida {sizes['min_members']}–"
@@ -475,7 +488,24 @@ def tour_intro(title: str, package_title: str, rounds: int, per_round: int, time
         "• Vaqt tugaguncha javobni o‘zgartirish mumkin — oxirgisi hisoblanadi",
         "• To‘g‘ri yakuniy javob — jamoaga +1 ochko; bir savolda bir nechta jamoa "
         "ochko olishi mumkin",
+        "• Savollar va e’lon qilingan javoblar shu guruhda hammaga ko‘rinadi",
     ]
+    return "\n".join(lines)
+
+
+def tour_reminder(title: str, start_text: str, teams: list, sizes: dict,
+                  left: int = 0) -> str:
+    """The message the bot posts when a scheduled tournament's time has come."""
+    ready = [team for team in teams
+             if int(team.get("ready") or 0) >= int(sizes.get("min_ready") or 2)]
+    lines = [f"<b>ESLATMA · {esc(title)}</b>",
+             f"Boshlanish vaqti: <b>{esc(start_text)}</b>"]
+    if left > 0:
+        lines.append(f"Guruhga {left // 60} daqiqa qoldi.")
+    lines.append(f"Jamolar: {len(teams)} ta · tayyor: {len(ready)} ta "
+                 f"(kamida {sizes.get('min_teams', 3)} jamoa va har biridan "
+                 f"{sizes.get('min_ready', 2)} kishi «Men tayyorman» degan bo‘lishi kerak)")
+    lines.append("Kurator yoki admin pastdagi «Boshlash» tugmasini bossa, o‘yin ochiladi.")
     return "\n".join(lines)
 
 
@@ -961,14 +991,137 @@ def tour_search_empty(query: str, package_title: str) -> str:
             f"({esc(package_title or 'paket')}). Boshqa so‘z bilan urinib ko‘ring.")
 
 
-def tour_question_card(question: dict, show_answer: bool) -> str:
-    lines = [f"<b>SAVOL {question.get('id')}</b>", esc(question.get("text") or "")]
+def tour_question_card(question: dict, show_answer: bool, used: bool = False,
+                       number: int = 0, total: int = 0) -> str:
+    """One question, as everybody in the group may see it.
+
+    The answer follows the game: it is shown once it has been published (or in a
+    private chat, or to a curator), and the "ishlatildi" mark says the question
+    has already been asked somewhere.
+    """
+    head = f"<b>SAVOL {question.get('id')}</b>"
+    if number and total:
+        head = f"<b>SAVOL {number} / {total}</b> · <code>{question.get('id')}</code>"
+    lines = [head, esc(question.get("text") or "")]
+    if used:
+        lines.append("• Holat: <b>ishlatildi</b>")
     if question.get("comment") and show_answer:
         lines.append(f"• Izoh: {esc(question['comment'])[:600]}")
     if show_answer:
         lines.append(f"• Javob: <b>{esc(question.get('answer') or '')}</b>")
     else:
-        lines.append("• Javob faqat shaxsiy chatda ko‘rsatiladi (guruhda yozmang).")
+        lines.append("• Javob e’lon qilingach shu guruhda hammaga ko‘rinadi.")
+    return "\n".join(lines)
+
+
+def tour_question_list(title: str, rows: list, published: int, page: int = 1,
+                       pages: int = 1) -> str:
+    """The whole tournament question set, open to everybody in the group.
+
+    A row shows its answer only once that question has been played: the game
+    stays fair, and nothing has to be asked from a curator in private.
+    """
+    if not rows:
+        return ("Turnir savollari hozircha tanlanmagan. Kurator paketni yoki tanlovni "
+                "belgilagach, ro‘yxat shu yerda chiqadi.")
+    lines = [f"<b>TURNIR SAVOLLARI</b> · {esc(title or 'Turnir')}",
+             f"E’lon qilingan javoblar: {published} ta · sahifa {page}/{pages}"]
+    for row in rows:
+        mark = "●" if row.get("published") else "○"
+        body = " ".join(str(row.get("text") or "").split())[:90]
+        line = f"{mark} <b>{row.get('number')}</b> · {esc(body)}…"
+        if row.get("published") and row.get("answer"):
+            line += f"\n   Javob: <b>{esc(str(row.get('answer'))[:120])}</b>"
+        elif row.get("used"):
+            line += "\n   <i>bu savol oldin ishlatilgan</i>"
+        lines.append(line)
+    lines.append("")
+    lines.append("Batafsil: <code>/savol 12345</code> · javoblar e’lon qilingach ochiladi.")
+    return "\n".join(lines)
+
+
+def tour_manage_text(tour, start_text: str = "", ready: bool = False) -> str:
+    """The curator's control panel: everything that used to need a /command."""
+    lines = [f"<b>BOSHQARUV</b> · {esc(tour.title)}",
+             f"Paket: <code>{int(tour.package_id)}</code> · "
+             f"{int(tour.rounds or 1)} raund × {int(tour.per_round or 0)} savol · "
+             f"{int(tour.timer)} s",
+             f"Jamolar: {len(tour.teams)} / {tour.team_limit} ta · "
+             f"o‘yinchi: {tour.people} kishi"]
+    if start_text:
+        lines.append(f"Boshlanish: <b>{esc(start_text)}</b>")
+    lines.append("Holat: " + ("boshlashga tayyor" if ready
+                              else "shartlar to‘liq bajarilmagan"))
+    lines.append("")
+    lines.append("Pastdagi tugmalar buyruqlarning o‘rnini bosadi: boshlash, "
+                 "sozlash, savol tanlash, jadval, javoblar holati, to‘xtatish.")
+    return "\n".join(lines)
+
+
+def tour_plan_text(tour) -> str:
+    """What the schedule says, and what happens at that moment."""
+    from . import schedule as sched
+
+    if not int(tour.start_at or 0):
+        return "\n".join([
+            "<b>REJA</b>",
+            "Bu turnir uchun vaqt belgilanmagan — «Boshlash» tugmasi hozir ishlaydi.",
+            "",
+            "Vaqtni belgilash: <code>/turnir vaqt=19:00</code> (yangi turnir) yoki "
+            "Mini App panelidagi «Turnir shakllantirish».",
+        ])
+    left = int(tour.start_at) - sched.now()
+    lines = ["<b>REJA</b>",
+             f"Boshlanish: <b>{esc(sched.when_text(int(tour.start_at)))}</b> "
+             f"({esc(sched.clock_text(int(tour.start_at)))})",
+             f"Qolgan vaqt: {esc(sched.left_text(int(tour.start_at)))}"
+             if left > 0 else "Vaqti keldi — «Boshlash» tugmasi ishlaydi"]
+    lines += [
+        f"Jamolar: {len(tour.teams)} / {tour.team_limit} ta · o‘yinchi: {tour.people}",
+        "",
+        "Belgilangan paytda bot shu guruhga eslatma va «Boshlash» tugmasini yuboradi. "
+        "O‘yin o‘zi boshlanmaydi — kurator yoki admin tugmani bosishi kerak.",
+        f"Shartlar: kamida {tn_min_teams()} jamoa, har biridan kamida {tn_min_ready()} kishi "
+        "«Men tayyorman» degan bo‘lishi kerak.",
+    ]
+    return "\n".join(lines)
+
+
+def tn_min_teams() -> int:
+    from . import tournament as tn
+
+    return int(tn.MIN_TEAMS)
+
+
+def tn_min_ready() -> int:
+    from . import tournament as tn
+
+    return int(tn.MIN_READY)
+
+
+def tour_curator_picker(tour, people: list) -> str:
+    """Who is in the group, with the ids a curator needs to appoint one of them."""
+    lines = ["<b>KURATOR TAYINLASH</b>",
+             "Quyidagi id ni nusxalab, buyruqni yozing:",
+             "<code>/kurator 123456789</code> — tayinlash · "
+             "<code>/kurator 123456789 olib</code> — olish"]
+    curators = [int(item) for item in (tour.curators or [])]
+    if curators:
+        lines.append("")
+        lines.append("Hozirgi kuratorlar: " + " · ".join(f"<code>{item}</code>"
+                                                         for item in curators))
+    rows = [row for row in (people or []) if isinstance(row, (list, tuple)) and len(row) >= 2]
+    if rows:
+        lines.append("")
+        lines.append("Guruhda ko‘ringan odamlar:")
+        for row in rows[:20]:
+            who = esc(str(row[1] or row[0]))
+            lines.append(f"• <code>{int(row[0])}</code> — {who}")
+    else:
+        lines.append("")
+        lines.append("Bot bu guruhda hali hech kimni ko‘rmagan: kimdir bir marta "
+                     "«Men tayyorman» yoki «Yangi jamoa» tugmasini bosgach, "
+                     "ro‘yxat shu yerda chiqadi.")
     return "\n".join(lines)
 
 
@@ -1022,16 +1175,38 @@ def tour_private_note(team: str, text: str) -> str:
     return f"<b>{esc(team)}</b> · jamoangizga maxfiy xabar\n\n{esc(text)}"
 
 
+def tour_spec_help() -> str:
+    """How one /turnir line carries the whole plan."""
+    return "\n".join([
+        "<b>TURNIRNI BIR QATORDA SHAKLLANTIRISH</b>",
+        "<code>/turnir 959 vaqt=19:00 jamoa=6 tur=3 savol=10 sekund=60 sarlavha=Kuzgi liga</code>",
+        "",
+        "• <code>vaqt=</code> — 19:00 · ertaga 10:30 · 28.11 19:00 · +45 (daqiqa)",
+        "• <code>jamoa=</code> — nechta jamoa o‘ynashi mumkin (3–12)",
+        "• <code>tur=</code> — raundlar soni · <code>savol=</code> — har raundda nechta savol",
+        "• <code>sekund=</code> — har savolga vaqt (30–120)",
+        "• <code>sarlavha=</code> — turnir nomi",
+        "• Paket o‘rniga matn ham yozsa bo‘ladi: <code>/turnir talabalar ligasi vaqt=ertaga 18:00</code>",
+        "",
+        "Belgilangan vaqtda bot shu guruhga eslatma va «Boshlash» tugmasini yuboradi.",
+    ])
+
+
 def tour_help() -> str:
     return "\n".join([
         "<b>TURNIR BUYRUQLARI</b>",
         "<i>Kurator va admin uchun</i>",
         "• <code>/turnir</code> — turnir ochish (paket: <code>/turnir 959</code>)",
+        "• <code>/turnir 959 vaqt=19:00 jamoa=6</code> — rejadagi turnir (bir qatorda)",
         "• <code>/tanlov so‘z</code> — savollar ichidan qidirish",
         "• <code>/olish 12345 12346</code> — savollarni tanlovga olish",
         "• <code>/chiqarish 12347</code> — savolni tanlovdan chiqarish",
         "• <code>/savol 12345</code> — bitta savolni ko‘rish",
         "• <code>/kurator 123456789</code> — kurator tayinlash",
+        "",
+        "<i>Hamma uchun</i>",
+        "• <code>/savollar</code> — turnir savollari ro‘yxati (javobi e’lon qilinganlari bilan)",
+        "• <code>/savol 12345</code> — bitta savol; javobi ochilgach hammaga ko‘rinadi",
         "",
         "<i>Jamoalar uchun</i>",
         "• <code>/jamoa Bilimdonlar</code> — jamoa yaratish",
@@ -1176,6 +1351,86 @@ def stats_sections(data: dict) -> str:
     for entry in sections:
         lines.append(f"• {esc(entry.get('name'))} — {entry.get('packages', 0)} paket, "
                      f"{entry.get('questions', 0)} savol")
+    return "\n".join(lines)
+
+
+def _stamp_zone(seconds: object) -> str:
+    """A stamp in the zone curators read, not in the server's UTC."""
+    try:
+        return datetime.fromtimestamp(int(seconds or 0), tz=sched.ZONE).strftime("%d.%m %H:%M")
+    except (TypeError, ValueError, OSError, OverflowError):
+        return "--.-- --:--"
+
+
+def stats_used(data: dict, rows: list | None = None, page: int = 1, pages: int = 1) -> str:
+    """The "ishlatildi" index: which questions have already been asked."""
+    used = dict(data.get("used") or {})
+    rows = list(used.get("items") if rows is None else rows)
+    head = ["<b>ISHLATILGAN SAVOLLAR</b>",
+            f"Indeksda {used.get('count', 0)} ta savol (chegara {used.get('limit', 0)}) · "
+            f"{used.get('packages', 0)} paket · jami {used.get('uses', 0)} marta"]
+    if used.get("top_packages"):
+        head.append("Ko‘p ishlatilgan paketlar: " + " · ".join(
+            f"{package} ({amount})" for package, amount in used["top_packages"][:5]))
+    if not rows:
+        head.append("")
+        head.append("• Hozircha indeks bo‘sh: o‘yin yoki turnirda savol berilgach, "
+                    "u shu yerga tushadi.")
+        return "\n".join(head)
+    head.append("")
+    head.append(f"Sahifa {page}/{pages}")
+    for row in rows:
+        when = _stamp_zone(row.get("t"))
+        where = f"paket {row.get('p')}" if row.get("p") else "paketi aniqlanmagan"
+        times = f" · {row.get('n')} marta" if int(row.get("n") or 1) > 1 else ""
+        kind = f" · {row.get('m')}" if row.get("m") else ""
+        snippet = " ".join(str(row.get("x") or "").split())[:60]
+        line = f"• <code>{row.get('id')}</code> — {when} · {where}{kind}{times}"
+        if snippet:
+            line += f"\n  {esc(snippet)}…"
+        head.append(line)
+    head.append("")
+    head.append("Bir savolni ochish: <code>/savol 12345</code>")
+    return "\n".join(head)
+
+
+def stats_plans(data: dict) -> str:
+    """Every tournament the bot has to announce, soonest first."""
+    rows = list(data.get("plans") or [])
+    groups = {int(key): value for key, value in (data.get("groups") or {}).items()
+              if str(key).lstrip("-").isdigit()}
+    lines = ["<b>TURNIR REJALARI</b>",
+             f"Yozilgan eslatmalar: {len(rows)} ta · guruhlar: {len(groups)} ta"]
+    if not rows:
+        lines.append("")
+        lines.append("• Hozircha reja yo‘q. Turnirni ochishda vaqtini yozing: "
+                     "<code>/turnir 959 vaqt=19:00</code> yoki Mini App panelidagi "
+                     "«Turnir shakllantirish».")
+    for row in rows:
+        chat = int(row.get("chat") or 0)
+        name = groups.get(chat) or str(chat)
+        left = int(row.get("left") or 0)
+        state = "vaqti keldi" if left <= 0 else f"{sched.left_text(row.get('start'), sched.now())} qoldi"
+        lines.append(f"• <b>{esc(str(row.get('title') or 'Turnir'))}</b> — {esc(name)}\n"
+                     f"  {_stamp_zone(row.get('start'))} · {state} · karta "
+                     f"<code>{row.get('message')}</code>")
+    if groups:
+        lines.append("")
+        lines.append("Panel tanlay oladigan guruhlar: " + " · ".join(
+            esc(value or key) if value else str(key) for key, value in list(groups.items())[:8]))
+    return "\n".join(lines)
+
+
+def stats_access(data: dict) -> str:
+    """Who may open the Mini App, and how to change it."""
+    rows = list(data.get("access") or [])
+    lines = ["<b>MINI APP RUXSATLARI</b>", f"Berilgan: {len(rows)} ta"]
+    for row in rows[:40]:
+        name = esc(str(row.get("name") or "(ismsiz)"))
+        lines.append(f"• <code>{row.get('id')}</code> — {name} · {row.get('label') or ''}".rstrip(" ·"))
+    lines.append("")
+    lines.append("Qo‘shish: <code>/grant 123456789 Ism</code> · olish: "
+                 "<code>/revoke 123456789</code>")
     return "\n".join(lines)
 
 

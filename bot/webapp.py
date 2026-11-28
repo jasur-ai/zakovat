@@ -44,6 +44,10 @@ EVENT_LABELS = {
     "grant": "Ruxsat berildi",
     "revoke": "Ruxsat bekor qilindi",
     "probe": "Saqlash tekshiruvi",
+    "tour_scheduled": "Turnir rejalashtirildi",
+    "tour_composed": "Turnir guruhga chiqarildi",
+    "tour_reminder": "Turnir eslatmasi yuborildi",
+    "tour_cancelled": "Turnir rejasi bekor qilindi",
 }
 
 
@@ -263,11 +267,131 @@ async def payload(user: dict, archive=None, count: bool = True, flush=None) -> d
         },
         "instance": data.get("instance", {}),
         "access": access_report(),
+        "used": data.get("used") or {},
+        "plans": data.get("plans") or [],
+        "groups": [{"id": int(key), "title": str(value or "")}
+                   for key, value in sorted((data.get("groups") or {}).items(),
+                                            key=lambda kv: -int(kv[0]))],
         "storage": {"backend": data.get("backend", "lokal"), "label": stats.store_label(),
                     "synced": bool(data.get("synced")), "dry_run": bool(data.get("dry_run")),
                     "remote_age": data.get("remote_age")},
         "server": {"time": time.time()},
     }
+
+
+# ------------------------------------------------------------------ browsing
+BROWSE_PAGE = 12          # paketlar bir sahifada
+QUESTION_PAGE = 20        # savollar bir sahifada
+SNIPPET = 220             # savol matnidan qancha ko‘rsatiladi
+
+
+def _used_marks(rows: list, used: set) -> int:
+    """Mark the rows the index already knows, and say how many there were."""
+    marked = 0
+    for row in rows:
+        row["used"] = int(row.get("id") or 0) in used
+        marked += 1 if row["used"] else 0
+    return marked
+
+
+def browse(body: dict, archive) -> dict:
+    """One step of the panel's browser: sections, packages, then questions.
+
+    The panel is the admin's tool, so it shows answers too — that is the point of
+    picking questions by hand. Every row also carries whether the used-question
+    index already knows it, so a spent question is visible before it is chosen.
+    """
+    kind = str((body or {}).get("turi") or "bolimlar").strip().lower()
+    used = stats.used_ids()
+    if kind in ("paketlar", "packages"):
+        return _browse_packages(body, archive, used)
+    if kind in ("savollar", "questions"):
+        return _browse_questions(body, archive, used)
+    sections = [{"name": row["name"], "packages": int(row["packages"]),
+                 "questions": int(row["questions"])}
+                for row in stats.archive_sections(archive)]
+    return {"ok": True, "turi": "bolimlar", "bolimlar": sections,
+            "ishlatilgan": len(used), "sahifa": 1, "sahifalar": 1}
+
+
+def _browse_packages(body: dict, archive, used: set) -> dict:
+    section = str((body or {}).get("bolim") or "").strip()
+    query = str((body or {}).get("qidiruv") or "").strip().casefold()
+    only_used = bool((body or {}).get("ishlatilgan"))
+    packages = getattr(archive, "packages", {}) or {}
+    ids = sorted((pid for pid, info in packages.items()
+                  if int((info or {}).get("questions") or 0) > 0), reverse=True)
+    if section:
+        ids = [pid for pid in ids
+               if stats.section_of(str((packages[pid] or {}).get("title") or "")) == section]
+    if query:
+        ids = [pid for pid in ids
+               if query in str((packages[pid] or {}).get("title") or "").casefold()]
+    if only_used:
+        known = {int(row.get("p") or 0) for row in stats.used_index()["items"]}
+        ids = [pid for pid in ids if int(pid) in known]
+    per_page = max(1, BROWSE_PAGE)
+    pages = max(1, -(-len(ids) // per_page))
+    page = min(max(1, int((body or {}).get("sahifa") or 1)), pages)
+    start = (page - 1) * per_page
+    rows = [{"id": int(pid),
+             "title": str((packages[pid] or {}).get("title") or "(sarlavhasiz)"),
+             "questions": int((packages[pid] or {}).get("questions") or 0),
+             "bolim": stats.section_of(str((packages[pid] or {}).get("title") or "")),
+             "manba": "turnirlar" if archive.is_remote(int(pid)) else "zakovatklubi"}
+            for pid in ids[start:start + per_page]]
+    spent = {}
+    for item in stats.used_index()["items"]:
+        package = int(item.get("p") or 0)
+        if package:
+            spent[package] = int(spent.get(package) or 0) + 1
+    for row in rows:
+        row["ishlatilgan"] = int(spent.get(row["id"]) or 0)
+    return {"ok": True, "turi": "paketlar", "paketlar": rows, "bolim": section,
+            "qidiruv": str((body or {}).get("qidiruv") or ""),
+            "jami": len(ids), "sahifa": page, "sahifalar": pages,
+            "ishlatilgan": len(used)}
+
+
+def _browse_questions(body: dict, archive, used: set) -> dict:
+    try:
+        package_id = int((body or {}).get("paket") or 0)
+    except (TypeError, ValueError):
+        package_id = 0
+    info = archive.package_info(package_id) if package_id else None
+    if not info:
+        return {"ok": False, "reason": "Paket topilmadi.", "turi": "savollar"}
+    query = str((body or {}).get("qidiruv") or "").strip().casefold()
+    questions = archive.questions(package_id) or []
+    if not questions and int(info.get("questions") or 0) > 0:
+        # a remote package whose shard could not be fetched: say so, do not lie
+        return {"ok": False, "turi": "savollar",
+                "reason": "Paketning bo‘lagi (shard) yuklanmadi — birozdan so‘ng "
+                          "qayta urining. Bu paket turnirlar.uz bazasida saqlanadi."}
+    if query:
+        questions = [item for item in questions
+                     if query in str(item.get("text") or "").casefold()
+                     or query in str(item.get("answer") or "").casefold()]
+    per_page = max(1, QUESTION_PAGE)
+    pages = max(1, -(-len(questions) // per_page))
+    page = min(max(1, int((body or {}).get("sahifa") or 1)), pages)
+    start = (page - 1) * per_page
+    rows = [{"id": int(item.get("id") or 0),
+             "tartib": int(item.get("index") or number),
+             "tur": int(item.get("round") or 0),
+             "matn": " ".join(str(item.get("text") or "").split())[:SNIPPET],
+             "javob": " ".join(str(item.get("answer") or "").split())[:160],
+             "rasm": any(str(a).startswith("http") for a in (item.get("attachments") or []))}
+            for number, item in enumerate(questions[start:start + per_page], start=start + 1)]
+    marked = _used_marks(rows, used)
+    return {"ok": True, "turi": "savollar", "savollar": rows,
+            "paket": {"id": package_id, "title": str(info.get("title") or ""),
+                      "questions": int(info.get("questions") or 0),
+                      "bolim": stats.section_of(str(info.get("title") or "")),
+                      "manba": "turnirlar" if archive.is_remote(package_id) else "zakovatklubi"},
+            "qidiruv": str((body or {}).get("qidiruv") or ""),
+            "jami": len(questions), "sahifa": page, "sahifalar": pages,
+            "ishlatilgan": marked, "indeksda": len(used)}
 
 
 def denied(reason: str = "") -> dict:

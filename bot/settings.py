@@ -39,6 +39,10 @@ PREFIX_STATS = "zs"
 STATS_REFRESH = "zs|r"
 STATS_SECTIONS = "zs|b"
 STATS_EVENTS = "zs|e"
+STATS_USED = "zs|q"          # ishlatilgan savollar indeksi
+STATS_PLANS = "zs|p"         # rejadagi turnirlar
+STATS_ACCESS = "zs|a"        # Mini App ruxsatlari
+STATS_USED_PAGE = "zs|qp"    # indeksning boshqa sahifasi
 
 # --- turnir -----------------------------------------------------------------
 # Callback data stays under 64 bytes: the tournament itself rides invisibly
@@ -62,6 +66,11 @@ TEAM_STOP = "x"             # turnirni to‘xtatish
 TEAM_TABLE = "t"            # jadvalni ko‘rsatish
 TEAM_REVEAL = "rv"          # yakuniy javoblar holati (kurator)
 TEAM_SKIP = "s"             # savolni yopish (kurator)
+TEAM_LIST = "ls"            # turnir savollari ro‘yxati (hammaga ochiq)
+TEAM_LIST_PAGE = "lp"       # ro‘yxatning boshqa sahifasi
+TEAM_QUESTION = "so"        # ro‘yxatdagi bitta savolni ochish
+TEAM_MANAGE = "mn"          # kurator boshqaruv oynasi
+TEAM_PLAN = "pl"            # rejadagi boshlanish vaqti haqida xabar
 
 
 def _default(name: str, fallback: int) -> int:
@@ -215,7 +224,8 @@ def curator_data(action: str, value: str | int = "") -> str:
 
 
 def tour_keyboard(teams: list, phase: str = "register", can_start: bool = False,
-                  curator: bool = False, sizes: dict | None = None) -> "object":
+                  curator: bool = False, sizes: dict | None = None,
+                  start_text: str = "") -> "object":
     """Buttons of the registration card.
 
     One button per team: pressing it joins that team, pressing it again says
@@ -245,16 +255,96 @@ def tour_keyboard(teams: list, phase: str = "register", can_start: bool = False,
             InlineKeyboardButton("Yangilash", callback_data=tour_data(TEAM_REFRESH)),
         ])
         start = "Boshlash" if can_start else "Boshlash (shartlar bajarilmagan)"
+        if start_text:
+            start = f"Boshlash · {start_text}" if can_start \
+                else f"Boshlash · {start_text} (shartlar bajarilmagan)"
         rows.append([InlineKeyboardButton(start, callback_data=tour_data(TEAM_START))])
+    # The questions belong to everybody in the group, so this row is never gated.
+    rows.append([
+        InlineKeyboardButton("Savollar", callback_data=tour_data(TEAM_LIST)),
+        InlineKeyboardButton("Jadval", callback_data=tour_data(TEAM_TABLE)),
+    ])
     if curator:
         rows.append([
+            InlineKeyboardButton("Boshqaruv", callback_data=tour_data(TEAM_MANAGE)),
             InlineKeyboardButton("Savol tanlash", callback_data=tour_data(TEAM_PICK)),
             InlineKeyboardButton("Sozlamalar", callback_data=curator_data("c")),
             InlineKeyboardButton("To‘xtatish", callback_data=tour_data(TEAM_STOP)),
         ])
-    else:
-        rows.append([InlineKeyboardButton("Jadval", callback_data=tour_data(TEAM_TABLE))])
     return InlineKeyboardMarkup(rows)
+
+
+def manage_keyboard(phase: str = "register", can_start: bool = False,
+                    start_text: str = "") -> "object":
+    """Everything a curator or admin can do, as buttons instead of /commands.
+
+    The same actions the slash commands offer, in one message: the group never
+    has to remember a command, and the bot never has to explain one.
+    """
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    rows: list[list] = [
+        [InlineKeyboardButton("Savollar ro‘yxati", callback_data=tour_data(TEAM_LIST)),
+         InlineKeyboardButton("Jadval", callback_data=tour_data(TEAM_TABLE))],
+        [InlineKeyboardButton("Sozlamalar", callback_data=curator_data("c")),
+         InlineKeyboardButton("Savol tanlash", callback_data=tour_data(TEAM_PICK))],
+    ]
+    if phase == "register":
+        start = f"Boshlash · {start_text}" if start_text else "Boshlash"
+        rows.append([InlineKeyboardButton(start if can_start else f"{start} (shartlar bajarilmagan)",
+                                          callback_data=tour_data(TEAM_START))])
+        rows.append([InlineKeyboardButton("Ro‘yxatni yangilash",
+                                          callback_data=tour_data(TEAM_REFRESH)),
+                     InlineKeyboardButton("Reja haqida", callback_data=tour_data(TEAM_PLAN))])
+    else:
+        rows.append([InlineKeyboardButton("Javoblar holati", callback_data=tour_data(TEAM_REVEAL)),
+                     InlineKeyboardButton("Savolni yopish", callback_data=tour_data(TEAM_SKIP))])
+        rows.append([InlineKeyboardButton("Vaqtni yangilash",
+                                          callback_data=tour_data(TEAM_REFRESH)),
+                     InlineKeyboardButton("To‘xtatish", callback_data=tour_data(TEAM_STOP))])
+    rows.append([InlineKeyboardButton("Kurator tayinlash", callback_data=curator_data("ku")),
+                 InlineKeyboardButton("Yopish", callback_data=tour_data(TEAM_REFRESH))])
+    return InlineKeyboardMarkup(rows)
+
+
+def question_card_keyboard(page: int = 1) -> "object":
+    """Buttons under one opened question: back to the public list."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("Savollar ro‘yxati", callback_data=tour_data(TEAM_LIST_PAGE, page)),
+         InlineKeyboardButton("Yopish", callback_data=tour_data(TEAM_REFRESH))]])
+
+
+def question_list_keyboard(page: int, pages: int, rows: list) -> "object":
+    """Paging and one button per question of the public list."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    keyboard: list[list] = []
+    line: list = []
+    for row in rows:
+        mark = "✅" if row.get("published") else ("•" if row.get("used") else "⏳")
+        line.append(InlineKeyboardButton(f"{mark} {row.get('number')}",
+                                         callback_data=tour_data(TEAM_QUESTION,
+                                                                 int(row.get("id") or 0))))
+        if len(line) == 5:
+            keyboard.append(line)
+            line = []
+    if line:
+        keyboard.append(line)
+    if pages > 1:
+        nav: list = []
+        if page > 1:
+            nav.append(InlineKeyboardButton("‹ Orqaga",
+                                            callback_data=tour_data(TEAM_LIST_PAGE, page - 1)))
+        nav.append(InlineKeyboardButton(f"{page} / {pages}",
+                                        callback_data=tour_data(TEAM_LIST_PAGE, page)))
+        if page < pages:
+            nav.append(InlineKeyboardButton("Oldinga ›",
+                                            callback_data=tour_data(TEAM_LIST_PAGE, page + 1)))
+        keyboard.append(nav)
+    keyboard.append([InlineKeyboardButton("Yopish", callback_data=tour_data(TEAM_REFRESH))])
+    return InlineKeyboardMarkup(keyboard)
 
 
 def selection_keyboard(page: int, pages: int, rows: list, chosen: set, dropped: set,
@@ -380,7 +470,7 @@ def page_keyboard(page: int, pages: int, query: str = ""):
     return InlineKeyboardMarkup([row])
 
 
-def stats_keyboard(view: str = "main", app_url: str = ""):
+def stats_keyboard(view: str = "main", app_url: str = "", page: int = 1, pages: int = 1):
     """Buttons of the owner's statistics panel.
 
     ``app_url`` adds the Mini App row: the full dashboard opens inside Telegram,
@@ -396,7 +486,22 @@ def stats_keyboard(view: str = "main", app_url: str = ""):
     if view == "main":
         row.append(InlineKeyboardButton("Bo‘limlar", callback_data=STATS_SECTIONS))
         row.append(InlineKeyboardButton("O‘yinlar", callback_data=STATS_EVENTS))
-    else:
+    elif view != "used":
         row.append(InlineKeyboardButton("Orqaga", callback_data=STATS_REFRESH))
     rows.append(row)
+    rows.append([
+        InlineKeyboardButton("Ishlatilgan savollar", callback_data=STATS_USED),
+        InlineKeyboardButton("Turnir rejalari", callback_data=STATS_PLANS),
+        InlineKeyboardButton("Ruxsatlar", callback_data=STATS_ACCESS),
+    ])
+    if view == "used" and pages > 1:
+        nav = []
+        if page > 1:
+            nav.append(InlineKeyboardButton("‹ Orqaga",
+                                            callback_data=f"{STATS_USED_PAGE}|{page - 1}"))
+        nav.append(InlineKeyboardButton(f"{page} / {pages}", callback_data=STATS_USED))
+        if page < pages:
+            nav.append(InlineKeyboardButton("Oldinga ›",
+                                            callback_data=f"{STATS_USED_PAGE}|{page + 1}"))
+        rows.append(nav)
     return InlineKeyboardMarkup(rows)

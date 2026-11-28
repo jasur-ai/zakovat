@@ -46,6 +46,9 @@ DRY_RUN = False        # the self-test counts, but never writes to the store
 EVENT_LIMIT = 30
 MAP_LIMIT = 400
 ACCESS_LIMIT = 60           # nechta foydalanuvchini Mini App ga ruxsat berish mumkin
+USED_LIMIT = 120              # «ishlatildi» indeksida saqlanadigan eng ko‘p savol
+PLAN_LIMIT = 12               # nechta rejadagi turnir eslatib qo‘yiladi
+GROUP_LIMIT = 12              # panel tanlay oladigan guruhlar soni
 
 COUNTERS = (
     "games_started",        # o‘yin boshlandi
@@ -86,7 +89,8 @@ SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
 OTHER_SECTION = "Boshqa paketlar"
 
 # --- instance state -------------------------------------------------------
-_pending: dict = {"c": Counter(), "u": Counter(), "h": Counter(), "p": Counter(), "e": []}
+_pending: dict = {"c": Counter(), "u": Counter(), "h": Counter(), "p": Counter(),
+                  "e": [], "q": []}
 _instance: dict = {"c": Counter(), "u": set(), "h": set(), "p": set(), "started": time.time()}
 _last_flush = 0.0
 _remote: dict = {}
@@ -94,6 +98,9 @@ _remote_at = 0.0
 _blob_url = ""          # the public address of our blob, learned on first write
 _tg_message_id = 0      # the pinned message that holds the document
 _access: dict = {}      # user ids the owner let into the Mini App
+_used: dict[str, dict] = {}    # savol id -> qachon, qaysi paketda ishlatilgan
+_plans: dict[str, dict] = {}   # "chat:xabar" -> rejadagi turnir eslatmasi
+_groups: dict[str, str] = {}   # bot yozgan guruhlar: id -> sarlavha
 
 
 def backend() -> str:
@@ -161,11 +168,171 @@ def _normalise(doc: object) -> dict:
     events = doc.get("e")
     if isinstance(events, list):
         result["e"] = [event for event in events if isinstance(event, dict)][:EVENT_LIMIT]
-    access = doc.get("a")
-    result["a"] = {str(key): value for key, value in access.items()
-                   if isinstance(value, dict)} if isinstance(access, dict) else {}
+    result["a"] = _normalise_access(doc.get("a"))
     result["s"] = doc.get("s")
+    result["q"] = _normalise_used(doc.get("q"))
+    result["r"] = _normalise_plans(doc.get("r"))
+    result["g"] = _normalise_groups(doc.get("g"))
     return result
+
+
+def _normalise_access(value: object) -> dict:
+    """Read the Mini App guest list: `{user_id: {"name":…, "since":…}}`.
+
+    Stored compactly as `"Ism|minutes"` per user — the document is one Telegram
+    message, and the fat shape alone would eat the room the used-question index
+    needs. The older dict shape is still accepted.
+    """
+    if not isinstance(value, dict):
+        return {}
+    out: dict[str, dict] = {}
+    for key, item in value.items():
+        key = str(key)[:20]
+        if not key.isdigit():
+            continue
+        if isinstance(item, str):
+            name, _, minutes = item.rpartition("|")
+            try:
+                since = int(float(minutes or 0) * 60) if _ else 0
+            except ValueError:
+                name, since = item, 0
+            out[key] = {"name": str(name)[:40], "since": since}
+        elif isinstance(item, dict):
+            try:
+                out[key] = {"name": str(item.get("name") or "")[:40],
+                            "since": int(item.get("since") or 0)}
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
+def _pack_access(access: dict) -> dict:
+    """Write the guest list back out in its compact shape."""
+    return {str(key): f"{str((item or {}).get('name') or '')[:40]}|"
+                      f"{int((item or {}).get('since') or 0) // 60}"
+            for key, item in (access or {}).items()}
+
+
+def _normalise_plans(value: object) -> dict:
+    """Read the reminder list: `{"<chat>:<message>": [start, title]}`.
+
+    Stored compactly as `chat.message.minutes.title|…`, because the whole
+    document has to fit into one Telegram message.
+    """
+    out: dict[str, list] = {}
+    if isinstance(value, str):
+        for chunk in value.split("|"):
+            parts = chunk.split(".", 3)
+            if len(parts) < 3:
+                continue
+            chat, message, minutes = parts[0], parts[1], parts[2]
+            title = parts[3] if len(parts) > 3 else ""
+            if not chat.lstrip("-").isdigit() or not message.isdigit():
+                continue
+            try:
+                start = int(float(minutes or 0) * 60)
+            except ValueError:
+                continue
+            out[f"{chat}:{message}"] = [start, str(title)[:40]]
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(item, (list, tuple)) or len(item) < 1:
+                continue
+            try:
+                out[str(key)[:24]] = [int((list(item) + [0, ""])[0] or 0),
+                                      str((list(item) + [0, ""])[1] or "")[:40]]
+            except (TypeError, ValueError):
+                continue
+    return dict(sorted(out.items(), key=lambda kv: kv[1][0])[:PLAN_LIMIT])
+
+
+def _pack_plans(plans: dict) -> str:
+    """Write the reminder list back out, soonest first."""
+    rows = sorted((plans or {}).items(), key=lambda kv: int((kv[1] or [0])[0]))[:PLAN_LIMIT]
+    return "|".join(
+        f"{key.split(':')[0]}.{key.split(':')[1] if ':' in key else 0}."
+        f"{int((item or [0])[0]) // 60}.{str((item or ['', ''])[1])[:40]}"
+        for key, item in rows if ":" in key)
+
+
+def _normalise_groups(value: object) -> dict:
+    """The chats the panel may post a tournament into: `{chat_id: title}`."""
+    if not isinstance(value, dict):
+        return {}
+    out = {str(key)[:20]: str(item or "")[:40] for key, item in value.items()
+           if str(key).lstrip("-").isdigit()}
+    return dict(list(out.items())[-GROUP_LIMIT:])
+
+
+def _normalise_used(value: object) -> dict:
+    """Read the used-question index: `{"<id>": <stamp>}`, newest first.
+
+    The document is one Telegram message, so the stored form is the compact
+    string `"id:minutes,id:minutes,…"`. A dict (an older or richer shape) is
+    accepted too; anything unreadable is simply dropped.
+    """
+    out: dict[str, int] = {}
+    if isinstance(value, str):
+        for chunk in value.split(","):
+            head, _, tail = chunk.partition(":")
+            head = head.strip()
+            if not head.isdigit():
+                continue
+            try:
+                out[head[:12]] = int(float(tail.strip() or 0) * 60)
+            except ValueError:
+                out[head[:12]] = 0
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            key = str(key)[:12]
+            if not key.isdigit():
+                continue
+            if isinstance(item, (list, tuple)):
+                when = (list(item) + [0])[0]
+            elif isinstance(item, dict):
+                when = item.get("t")
+            else:
+                when = item
+            try:
+                out[key] = int(when or 0)
+            except (TypeError, ValueError):
+                continue
+    return dict(sorted(out.items(), key=lambda kv: -kv[1])[:USED_LIMIT])
+
+
+def _pack_used(index: dict) -> str:
+    """Write the index back out as `id:minutes`, newest first, capped."""
+    rows = sorted(((str(key), int(stamp or 0)) for key, stamp in (index or {}).items()),
+                  key=lambda kv: -kv[1])[:USED_LIMIT]
+    return ",".join(f"{key}:{stamp // 60}" for key, stamp in rows)
+
+
+def _trim_used(value: object, keep: int) -> str:
+    """The stored (compact) form of the index, cut down to `keep` newest rows."""
+    index = _normalise_used(value) if not isinstance(value, str) else _normalise_used(value)
+    if keep <= 0:
+        return ""
+    return _pack_used(dict(list(index.items())[:keep]))
+
+
+def _pending_used() -> dict:
+    """Pending uses folded into one index entry per question."""
+    merged: dict[str, int] = {}
+    for key, stamp, _package, _chat in _pending.get("q") or []:
+        if int(stamp) >= int(merged.get(str(key)) or 0):
+            merged[str(key)] = int(stamp)
+    return merged
+
+
+def _cap_used(index: dict) -> dict:
+    """Keep the newest ``USED_LIMIT`` rows of the index.
+
+    A whole playlist asked in one second shares one stamp, so equal stamps are
+    ordered by insertion: the question asked last is the newest one.
+    """
+    rows = sorted(reversed(list(index.items())),
+                  key=lambda kv: -int((kv[1] or {}).get("t") or 0))
+    return dict(rows[:USED_LIMIT])
 
 
 def record(kind: str, *, user_id: int | None = None, chat_id: int | None = None,
@@ -200,6 +367,157 @@ def record(kind: str, *, user_id: int | None = None, chat_id: int | None = None,
     # burst of events queues a single write. Any backend counts, not only an
     # address that was configured by hand.
     return backend() != "lokal" and time.time() - _last_flush >= FLUSH_SECONDS
+
+
+def mark_used(questions, package_id: int = 0, chat_id: int = 0, mode: str = "",
+              detail: str = "") -> int:
+    """Index the questions a game asked, so "ishlatildi" can be shown later.
+
+    Asking one again keeps the newest stamp and grows its use count. The index
+    travels inside the statistics document, so it costs no extra storage call and
+    a cold instance learns it back on the first read.
+    """
+    global _used
+    stamp = int(time.time())
+    added = 0
+    for question in questions or []:
+        try:
+            question_id = int((question or {}).get("id") or 0)
+        except (TypeError, ValueError):
+            continue
+        if not question_id:
+            continue
+        key = str(question_id)
+        before = _used.get(key) or {}
+        _used[key] = {"t": stamp,
+                      "p": int(package_id or (question or {}).get("package_id") or 0),
+                      "h": int(chat_id or 0),
+                      "m": str(mode or "")[:12],
+                      "n": int(before.get("n") or 0) + 1,
+                      "d": str(detail or "")[:40]}
+        _pending["q"].append([key, stamp, _used[key]["p"], _used[key]["h"]])
+        added += 1
+    if added:
+        del _pending["q"][:-USED_LIMIT]
+        _used = _cap_used(_used)
+    return added
+
+
+def used_index(archive=None, limit: int = 0) -> dict:
+    """The whole "ishlatildi" index, newest first, plus a short summary.
+
+    With an archive the package is resolved for the rows actually shown, so a
+    stored row (which carries only id and stamp) still reads well in the panel.
+    """
+    records = list(_cap_used(_used).items())
+    packages: Counter = Counter()
+    for _, item in records:
+        package = int((item or {}).get("p") or 0)
+        if package:
+            packages[str(package)] += 1
+    rows = records[:limit] if limit and limit > 0 else records
+    items = []
+    for key, item in rows:
+        row = {"id": int(key), **(item or {})}
+        if archive is not None and not row.get("p"):
+            found = archive.question(int(key)) or {}
+            row["p"] = int(found.get("package_id") or 0)
+            row["x"] = str(found.get("text") or "")[:90]
+        items.append(row)
+    return {
+        "count": len(records),
+        "limit": USED_LIMIT,
+        "packages": len(packages),
+        "uses": sum(int((item or {}).get("n") or 1) for _, item in records),
+        "top_packages": [(int(key), amount) for key, amount in packages.most_common(6)],
+        "items": items,
+    }
+
+
+def _adopt_used(stored: dict) -> None:
+    """Fold the stored index into this copy's memory, newest stamp wins."""
+    global _used
+    for key, stamp in (stored or {}).items():
+        stamp = int(stamp or 0)
+        current = _used.get(key)
+        if current and int(current.get("t") or 0) >= stamp:
+            continue
+        _used[key] = {"t": stamp, "p": 0, "h": 0, "m": "", "n": 1}
+    if len(_used) > USED_LIMIT:
+        _used = _cap_used(_used)
+
+
+def used_summary() -> dict:
+    """The headline numbers of the "ishlatildi" index, plus a few fresh rows."""
+    index = used_index()
+    index["recent"] = index.pop("items")[:8]
+    return index
+
+
+def plan_key(chat_id: int, message_id: int) -> str:
+    return f"{int(chat_id)}:{int(message_id)}"
+
+
+def plan_add(chat_id: int, message_id: int, start_at: int, title: str = "") -> None:
+    """Remember that this chat's card has to be announced at `start_at`."""
+    if not chat_id or not message_id or not start_at:
+        return
+    _plans[plan_key(chat_id, message_id)] = [int(start_at), str(title or "")[:40]]
+    while len(_plans) > PLAN_LIMIT:
+        # the farthest plan goes: the ones about to fire are the point of the list
+        furthest = max(_plans.items(), key=lambda kv: int((kv[1] or [0])[0]))
+        _plans.pop(furthest[0], None)
+
+
+def plan_drop(chat_id: int, message_id: int) -> None:
+    """The reminder is no longer needed: it fired, or the card is gone."""
+    _plans.pop(plan_key(chat_id, message_id), None)
+
+
+def plans(now: int = 0) -> list[dict]:
+    """Every registered reminder, soonest first."""
+    moment = int(now or time.time())
+    rows = [{"chat": int(key.split(":")[0]), "message": int(key.split(":")[1]),
+             "start": int((item or [0])[0]), "title": str((item or ["", ""])[1]),
+             "left": int((item or [0])[0]) - moment}
+            for key, item in sorted(_plans.items(), key=lambda kv: int((kv[1] or [0])[0]))]
+    return rows
+
+
+def due_plans(now: int = 0, lead: int = 0) -> list[dict]:
+    """Reminders whose time has come (or comes within `lead` seconds)."""
+    return [row for row in plans(now) if -3600 <= row["left"] <= max(0, int(lead))]
+
+
+def group_seen(chat_id: int, title: str = "") -> None:
+    """Remember a group the bot works in, so the panel can offer it as a target."""
+    if not chat_id or int(chat_id) >= 0:
+        return
+    key = str(int(chat_id))
+    if title:
+        _groups[key] = str(title)[:40]
+    elif key not in _groups:
+        _groups[key] = ""
+    while len(_groups) > GROUP_LIMIT:
+        _groups.pop(next(iter(_groups)), None)
+
+
+def groups() -> dict:
+    """The chats the composer can post into: `{chat_id: title}`."""
+    return {int(key): value for key, value in _groups.items() if key.lstrip("-").isdigit()}
+
+
+def used_ids() -> set[int]:
+    """Every question id the index knows about."""
+    return {int(key) for key in _used if key.isdigit()}
+
+
+def is_used(question_id) -> bool:
+    """True when this question has already been asked somewhere."""
+    try:
+        return str(int(question_id or 0)) in _used
+    except (TypeError, ValueError):
+        return False
 
 
 def allowed(user_id: int | str | None) -> bool:
@@ -248,13 +566,18 @@ async def set_access(user_id: int, name: str = "", grant: bool = True,
             code, text = await store_read(client)
             document = _normalise(_try_json(text)) if code == 200 else {}
             document["a"] = access
-            payload = {"v": 1, "s": int(time.time()),
+            # a guest list write must not throw the rest of the document away:
+            # the used-question index, the reminders and the groups ride along.
+            payload = {"v": 1, "s": document.get("s") or int(time.time()),
                        "c": {str(k): int(v) for k, v in (document.get("c") or {}).items()},
                        "u": _cap(Counter(document.get("u") or {})),
                        "h": _cap(Counter(document.get("h") or {})),
                        "p": _cap(Counter(document.get("p") or {})),
                        "e": list(document.get("e") or [])[:EVENT_LIMIT],
-                       "a": access}
+                       "a": _pack_access(access),
+                       "q": _pack_used(document.get("q") or {}),
+                       "r": _pack_plans(document.get("r") or {}),
+                       "g": _normalise_groups(document.get("g") or {})}
             code, _ = await store_write(client, json.dumps(payload, ensure_ascii=False))
     except Exception:
         logging.getLogger(__name__).debug("access write failed", exc_info=True)
@@ -362,6 +685,13 @@ def _merge(target: dict, source: dict) -> dict:
     events = list(source.get("e") or []) + list(target.get("e") or [])
     events.sort(key=lambda item: -int(item.get("t") or 0))
     target["e"] = events[:EVENT_LIMIT]
+    index = dict(target.get("q") or {})
+    for key, stamp in (source.get("q") or {}).items():
+        if int(stamp or 0) >= int(index.get(key) or 0):
+            index[key] = int(stamp or 0)
+    target["q"] = _normalise_used(index)
+    target["r"] = _normalise_plans({**(target.get("r") or {}), **(source.get("r") or {})})
+    target["g"] = _normalise_groups({**(target.get("g") or {}), **(source.get("g") or {})})
     return target
 
 
@@ -377,13 +707,20 @@ def _shrink(payload: dict, room: int) -> dict:
     longest lists go first.
     """
     text = json.dumps(payload, ensure_ascii=False)
-    for maps, events in ((60, 12), (30, 8), (12, 5), (5, 3), (0, 0)):
+    for maps, events, used in ((60, 12, USED_LIMIT), (60, 12, 40), (30, 8, 40),
+                               (30, 8, 0), (12, 5, 0), (5, 3, 0), (0, 0, 0)):
         if len(text) + len(DOC_HEADER) + 1 <= room:
             return payload
         trimmed = dict(payload)
         for field in ("u", "h", "p"):
             trimmed[field] = dict(Counter(payload.get(field) or {}).most_common(maps))
         trimmed["e"] = list(payload.get("e") or [])[:events]
+        # the used-question index is the youngest part of the document, so a tight
+        # store gives it up first — the newest stamps are the ones that stay.
+        if "q" in trimmed:
+            trimmed["q"] = _trim_used(trimmed.get("q"), used)
+        if "g" in trimmed and used == 0:
+            trimmed["g"] = dict(list((trimmed.get("g") or {}).items())[:4])
         payload = trimmed
         text = json.dumps(payload, ensure_ascii=False)
     return payload
@@ -399,9 +736,11 @@ async def sync(force: bool = False, transport=None) -> bool:
     _last_flush = time.time()
     deltas = {"c": Counter(_pending["c"]), "u": Counter(_pending["u"]),
               "h": Counter(_pending["h"]), "p": Counter(_pending["p"]),
-              "e": list(_pending["e"])}
+              "e": list(_pending["e"]), "q": _pending_used(),
+              "r": _normalise_plans(_plans), "g": dict(_groups)}
     document = _normalise(_remote) if _remote else {"c": Counter(), "u": Counter(),
-                                                    "h": Counter(), "p": Counter(), "e": []}
+                                                    "h": Counter(), "p": Counter(), "e": [],
+                                                    "a": {}, "q": {}}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0),
                                      transport=transport) as client:
@@ -411,7 +750,10 @@ async def sync(force: bool = False, transport=None) -> bool:
             body = _merge(document, deltas)
             payload = {"v": 1, "s": int(time.time()), "c": dict(body["c"]),
                        "u": _cap(body["u"]), "h": _cap(body["h"]), "p": _cap(body["p"]),
-                       "e": body["e"][:EVENT_LIMIT], "a": body.get("a") or {}}
+                       "e": body["e"][:EVENT_LIMIT], "a": _pack_access(body.get("a") or {}),
+                       "q": _pack_used(body.get("q") or {}),
+                       "r": _pack_plans(body.get("r") or {}),
+                       "g": _normalise_groups(body.get("g") or {})}
             payload = _shrink(payload, MESSAGE_LIMIT)
             body_text = json.dumps(payload, ensure_ascii=False)
             status, _ = await store_write(client, body_text)
@@ -427,9 +769,13 @@ async def sync(force: bool = False, transport=None) -> bool:
         _pending[field] = Counter({k: v for k, v in _pending[field].items() if v > 0})
     sent = {event["t"] for event in deltas["e"]}
     _pending["e"] = [event for event in _pending["e"] if event["t"] not in sent]
+    sent_questions = set(deltas["q"])
+    _pending["q"] = [row for row in _pending["q"] if str(row[0]) not in sent_questions]
     _remote = payload
     _remote_at = time.time()
     _access = dict(payload.get("a") or {})
+    _plans.update(_normalise_plans(payload.get("r") or {}))
+    _groups.update(payload.get("g") or {})
     return True
 
 
@@ -833,6 +1179,11 @@ async def snapshot(archive=None, force: bool = True) -> dict:
     stored_doc = _normalise(_remote)
     if _remote:                     # nothing stored yet: keep what this copy knows
         _access = dict(stored_doc.get("a") or {})
+        _adopt_used(stored_doc.get("q") or {})
+        for key, item in (stored_doc.get("r") or {}).items():
+            _plans.setdefault(key, item)
+        _groups.update({key: value for key, value in (stored_doc.get("g") or {}).items()
+                        if key not in _groups or not _groups[key]})
     totals: Counter = Counter(stored_doc.get("c") or {})
     users: Counter = Counter(stored_doc.get("u") or {})
     chats: Counter = Counter(stored_doc.get("h") or {})
@@ -865,6 +1216,9 @@ async def snapshot(archive=None, force: bool = True) -> dict:
         "stored": backend() != "lokal",
         "backend": backend(),
         "access": dict(_access),
+        "used": used_summary(),
+        "plans": plans(),
+        "groups": groups(),
         "dry_run": DRY_RUN,
         "synced": stored,
         "remote_age": int(time.time() - _remote_at) if _remote_at else None,
@@ -876,6 +1230,10 @@ def freeze() -> dict:
     """Copy the buffers, so a dry run can be undone without a trace."""
     return {"pending": {field: Counter(_pending[field]) for field in ("c", "u", "h", "p")},
             "events": list(_pending["e"]),
+            "used": [list(row) for row in _pending.get("q") or []],
+            "index": {key: dict(item) for key, item in _used.items()},
+            "plans": {key: list(item) for key, item in _plans.items()},
+            "groups": dict(_groups),
             "instance_c": Counter(_instance["c"]),
             "instance_u": set(_instance["u"]),
             "instance_h": set(_instance["h"]),
@@ -891,6 +1249,13 @@ def restore(state: dict) -> None:
     for field in ("c", "u", "h", "p"):
         _pending[field] = Counter(state["pending"][field])
     _pending["e"] = list(state["events"])
+    _pending["q"] = [list(row) for row in state.get("used") or []]
+    _used.clear()
+    _used.update({key: dict(item) for key, item in (state.get("index") or {}).items()})
+    _plans.clear()
+    _plans.update({key: list(item) for key, item in (state.get("plans") or {}).items()})
+    _groups.clear()
+    _groups.update(dict(state.get("groups") or {}))
     _instance["c"] = Counter(state["instance_c"])
     _instance["u"] = set(state["instance_u"])
     _instance["h"] = set(state["instance_h"])
@@ -905,6 +1270,10 @@ def reset() -> None:
     _pending["h"] = Counter()
     _pending["p"] = Counter()
     _pending["e"] = []
+    _pending["q"] = []
+    _used.clear()
+    _plans.clear()
+    _groups.clear()
     _instance["c"] = Counter()
     _instance["u"] = set()
     _instance["h"] = set()

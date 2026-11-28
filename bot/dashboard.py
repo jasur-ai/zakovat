@@ -162,6 +162,67 @@ h2{
 }
 @keyframes sh{0%{background-position:100% 50%}100%{background-position:0 50%}}
 .note{color:var(--bad);font-size:12.5px;margin:2px 2px 12px}
+
+/* ---- browser and composer ------------------------------------------ */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 4px}
+.chips button{
+  padding:7px 12px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);
+  color:var(--muted);font-size:12.5px;font-weight:550;white-space:nowrap;transition:all .15s;
+}
+.chips button[aria-pressed="true"]{
+  background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:650;
+}
+.field{margin:2px 0 11px}
+.field i{
+  display:block;font-style:normal;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin-bottom:6px;
+}
+.field input,.field select{
+  width:100%;padding:11px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);
+  background:var(--surface2);color:var(--text);font:inherit;font-size:14.5px;
+}
+.field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.q{display:flex;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line);align-items:flex-start}
+.q:last-child{border-bottom:0}
+.q .body{flex:1 1 auto;min-width:0}
+.q .body b{display:block;font-size:14px;font-weight:550;line-height:1.5;overflow-wrap:anywhere}
+.q .body span{display:block;color:var(--muted);font-size:12.5px;margin-top:4px;overflow-wrap:anywhere}
+.q .side{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.pick{
+  padding:7px 11px;border-radius:9px;background:var(--surface2);border:1px solid var(--line);
+  color:var(--muted);font-size:12px;font-weight:600;white-space:nowrap;
+}
+.pick[aria-pressed="true"]{
+  background:var(--accent);border-color:transparent;color:#fff;
+}
+.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px}
+.pager button{
+  padding:8px 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);
+  color:var(--text);font-size:13px;font-weight:600;
+}
+.pager button[disabled]{opacity:.4}
+.pager span{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.act{
+  position:sticky;bottom:0;margin:14px -16px calc(-14px - env(safe-area-inset-bottom));
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-top:1px solid var(--line);
+}
+.act button{
+  width:100%;padding:14px;border-radius:13px;background:var(--accent);color:#fff;
+  font-size:15px;font-weight:650;box-shadow:var(--shadow);
+}
+.act button[disabled]{opacity:.55}
+.act small{display:block;color:var(--muted);font-size:11.5px;text-align:center;margin-top:8px;line-height:1.5}
+.ok{
+  background:color-mix(in srgb,var(--good) 13%,transparent);border:1px solid transparent;
+  border-radius:var(--radius-sm);padding:11px 12px;font-size:13.5px;line-height:1.6;margin-bottom:12px;
+}
+.crumb{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;margin:14px 2px 8px}
+.crumb button{color:var(--accent);font-size:12.5px;font-weight:600}
+h2 .cnt{color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
 </style>
 </head>
 <body>
@@ -191,6 +252,8 @@ var API = __API__;
 var INIT = __INIT__;
 var TABS = [
   {id:"main", label:"Umumiy"},
+  {id:"questions", label:"Savollar"},
+  {id:"tour", label:"Turnir"},
   {id:"sections", label:"Bo‘limlar"},
   {id:"events", label:"O‘yinlar"},
   {id:"access", label:"Ruxsatlar", owner:true}
@@ -201,6 +264,13 @@ var busy = false;
 var failed = "";
 var themeTries = 0;
 var proofSource = "";
+var BROWSE_API = API.replace(/\/api\/app$/, "/api/browse");
+var TOUR_API = API.replace(/\/api\/app$/, "/api/tour");
+var browse = {turi:"paketlar", bolim:"", paket:0, sahifa:1, qidiruv:"",
+              body:null, busy:false, error:""};
+var plan = {guruh:0, paket:0, sarlavha:"", raund:1, savol_soni:10, sekund:60, jamoa:6,
+            sana:"", vaqt:"19:00", savollar:[], busy:false, error:"", ok:"",
+            plans:null, limits:null, guruhlar:null};
 
 function tg(){
   return (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
@@ -260,6 +330,16 @@ function ago(seconds){
   if (diff < 3600) return Math.floor(diff / 60) + " daqiqa oldin";
   if (diff < 86400) return Math.floor(diff / 3600) + " soat oldin";
   return Math.floor(diff / 86400) + " kun oldin";
+}
+function until(seconds){
+  var n = Number(seconds || 0);
+  if (!n) return "";
+  var diff = Math.floor(n - Date.now() / 1000);
+  if (diff <= 0) return "vaqti keldi";
+  if (diff < 60) return diff + " soniya keyin";
+  if (diff < 3600) return Math.floor(diff / 60) + " daqiqa keyin";
+  if (diff < 86400) return Math.floor(diff / 3600) + " soat keyin";
+  return Math.floor(diff / 86400) + " kun keyin";
 }
 function stamp(value){
   var n = Number(value || 0);
@@ -350,6 +430,83 @@ function load(){
   });
 }
 
+function post(address, payload, done){
+  payload.initData = proof();
+  payload.manba = proofSource || "yo‘q";
+  return fetch(address, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload),
+    credentials: "same-origin"
+  }).then(function(response){
+    return response.json()["catch"](function(){
+      return {ok:false, reason:"Javob o‘qilmadi (kod " + response.status + ")"};
+    });
+  }).then(done)["catch"](function(error){
+    done({ok:false, reason:"Server bilan bog‘lanish bo‘lmadi: " + error.message});
+  });
+}
+
+function loadBrowse(){
+  if (browse.busy) return;
+  browse.busy = true;
+  browse.error = "";
+  post(BROWSE_API, {turi: browse.turi, bolim: browse.bolim, paket: browse.paket,
+                    sahifa: browse.sahifa, qidiruv: browse.qidiruv}, function(body){
+    browse.busy = false;
+    if (body && body.ok){
+      browse.body = body;
+      browse.sahifa = Number(body.sahifa || browse.sahifa);
+      if (body.ishlatilgan_indeks) usedIndex = body.ishlatilgan_indeks;
+      haptic("notify", "success");
+    }else{
+      browse.error = (body && body.reason) || "Ro‘yxat olinmadi.";
+      haptic("notify", "error");
+    }
+    paint();
+  });
+}
+
+function sendTour(extra, quiet){
+  if (plan.busy) return;
+  plan.busy = true;
+  plan.error = "";
+  if (!quiet) plan.ok = "";
+  var payload = {
+    amal: (extra && extra.amal) || "reja",
+    guruh: plan.guruh, paket: plan.paket, sarlavha: plan.sarlavha,
+    raund: plan.raund, savol_soni: plan.savol_soni, sekund: plan.sekund,
+    jamoa: plan.jamoa, savollar: plan.savollar,
+    vaqt: plan.sana ? (plan.sana + "T" + (plan.vaqt || "19:00")) : ""
+  };
+  if (extra){
+    for (var key in extra) if (extra.hasOwnProperty(key)) payload[key] = extra[key];
+  }
+  post(TOUR_API, payload, function(body){
+    plan.busy = false;
+    if (body && body.ok){
+      plan.plans = body.rejalar || plan.plans;
+      if (body.guruhlar) plan.guruhlar = body.guruhlar;
+      if (body.chegaralar) plan.limits = body.chegaralar;
+      if (body.amal === "shakllantirish"){
+        plan.ok = body.xabar || "Turnir guruhga chiqarildi.";
+        plan.guruh = 0;
+        plan.savollar = [];
+        load();                       // the counters and the plan list have moved
+      }else if (body.xabar){
+        plan.ok = body.xabar;
+      }
+      haptic("notify", "success");
+    }else{
+      plan.error = (body && body.reason) || "Amal bajarilmadi.";
+      haptic("notify", "error");
+    }
+    paint();
+  });
+}
+
+var usedIndex = null;
+
 /* ---- pieces --------------------------------------------------------- */
 function kpi(label, value, note){
   return '<div class="kpi"><i>' + esc(label) + '</i><b>' + esc(value) + '</b>' +
@@ -363,6 +520,33 @@ function row(index, title, sub, value, note){
     esc(title) + '</b>' + (sub ? '<span>' + esc(sub) + '</span>' : '') +
     '</div><div class="v"><b>' + esc(value) + '</b>' +
     (note ? '<span>' + esc(note) + '</span>' : '') + '</div></div>';
+}
+function chips(items, current, act){
+  var html = '<div class="chips">';
+  items.forEach(function(item){
+    var on = String(item.value) === String(current);
+    html += '<button data-act="' + act + '" data-val="' + esc(item.value) +
+      '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(item.label) + '</button>';
+  });
+  return html + '</div>';
+}
+function pager(page, pages, act){
+  if (pages <= 1) return "";
+  return '<div class="pager">' +
+    '<button data-act="' + act + '" data-val="1"' + (page <= 1 ? " disabled" : "") + '>Boshi</button>' +
+    '<button data-act="' + act + '" data-val="' + (page - 1) + '"' +
+      (page <= 1 ? " disabled" : "") + '>‹ Orqaga</button>' +
+    '<span>' + page + " / " + pages + '</span>' +
+    '<button data-act="' + act + '" data-val="' + (page + 1) + '"' +
+      (page >= pages ? " disabled" : "") + '>Oldinga ›</button>' +
+    '<button data-act="' + act + '" data-val="' + pages + '"' +
+      (page >= pages ? " disabled" : "") + '>Oxiri</button>' +
+    '</div>';
+}
+function todayLocal(){
+  var now = new Date();
+  return now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2) + "-" +
+    ("0" + now.getDate()).slice(-2);
 }
 function fact(title, sub, value, kind){
   return '<div class="row"><div class="t"><b>' + esc(title) + '</b>' +
@@ -463,6 +647,255 @@ function viewSections(){
       '<div class="bar"><i style="width:' + Math.max(1.5, Math.min(100, share)) + '%"></i></div>' +
       '</div>';
   });
+  return html;
+}
+
+function viewQuestions(){
+  var html = "";
+  var body = browse.body;
+  var used = (data || {}).used || {};
+  html += '<h2>Savollar bazasi <span class="cnt">· ' +
+    num(((data || {}).archive || {}).questions || 0) +
+    ' savol · indeksda ' + num(used.count || 0) + " ishlatilgan</span></h2>";
+  if (used.count){
+    html += '<div class="card" style="padding:12px 14px">' +
+      '<div class="row" style="padding:0;border:0"><div class="t"><b>Ishlatilgan savollar indeksi</b>' +
+      '<span>' + num(used.count) + " savol · " + num(used.packages) + " paket · jami " +
+      num(used.uses) + " marta · chegara " + num(used.limit) + '</span></div>' +
+      '<div class="v">' + pill(used.count >= used.limit ? "to‘lgan" : "yozilmoqda",
+                               used.count >= used.limit ? "warn" : "good") + '</div></div>';
+    if ((used.recent || []).length){
+      html += '<div style="margin-top:9px">';
+      (used.recent || []).slice(0, 5).forEach(function(item){
+        html += '<div class="row" style="padding:7px 0"><div class="n">' +
+          esc(String(item.id).slice(-4)) + '</div><div class="t"><b>' + esc("savol " + item.id) +
+          '</b><span>' + esc(ago(item.t)) +
+          (item.p ? " · paket " + esc(item.p) : "") + (item.m ? " · " + esc(item.m) : "") +
+          (Number(item.n || 1) > 1 ? " · " + esc(item.n) + "-marta" : "") +
+          '</span></div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  if (browse.turi === "savollar" && body && body.paket){
+    var pack = body.paket;
+    html += '<div class="crumb"><button data-act="backpkgs">‹ Paketlar</button>' +
+      '<span>' + esc(pack.bolim || "") + '</span></div>';
+    html += '<div class="card">' +
+      '<div class="row" style="padding:0;border:0"><div class="t"><b>' + esc(pack.title) +
+      '</b><span>id ' + esc(pack.id) + " · " + num(pack.questions) + " savol · " +
+      esc(pack.manba === "turnirlar" ? "turnirlar.uz bazasi" : "zakovatklubi.uz bazasi") +
+      '</span></div><div class="v">' +
+      '<button class="pick" data-act="choosepkg" data-val="' + esc(pack.id) + '"' +
+      ' aria-pressed="' + (Number(plan.paket) === Number(pack.id) ? "true" : "false") + '">' +
+      (Number(plan.paket) === Number(pack.id) ? "Turnirda" : "Turnirga") + '</button></div></div>';
+    if (body.jami){
+      html += '<div class="field" style="margin:12px 0 0"><i>Savollar ichidan qidirish</i>' +
+        '<input id="browseQ" value="' + esc(body.qidiruv || "") + '" placeholder="so‘z yoki id"></div>';
+    }
+    html += '</div>';
+    html += '<h2>' + num(body.jami) + ' savol <span class="cnt">· ' + num(body.ishlatilgan || 0) +
+      " tasi ishlatilgan · sahifa " + body.sahifa + "/" + body.sahifalar + "</span></h2>";
+    if (browse.error) html += '<div class="note">' + esc(browse.error) + '</div>';
+    html += '<div class="card">';
+    (body.savollar || []).forEach(function(item){
+      var chosen = plan.savollar.indexOf(Number(item.id)) >= 0;
+      html += '<div class="q"><div class="body"><b>' + esc(item.tartib || item.id) + ". " +
+        esc(item.matn || "(matn yo‘q)") + '</b>' +
+        '<span>Javob: ' + esc(item.javob || "—") +
+        (item.rasm ? " · rasmi bor" : "") + '</span></div>' +
+        '<div class="side">' +
+        (item.used ? pill("ishlatildi", "warn") : "") +
+        '<button class="pick" data-act="pick" data-val="' + esc(item.id) +
+        '" aria-pressed="' + (chosen ? "true" : "false") + '">' +
+        (chosen ? "Olingan" : "Tanlovga") + '</button>' +
+        '</div></div>';
+    });
+    if (!(body.savollar || []).length){
+      html += '<div class="empty">Bu sahifada savol yo‘q.</div>';
+    }
+    html += '</div>';
+    html += pager(Number(body.sahifa || 1), Number(body.sahifalar || 1), "page");
+    html += '<div class="foot">Tanlovga olingan savollar «Turnir» bo‘limida ko‘rinadi va ' +
+      'shu turnirning savol to‘plamini tashkil qiladi. Bo‘sh qoldirilsa, bot paketdan ' +
+      'o‘zi aralashtirib oladi.</div>';
+    return html;
+  }
+
+  html += '<div class="card"><div class="field" style="margin:0"><i>Paketlar ichidan qidirish</i>' +
+    '<input id="browseQ" value="' + esc(browse.qidiruv || "") + '" placeholder="liga, tur, sana yoki id"></div></div>';
+  var sections = (data || {}).sections || [];
+  if (sections.length){
+    html += '<h2>Qaysi turkumdan <span class="cnt">· ' + sections.length + " bo‘lim</span></h2>";
+    html += chips([{value:"", label:"Hammasi"}].concat(sections.map(function(item){
+      return {value:item.name, label:item.name + " (" + item.packages + ")"};
+    })), browse.bolim, "section");
+  }
+  html += '<h2>Paketlar <span class="cnt">' +
+    (body ? "· " + num(body.jami) + " ta · sahifa " + body.sahifa + "/" + body.sahifalar : "") +
+    "</span></h2>";
+  if (browse.error) html += '<div class="note">' + esc(browse.error) + '</div>';
+  if (browse.busy && !body){
+    html += '<div class="card">' + '<div class="sk" style="width:80%"></div>'.repeat(4) + '</div>';
+    return html;
+  }
+  html += '<div class="card">';
+  ((body && body.paketlar) || []).forEach(function(item){
+    var chosen = Number(plan.paket) === Number(item.id);
+    html += '<div class="row"><div class="n">' + esc(String(item.id).slice(-4)) + '</div>' +
+      '<div class="t"><b>' + esc(item.title) + '</b><span>id ' + esc(item.id) + " · " +
+      num(item.questions) + " savol · " + esc(item.bolim || "") +
+      (item.manba === "turnirlar" ? " · turnirlar.uz" : "") +
+      (item.ishlatilgan ? " · " + esc(item.ishlatilgan) + " savoli ishlatilgan" : "") +
+      '</span></div><div class="v">' +
+      (chosen ? pill("tanlangan", "good") : "") +
+      '<button class="pick" data-act="openpkg" data-val="' + esc(item.id) + '">Ochish ›</button>' +
+      '</div></div>';
+  });
+  if (!body && !browse.error) html += '<div class="empty">Yuklanmoqda…</div>';
+  else if (!((body && body.paketlar) || []).length){
+    html += '<div class="empty">Bu bo‘limda paket topilmadi.</div>';
+  }
+  html += '</div>';
+  html += pager(Number((body || {}).sahifa || 1), Number((body || {}).sahifalar || 1), "page");
+  return html;
+}
+
+function viewTour(){
+  var html = "";
+  var limits = plan.limits || {};
+  var groups = plan.guruhlar || (data || {}).groups || [];
+  var rounds = limits.raund || [1, 2, 3, 5, 10];
+  var perRound = limits.savol || [5, 10, 15, 25, 0];
+  var timers = limits.sekund || [30, 45, 60, 90, 120];
+  var teamRange = limits.jamoa || [3, 12];
+
+  html += '<h2>Turnir shakllantirish <span class="cnt">· panel ichida</span></h2>';
+  if (plan.ok) html += '<div class="ok">' + esc(plan.ok) + '</div>';
+  if (plan.error) html += '<div class="note">' + esc(plan.error) + '</div>';
+
+  /* --- where ------------------------------------------------------- */
+  html += '<div class="card"><div class="field" style="margin:0"><i>Qaysi guruhga</i>';
+  if (groups.length){
+    html += '</div><div class="chips">';
+    groups.forEach(function(item){
+      var on = Number(plan.guruh) === Number(item.id);
+      html += '<button data-act="group" data-val="' + esc(item.id) + '" aria-pressed="' +
+        (on ? "true" : "false") + '">' + esc(item.title || ("guruh " + item.id)) + '</button>';
+    });
+    html += '</div>';
+    html += '<div class="field" style="margin:10px 0 0"><i>Yoki guruh id si</i>' +
+      '<input data-field="guruh" inputmode="numeric" value="' +
+      (plan.guruh ? esc(plan.guruh) : "") + '" placeholder="-1001234567890"></div>';
+  }else{
+    html += '<input data-field="guruh" inputmode="numeric" value="' +
+      (plan.guruh ? esc(plan.guruh) : "") + '" placeholder="-1001234567890"></div>';
+    html += '<div class="empty" style="margin-top:9px">Bot hali biror guruhni eslab qolmagan. ' +
+      'Guruhda bir marta <b>/turnir</b> yoki <b>/solo</b> buyrug‘i ishlansa, guruh shu ' +
+      'ro‘yxatda paydo bo‘ladi. Id ni qo‘lda ham yozsa bo‘ladi.</div>';
+  }
+  html += '</div>';
+
+  /* --- what -------------------------------------------------------- */
+  html += '<div class="card">';
+  html += '<div class="field"><i>Qaysi paketdan</i>' +
+    '<input data-field="paket" inputmode="numeric" value="' + (plan.paket ? esc(plan.paket) : "") +
+    '" placeholder="paket id si — «Savollar» bo‘limidan tanlang"></div>';
+  html += '<div class="field"><i>Turnir sarlavhasi</i>' +
+    '<input data-field="sarlavha" maxlength="40" value="' + esc(plan.sarlavha || "") +
+    '" placeholder="bo‘sh qoldirilsa paket nomi oladi"></div>';
+  html += '<i style="display:block;font-style:normal;font-size:11.5px;letter-spacing:.05em;' +
+    'text-transform:uppercase;color:var(--muted);font-weight:600;margin:4px 0 6px">Necha tur (raund)</i>';
+  html += chips(rounds.map(function(value){ return {value:value, label:value + " raund"}; }),
+                plan.raund, "chip:raund");
+  html += '<i style="display:block;font-style:normal;font-size:11.5px;letter-spacing:.05em;' +
+    'text-transform:uppercase;color:var(--muted);font-weight:600;margin:12px 0 6px">' +
+    'Har turda nechta savol</i>';
+  html += chips(perRound.map(function(value){
+    return {value:value, label:value === 0 ? "hammasi" : value + " savol"};
+  }), plan.savol_soni, "chip:savol_soni");
+  html += '<i style="display:block;font-style:normal;font-size:11.5px;letter-spacing:.05em;' +
+    'text-transform:uppercase;color:var(--muted);font-weight:600;margin:12px 0 6px">' +
+    'Har savolga vaqt</i>';
+  html += chips(timers.map(function(value){ return {value:value, label:value + " s"}; }),
+                plan.sekund, "chip:sekund");
+  html += '<i style="display:block;font-style:normal;font-size:11.5px;letter-spacing:.05em;' +
+    'text-transform:uppercase;color:var(--muted);font-weight:600;margin:12px 0 6px">' +
+    'Nechta jamoa o‘ynashi mumkin</i>';
+  html += chips([teamRange[0], 4, 6, 8, 10, teamRange[1]].filter(function(value, index, all){
+    return all.indexOf(value) === index;
+  }).map(function(value){ return {value:value, label:value + " jamoa"}; }), plan.jamoa, "chip:jamoa");
+  html += '</div>';
+
+  /* --- which questions --------------------------------------------- */
+  html += '<div class="card">';
+  html += '<div class="row" style="padding:0 0 9px;border:0"><div class="t">' +
+    '<b>Qaysi savollar</b><span>' +
+    (plan.savollar.length ? plan.savollar.length + " ta tanlangan — faqat shular o‘ynaladi"
+                          : "tanlanmagan — bot paketdan o‘zi aralashtiradi") +
+    '</span></div>' +
+    (plan.savollar.length ? '<div class="v"><button class="pick" data-act="clearpick">' +
+      "Tozalash</button></div>" : "") + '</div>';
+  if (plan.savollar.length){
+    html += '<div class="chips">';
+    plan.savollar.forEach(function(id){
+      html += '<button data-act="pick" data-val="' + esc(id) + '" aria-pressed="true">' +
+        esc(id) + " \u00d7</button>";
+    });
+    html += '</div>';
+  }
+  html += '<div class="empty" style="margin-top:9px">Aniq savollarni tanlash uchun ' +
+    '«Savollar» bo‘limini oching, paketni tanlang va kerakli savollardagi ' +
+    '<b>Tanlovga</b> tugmasini bosing.</div>';
+  html += '</div>';
+
+  /* --- when -------------------------------------------------------- */
+  html += '<div class="card">';
+  html += '<div class="field"><i>Qaysi vaqtda</i></div>';
+  html += '<div class="two">' +
+    '<div class="field" style="margin:0"><i>Sana</i>' +
+    '<input data-field="sana" type="date" value="' + esc(plan.sana || "") + '"></div>' +
+    '<div class="field" style="margin:0"><i>Soat</i>' +
+    '<input data-field="vaqt" type="time" value="' + esc(plan.vaqt || "19:00") + '"></div>' +
+    '</div>';
+  html += '<div class="chips" style="margin-top:11px">' +
+    '<button data-act="quick" data-val="+30">30 daqiqadan so‘ng</button>' +
+    '<button data-act="quick" data-val="+60">1 soatdan so‘ng</button>' +
+    '<button data-act="quick" data-val="today19">Bugun 19:00</button>' +
+    '<button data-act="quick" data-val="tomorrow10">Ertaga 10:00</button>' +
+    '<button data-act="quick" data-val="">Rejasiz (hozir)</button>' +
+    '</div>';
+  html += '<div class="empty" style="margin-top:9px">Belgilangan paytda bot guruhga ' +
+    '<b>eslatma</b> va tayyor <b>«Boshlash»</b> tugmasini yuboradi. O‘yin o‘zi boshlanmaydi — ' +
+    'kurator yoki admin tugmani bosadi. Boshlashdan oldin kamida ' +
+    '<b>' + esc((limits.jamoa || [3])[0]) + ' jamoa</b> va har biridan <b>2 kishi</b> ' +
+    '«Men tayyorman» degan bo‘lishi kerak.</div>';
+  html += '</div>';
+
+  /* --- plans ------------------------------------------------------- */
+  var plans = plan.plans || (data || {}).plans || [];
+  html += '<h2>Rejadagi turnirlar <span class="cnt">· ' + plans.length + " ta</span></h2>";
+  html += '<div class="card">';
+  if (!plans.length){
+    html += '<div class="empty">Hozircha reja yo‘q.</div>';
+  }
+  plans.forEach(function(item){
+    var left = Number(item.left || 0);
+    html += '<div class="row"><div class="t"><b>' + esc(item.title || "Turnir") + '</b>' +
+      '<span>guruh ' + esc(item.chat) + " · karta " + esc(item.message) + " · " +
+      esc(stamp(item.start)) + '</span></div>' +
+      '<div class="v">' + pill(until(item.start), left > 0 ? "" : "good") +
+      '<span><button class="pick" data-act="removeplan" data-val="' + esc(item.chat) +
+      '" data-msg="' + esc(item.message) + '">Bekor</button></span></div></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="act"><button data-act="compose"' + (plan.busy ? " disabled" : "") + '>' +
+    (plan.busy ? "Yuborilmoqda…" : "Turnirni guruhga chiqarish") + '</button>' +
+    '<small>Karta guruhga yuboriladi va mahkamlanadi (pin). Savollar va e’lon qilingan ' +
+    'javoblar guruhdagi hammaga ko‘rinadi.</small></div>';
   return html;
 }
 
@@ -567,7 +1000,13 @@ function paint(){
     });
   });
 
-  if (tab === "sections") view.innerHTML = viewSections();
+  if (tab === "questions"){
+    view.innerHTML = viewQuestions();
+    if (!browse.body && !browse.busy) loadBrowse();
+  }else if (tab === "tour"){
+    view.innerHTML = viewTour();
+    if (!plan.limits) sendTour({amal:"reja"}, true);
+  }else if (tab === "sections") view.innerHTML = viewSections();
   else if (tab === "events") view.innerHTML = viewEvents();
   else if (tab === "access") view.innerHTML = viewAccess();
   else view.innerHTML = viewMain();
@@ -575,6 +1014,128 @@ function paint(){
   if (failed){
     view.insertAdjacentHTML("beforeend", '<div class="note">' + esc(failed) + '</div>');
   }
+}
+
+/* ---- actions -------------------------------------------------------- */
+function act(name, node){
+  var value = node.getAttribute("data-val") || "";
+  if (name === "section"){
+    browse.bolim = (browse.bolim === value ? "" : value);
+    browse.turi = "paketlar";
+    browse.sahifa = 1;
+    browse.body = null;
+    haptic("impact", "light");
+    loadBrowse();
+  }else if (name === "page"){
+    var page = Number(value || 1);
+    if (page < 1 || page === browse.sahifa) return;
+    browse.sahifa = page;
+    browse.body = null;
+    loadBrowse();
+  }else if (name === "openpkg"){
+    browse.paket = Number(value);
+    browse.turi = "savollar";
+    browse.sahifa = 1;
+    browse.body = null;
+    haptic("impact", "light");
+    loadBrowse();
+  }else if (name === "backpkgs"){
+    browse.turi = "paketlar";
+    browse.paket = 0;
+    browse.sahifa = 1;
+    browse.body = null;
+    loadBrowse();
+  }else if (name === "pick"){
+    var id = Number(value);
+    var at = plan.savollar.indexOf(id);
+    if (at >= 0) plan.savollar.splice(at, 1); else plan.savollar.push(id);
+    haptic("impact", "light");
+    paint();
+  }else if (name === "clearpick"){
+    plan.savollar = [];
+    paint();
+  }else if (name === "choosepkg"){
+    plan.paket = Number(value);
+    var pack = browsePackage(Number(value));
+    if (!plan.sarlavha && pack.title) plan.sarlavha = String(pack.title).slice(0, 40);
+    plan.ok = "Paket turnirga tanlandi: " + (pack.title || value);
+    haptic("notify", "success");
+    paint();
+  }else if (name === "group"){
+    plan.guruh = Number(value);
+    paint();
+  }else if (name === "removeplan"){
+    sendTour({amal:"bekor", guruh:Number(value), xabar:Number(node.getAttribute("data-msg") || 0)});
+  }else if (name === "compose"){
+    sendTour({amal:"shakllantirish"});
+  }else if (name === "quick"){
+    var now = new Date();
+    if (value === ""){ plan.sana = ""; plan.vaqt = "19:00"; }
+    else if (value.charAt(0) === "+"){
+      now.setTime(now.getTime() + Number(value.slice(1)) * 60000);
+      plan.sana = localDate(now);
+      plan.vaqt = localTime(now);
+    }else if (value === "today19"){ plan.sana = localDate(now); plan.vaqt = "19:00"; }
+    else if (value === "tomorrow10"){
+      now.setTime(now.getTime() + 86400000);
+      plan.sana = localDate(now); plan.vaqt = "10:00";
+    }
+    paint();
+  }else if (name.indexOf("chip:") === 0){
+    var field = name.slice(5);
+    plan[field] = Number(value);
+    haptic("impact", "light");
+    paint();
+  }else{
+    return;
+  }
+}
+
+function browsePackage(id){
+  /* The chosen package is described by the question view or by the list view. */
+  var body = browse.body || {};
+  if (body.paket && Number(body.paket.id) === Number(id)) return body.paket;
+  var rows = body.paketlar || [];
+  for (var index = 0; index < rows.length; index++){
+    if (Number(rows[index].id) === Number(id)) return rows[index];
+  }
+  return {};
+}
+
+function localDate(date){
+  return date.getFullYear() + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" +
+    ("0" + date.getDate()).slice(-2);
+}
+function localTime(date){
+  return ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
+}
+
+function wireView(){
+  var view = document.getElementById("view");
+  view.addEventListener("click", function(event){
+    var node = event.target;
+    while (node && node !== view && !(node.getAttribute && node.getAttribute("data-act")))
+      node = node.parentNode;
+    if (!node || node === view) return;
+    act(node.getAttribute("data-act"), node);
+  });
+  view.addEventListener("change", function(event){
+    var node = event.target;
+    if (!node || !node.getAttribute) return;
+    var field = node.getAttribute("data-field");
+    if (field){
+      plan[field] = (field === "guruh" || field === "paket")
+        ? Number(String(node.value || "").trim() || 0) : String(node.value || "");
+      plan.ok = "";
+      return;
+    }
+    if (node.id === "browseQ"){
+      browse.qidiruv = String(node.value || "").trim();
+      browse.sahifa = 1;
+      browse.body = null;
+      loadBrowse();
+    }
+  });
 }
 
 /* ---- boot ----------------------------------------------------------- */
@@ -598,6 +1159,7 @@ function boot(){
     haptic("impact", "medium");
     load();
   });
+  wireView();
   document.addEventListener("visibilitychange", function(){
     if (!document.hidden){ applyTheme(); if (data) load(); }
   });
