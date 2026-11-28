@@ -626,6 +626,46 @@ class RouteTests(unittest.TestCase):
         self.assertIn("Zakovat Agent", answer.text)
         self.assertIn("Mini App paneli", answer.text)    # but the page tells visitors about it
 
+    def test_the_status_page_answers_and_names_both_bases(self):
+        # /api/status is a route handler: it has to reach the report itself.
+        with mock.patch.dict(os.environ, {"BOT_TOKEN": ""}):
+            answer = self.client.get("/api/status")
+        self.assertEqual(answer.status_code, 200)
+        self.assertIn("Arxiv manifesti:", answer.text)
+        self.assertIn("Manba zakovatklubi:", answer.text)
+
+    def test_the_diagnostic_page_answers_without_a_probe(self):
+        # It used to read `request.query_params` inside a function that was
+        # never given a request: /api/index answered 500 in production while
+        # /health stayed green, because every probe returned before this line.
+        packages, questions = self.archive.counts()
+        with mock.patch.dict(os.environ, {"BOT_TOKEN": ""}):
+            answer = self.client.get("/api/index?cb=1")
+        self.assertEqual(answer.status_code, 200)
+        self.assertIn(f"Arxiv manifesti: {packages} paket, {questions} savol", answer.text)
+        self.assertIn("Katta baza:", answer.text)
+        self.assertNotIn("Shard tekshiruvi", answer.text)   # only ?shardprobe=1 fetches
+
+    def test_the_diagnostic_page_keeps_working_without_a_remote_base(self):
+        archive = Archive("data/all", turnirlar="/nonexistent-turnirlar")
+        with mock.patch.object(webhook, "ARCHIVE", archive), \
+                mock.patch.dict(os.environ, {"BOT_TOKEN": ""}):
+            answer = self.client.get("/api/index?cb=2")
+        self.assertEqual(answer.status_code, 200)
+        self.assertIn("Arxiv manifesti:", answer.text)
+        self.assertNotIn("Manba turnirlar:", answer.text)
+        self.assertNotIn("Katta baza:", answer.text)
+
+    def test_every_get_route_answers_without_a_server_error(self):
+        # A handler that raises answers 500, and nothing else notices: the
+        # diagnostics page did exactly that once while /health stayed green.
+        with mock.patch.dict(os.environ, {"BOT_TOKEN": ""}):
+            for path in ("/", "/health", "/api/now", "/app", "/api/status",
+                         "/api/index?cb=3", "/api/index?tickprobe=1"):
+                answer = self.client.get(path)
+                self.assertLess(answer.status_code, 500,
+                                f"{path} → {answer.status_code}: {answer.text[:120]}")
+
     def test_the_diagnostic_proves_the_gate_and_leaves_no_trace(self):
         before = asyncio.run(stats.snapshot(self.archive))
         answer = self.client.get("/api/index?appprobe=1&cb=7")
