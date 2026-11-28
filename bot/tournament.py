@@ -44,6 +44,12 @@ PHASE_DONE = "done"
 
 STATE_PREFIX = "T|"    # the strip body of a tournament, not of an ordinary game
 
+# A button can ask for one of three things; the next plain message answers it.
+PROMPT_TEAM = "jamoa"          # jamoa nomi
+PROMPT_SEARCH = "qidiruv"      # savol tanlash oynasidagi qidiruv so‘zi
+PROMPT_PACKAGE = "paket"       # turnirni boshqa paketga o‘tkazish
+PROMPT_KINDS = (PROMPT_TEAM, PROMPT_SEARCH, PROMPT_PACKAGE)
+
 
 @dataclass
 class Member:
@@ -180,7 +186,7 @@ class Tournament:
     curators: list[int] = field(default_factory=list)   # admin tayinlagan boshqaruvchilar
     page: int = 1                       # savol tanlash oynasidagi sahifa
     query: str = ""                     # tanlash oynasidagi qidiruv so‘zi
-    naming: int = 0                     # jamoa nomini yozishi kutilayotgan a’zo
+    pending: str = ""                   # "qidiruv|123" — kutilayotgan javob va kimdan
     directory: list[list] = field(default_factory=list)   # [[id, ism, username], …]
     hinted: list[int] = field(default_factory=list)       # javob tartibi eslatilganlar
     open_mode: bool = False          # javoblar guruhda ko‘rinadi (o‘chirish huquqi yo‘q)
@@ -194,6 +200,32 @@ class Tournament:
     start_at: int = 0                # rejadagi boshlanish vaqti (0 = hoziroq mumkin)
     max_teams: int = MAX_TEAMS       # nechta jamoa o‘ynashi mumkin
     announced: int = 0               # eslatma xabari yuborilgan payt
+
+    # ----------------------------------------------------------------- prompts
+    def ask(self, kind: str, user_id: int) -> None:
+        """Wait for one person's next plain message: a button asked for it.
+
+        Three buttons used to print an instruction and wait for a command to be
+        typed. Now the button asks and the group message answers, so nobody has
+        to remember ``/jamoa``, ``/tanlov`` or ``/turnir`` mid-flow. The slot is
+        one person wide and holds no text of its own — whatever they type is the
+        answer, and pressing any other button clears the question.
+        """
+        self.pending = f"{kind}|{int(user_id or 0)}"[:24]
+
+    def pending_of(self) -> tuple[str, int]:
+        """``("qidiruv", 123)`` when a question is open, ``("", 0)`` otherwise."""
+        kind, _, who = str(self.pending or "").partition("|")
+        if kind not in PROMPT_KINDS:
+            return ("", 0)
+        try:
+            number = int(who)
+        except (TypeError, ValueError):
+            return ("", 0)
+        return (kind, number) if number else ("", 0)
+
+    def clear_pending(self) -> None:
+        self.pending = ""
 
     # ------------------------------------------------------------------- teams
     def team(self, name: str) -> Team | None:
@@ -577,7 +609,7 @@ class Tournament:
             "k": int(self.control_message_id or 0), "o": 1 if self.open_mode else 0,
             "x": 1 if self.can_delete else 0, "h": self.history[-20:], "a": int(self.asked),
             "cd": int(self.card_message_id or 0), "cu": [int(x) for x in self.curators][:20],
-            "pg": int(self.page), "qs": self.query[:24], "nm": int(self.naming),
+            "pg": int(self.page), "qs": self.query[:24], "pd": self.pending[:24],
             "dr": [list(row) for row in self.directory][-DIRECTORY_LIMIT:],
             "hn": [int(x) for x in self.hinted][-DIRECTORY_LIMIT:],
             "rv": int(self.rev), "pn": 1 if self.can_pin else 0,
@@ -634,7 +666,7 @@ class Tournament:
         tour.curators = [int(item) for item in (data.get("cu") or [])][:20]
         tour.page = max(1, int(data.get("pg") or 1))
         tour.query = str(data.get("qs") or "")[:24]
-        tour.naming = int(data.get("nm") or 0)
+        tour.pending = str(data.get("pd") or "")[:24]
         tour.directory = [[int(row[0]), str(row[1] or ""), str(row[2] or "")]
                           for row in (data.get("dr") or []) if isinstance(row, (list, tuple))
                           and len(row) >= 1][:DIRECTORY_LIMIT]

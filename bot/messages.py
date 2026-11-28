@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Sequence
 
 from . import schedule as sched
+from . import tournament as tn
 
 BAR_WIDTH = 20
 IDLE_HINT = 3
@@ -391,6 +392,11 @@ EVENT_LABELS = {
     "revoke": "ruxsat bekor qilindi",
     "probe": "saqlash tekshiruvi",
     "command": "buyruq",
+    "tour_composed": "turnir rejalashtirildi",
+    "tour_reminder": "turnir eslatmasi",
+    "tour_package_swapped": "paket almashtirildi",
+    "tour_plan_dropped": "rejadan chiqarildi",
+    "tour_cancelled": "turnir rejasi bekor qilindi",
 }
 
 
@@ -991,6 +997,56 @@ def tour_search_empty(query: str, package_title: str) -> str:
             f"({esc(package_title or 'paket')}). Boshqa so‘z bilan urinib ko‘ring.")
 
 
+def tour_prompt_ask(kind: str) -> str:
+    """What a button says when it hands its question over to the group chat.
+
+    The next plain message the same person writes is the answer, so the text says
+    exactly that — no command to remember, and no surprise about who is asked.
+    """
+    if kind == tn.PROMPT_PACKAGE:
+        return ("Paket raqamini yoki nomidagi so‘zni shu guruhga yozing — turnir o‘sha "
+                "paketga o‘tadi. Eski tanlov va aralashtirish bekor bo‘ladi. So‘z paket "
+                "nomida haqiqatan uchrasa qabul qilinadi: tasodifiy gap bazani "
+                "ko‘chirmaydi, raqam esa har doim aniq.")
+    if kind == tn.PROMPT_SEARCH:
+        return ("Qidiruv so‘zini shu guruhga yozing — savollar ro‘yxati shu so‘z bilan "
+                "yangilanadi.")
+    return "Jamoangiz nomini shu guruhga yozing — bot uni darhol oladi."
+
+
+def tour_package_swapped(title: str, package_id: int, questions: int, name: str,
+                         previous: int = 0) -> str:
+    """The swap, out loud — including the number that puts the old bank back.
+
+    The answer is whatever the curator typed, so a word that happens to be a
+    package name really does move the whole bank and clear the hand-picked
+    selection. Naming the previous package in the same message makes that one
+    message away from being undone: press the button again, type the number.
+    """
+    lines = [
+        "<b>PAKET ALMASHTIRILDI</b>",
+        f"• Yangi paket: <b>{esc(title or package_id)}</b> "
+        f"(id <code>{int(package_id)}</code>, {int(questions)} savol)",
+        f"• Almashtirdi: {esc(name)}",
+        "• Eski tanlov bekor: savollar yangi paketdan, yangi aralashtirish bilan olinadi.",
+    ]
+    if int(previous) and int(previous) != int(package_id):
+        lines.append(f"• Qaytarish: «Paketni almashtirish» va <code>{int(previous)}</code>")
+    lines.append("• Davomi: <code>/tanlov</code> yoki karta tugmalari.")
+    return "\n".join(lines)
+
+
+def tour_package_unknown(text: str) -> str:
+    return (f"«{esc(text)}» bo‘yicha paket topilmadi. Raqam yozing (masalan <code>959</code>) "
+            "yoki paket nomidagi so‘zni. Savol almashtirishni bekor qilish uchun istalgan "
+            "boshqa tugmani bosing.")
+
+
+def tour_package_locked() -> str:
+    return ("O‘yin boshlangan — paketni almashtirib bo‘lmaydi. Avval <code>/turnirstop</code> "
+            "bilan to‘xtating, keyin yangi turnir oching.")
+
+
 def tour_question_card(question: dict, show_answer: bool, used: bool = False,
                        number: int = 0, total: int = 0) -> str:
     """One question, as everybody in the group may see it.
@@ -1182,10 +1238,11 @@ def tour_spec_help() -> str:
         "<code>/turnir 959 vaqt=19:00 jamoa=6 tur=3 savol=10 sekund=60 sarlavha=Kuzgi liga</code>",
         "",
         "• <code>vaqt=</code> — 19:00 · ertaga 10:30 · 28.11 19:00 · +45 (daqiqa)",
+        "  bir necha so‘z ham bo‘ladi: <code>vaqt=ertaga 19:00</code>",
         "• <code>jamoa=</code> — nechta jamoa o‘ynashi mumkin (3–12)",
         "• <code>tur=</code> — raundlar soni · <code>savol=</code> — har raundda nechta savol",
         "• <code>sekund=</code> — har savolga vaqt (30–120)",
-        "• <code>sarlavha=</code> — turnir nomi",
+        "• <code>sarlavha=</code> — turnir nomi (bir necha so‘z: <code>sarlavha=Kuzgi liga</code>)",
         "• Paket o‘rniga matn ham yozsa bo‘ladi: <code>/turnir talabalar ligasi vaqt=ertaga 18:00</code>",
         "",
         "Belgilangan vaqtda bot shu guruhga eslatma va «Boshlash» tugmasini yuboradi.",

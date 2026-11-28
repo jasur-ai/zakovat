@@ -850,6 +850,60 @@ def _resolve_package(context: ContextTypes.DEFAULT_TYPE, argument: str):
     return (int(found[0]["id"]), found[0]["title"]) if found else None
 
 
+APOSTROPHE_MARKS = "‘’ʼʻ′`´\u02bc"
+
+
+def _title_words(title: str) -> list[str]:
+    """The words of a package title, with every apostrophe shape made one.
+
+    Uzbek writes ``o‘`` and people type ``o'``; both must find the same word, and
+    Cyrillic titles (``Девятый тур``) must keep their words too.
+    """
+    text = str(title or "").casefold()
+    for mark in APOSTROPHE_MARKS:
+        text = text.replace(mark, "'")
+    return [word for word in re.split(r"[^\w']+", text, flags=re.UNICODE) if word]
+
+
+MIN_SWAP_WORD = 4       # a package choice has to be a word, not a "ha"
+
+
+def _resolve_package_strict(context: ContextTypes.DEFAULT_TYPE, argument: str):
+    """A package for the swap prompt: an id, or words its title really holds.
+
+    ``_resolve_package`` is deliberately loose — it powers ``/solo olimpiada``,
+    where a good guess is a kindness, and the archive search is a plain substring
+    match, so a single letter finds something ("a" lands on a championship, "9" on
+    the ninth tour of a student league). Moving the whole bank a group is about to
+    play is not a guess, so three rules decide: every word is at least two
+    letters, at least one is a real word (``MIN_SWAP_WORD``), and each one starts a
+    word of the title it matched — "savol" finds "…savollari", "o'yin" finds
+    "o'yini", and an answer typed for something else finds nothing. Refusing costs
+    one line and leaves the question open; swapping wrongly costs the whole
+    selection.
+    """
+    wanted = " ".join(str(argument or "").split())
+    if not wanted:
+        return None
+    if wanted.isdigit():
+        return _resolve_package(context, wanted)          # a number is exact
+    phrase = wanted.casefold().strip("!.?,;:«»" + "".join(APOSTROPHE_MARKS) + '"')
+    for mark in APOSTROPHE_MARKS:
+        phrase = phrase.replace(mark, "'")
+    words = [word for word in re.split(r"[^\w']+", phrase, flags=re.UNICODE) if word]
+    if not words or any(len(word) < 2 for word in words):
+        return None
+    if max(len(word) for word in words) < MIN_SWAP_WORD:
+        return None
+    found = _resolve_package(context, wanted) or _resolve_package(context, " ".join(words))
+    if not found:
+        return None
+    title = _title_words(found[1])
+    if not all(any(candidate.startswith(word) for candidate in title) for word in words):
+        return None
+    return found
+
+
 async def render_settings(context: ContextTypes.DEFAULT_TYPE, config: st.GameConfig,
                           message=None, query=None) -> None:
     archive = _archive_of(context)
@@ -1059,6 +1113,8 @@ async def on_settings_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if await tour_prompt_text(update, context):
+        return
     if await tour_group_text(update, context):
         return
     restored = restore(update, context)
@@ -1810,24 +1866,41 @@ async def arm_reminder(chat_id: int, message_id: int, start_at: int, title: str 
 
 
 async def arm_due_reminders() -> int:
-    """Lazy re-arming: whatever traffic arrives wakes the plans now due."""
+    """Lazy re-arming: whatever traffic arrives wakes the plans now due.
+
+    A plan that ran out while every instance was cold is dropped here instead —
+    the document holds twelve at most, and a stale one would otherwise sit in it
+    forever and push out a real plan.
+    """
     armed = 0
+    dropped = 0
     try:
         rows = stats.plans()
     except Exception:
         return 0
     for row in rows:
-        if not sched.due(int(row.get("start") or 0), window=REMINDER_ARM):
+        start_at = int(row.get("start") or 0)
+        chat_id = int(row.get("chat") or 0)
+        message_id = int(row.get("message") or 0)
+        if sched.too_late(start_at):
+            stats.plan_drop(chat_id, message_id)
+            _armed.discard(f"{chat_id}:{message_id}")
+            dropped += 1
+            note("tour_plan_dropped", chat_id=chat_id,
+                 detail=f"reja eskirgan · {start_at}")
             continue
-        key = f"{int(row.get('chat') or 0)}:{int(row.get('message') or 0)}"
+        if not sched.due(start_at, window=REMINDER_ARM):
+            continue
+        key = f"{chat_id}:{message_id}"
         if key in _armed:
             continue
         try:
-            if await arm_reminder(int(row.get("chat") or 0), int(row.get("message") or 0),
-                                  int(row.get("start") or 0), str(row.get("title") or "")):
+            if await arm_reminder(chat_id, message_id, start_at, str(row.get("title") or "")):
                 armed += 1
         except Exception:
             logging.getLogger(__name__).debug("reminder arming failed", exc_info=True)
+    if dropped:
+        bg_add(lambda: stats.sync(force=True))
     return armed
 
 
@@ -2205,7 +2278,7 @@ async def cmd_team(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if problem:
         await update.effective_message.reply_text(problem)
         return
-    tour.naming = 0
+    tour.clear_pending()
     tour.bump()
     await tour_persist(context.bot, archive, tour)
     await update.effective_message.reply_text(
@@ -2309,6 +2382,85 @@ async def cmd_leave(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     dropped = result is None
     await update.effective_message.reply_text(
         msg.tour_left(name, tour_sender(user), dropped), parse_mode=ParseMode.HTML)
+
+
+async def tour_prompt_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Take the next plain message from the person a button asked.
+
+    «Yangi jamoa», «Qidirish» and «Paketni almashtirish» used to answer with an
+    instruction and wait for a command. Now the button asks, the card remembers
+    who was asked, and the very next ordinary message that person writes in the
+    group is the answer — the same code runs as behind ``/jamoa``, ``/tanlov``
+    and ``/turnir``, so nothing about those flows changes. Everybody else's
+    messages are left completely alone.
+    """
+    message = update.effective_message
+    user = update.effective_user
+    chat = update.effective_chat
+    if message is None or user is None or chat is None:
+        return False
+    if getattr(chat, "type", "private") == "private":
+        return False
+    text = (message.text or message.caption or "").strip()
+    if not text or text.startswith("/"):
+        return False
+    archive = _archive_of(context)
+    if not await tour_active(context.bot, archive, int(chat.id)):
+        return False
+    tour = await tour_state(update, context)
+    if tour is None:
+        return False
+    kind, asked = tour.pending_of()
+    if not kind or int(asked) != int(user.id):
+        return False
+
+    if kind in (tn.PROMPT_TEAM, tn.PROMPT_SEARCH):
+        tour.clear_pending()
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        context.args = [text]
+        try:
+            if kind == tn.PROMPT_TEAM:
+                await cmd_team(update, context)          # what /jamoa <nom> does
+            else:
+                await cmd_selection(update, context)     # what /tanlov <so‘z> does
+        finally:
+            context.args = []
+        return True
+
+    if tour.phase != tn.PHASE_REGISTER:
+        tour.clear_pending()
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await message.reply_text(msg.tour_package_locked(), parse_mode=ParseMode.HTML)
+        return True
+    resolved = _resolve_package_strict(context, text)
+    if not resolved:
+        # The question stays open: a typo should not cost another button press.
+        await message.reply_text(msg.tour_package_unknown(text), parse_mode=ParseMode.HTML)
+        return True
+    package_id, title = resolved
+    info = archive.package_info(int(package_id)) or {}
+    previous = int(tour.package_id or 0)
+    tour.package_id = int(package_id)
+    tour.include = []
+    tour.exclude = []
+    tour.query = ""
+    tour.page = 1
+    tour.seed = random.randrange(1, 999999)
+    tour.clear_pending()
+    tour.bump()
+    await tour_persist(context.bot, archive, tour)
+    note("tour_package_swapped", user_id=int(user.id), chat_id=int(chat.id),
+         package_id=int(package_id),
+         detail=f"turnir · {tour.title} · tugma orqali")
+    await message.reply_text(
+        msg.tour_package_swapped(str(info.get("title") or title or package_id),
+                                 int(package_id), int(info.get("questions") or 0),
+                                 tour_sender(user), previous),
+        parse_mode=ParseMode.HTML)
+    await tour_render_curator_panel(context, context.bot, tour)
+    return True
 
 
 async def tour_group_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -2925,10 +3077,10 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     if action == st.TEAM_NEW:
-        tour.naming = int(user.id)
+        tour.ask(tn.PROMPT_TEAM, int(user.id))
         tour.bump()
         await tour_persist(context.bot, archive, tour)
-        await query.answer("Jamoangiz nomini guruhga yozing: /jamoa nom", show_alert=True)
+        await query.answer(msg.tour_prompt_ask(tn.PROMPT_TEAM), show_alert=True)
         return
 
     if action == st.TEAM_LEAVE:
@@ -3130,6 +3282,9 @@ async def on_curator_button(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await query.answer(msg.tour_denied_action("sozlash"), show_alert=True)
         return
     archive = _archive_of(context)
+    curator_id = int(getattr(update.effective_user, "id", 0) or 0)
+    if tour.pending_of()[0]:
+        tour.clear_pending()          # any button answers "never mind"
     pressed = getattr(getattr(query, "message", None), "message_id", None)
     # The pinned card is rewritten by tour_persist alone; a panel drawn into it
     # would replace the roster, so panels open in their own message instead.
@@ -3165,7 +3320,13 @@ async def on_curator_button(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
 
     if action == "pk":
-        await query.answer("Paketni almashtirish: /turnir <paket raqami yoki nomi>")
+        if tour.phase != tn.PHASE_REGISTER:
+            await query.answer(msg.tour_package_locked(), show_alert=True)
+            return
+        tour.ask(tn.PROMPT_PACKAGE, curator_id)
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer(msg.tour_prompt_ask(tn.PROMPT_PACKAGE), show_alert=True)
         return
 
     if action == "pg" and value.isdigit():
@@ -3222,7 +3383,10 @@ async def on_curator_button(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
 
     if action == "qs":
-        await query.answer("Qidirish: /tanlov so‘z", show_alert=True)
+        tour.ask(tn.PROMPT_SEARCH, curator_id)
+        tour.bump()
+        await tour_persist(context.bot, archive, tour)
+        await query.answer(msg.tour_prompt_ask(tn.PROMPT_SEARCH), show_alert=True)
         return
 
     await query.answer()
@@ -3884,6 +4048,11 @@ async def status_report(request: Request | None = None):
         f"diagnostika: ?tickprobe=1 · ?bgprobe=1",
         f"Shu nusxadagi taymer urinishlari: {_ticks_seen} · yangilangan: {_ticks_painted} · "
         f"vaqti tugagan: {_ticks_resolved} · to‘xtagan: {_ticks_stopped}",
+        f"Shu nusxadagi eslatmalar: qurollangan {len(_armed)} · ko‘rilgan {_reminders_seen} · "
+        f"e’lon qilingan {_reminders_fired} · oyna {REMINDER_ARM} s",
+        f"Xotirada: reja {len(stats.plans())} ta · guruh {len(stats.groups())} ta · "
+        f"indeksda {int(stats.used_index().get('count') or 0)} savol · "
+        f"/api/browse /api/tour · ?appprobe=1",
     ]
     probe = request is not None and request.query_params.get("shardprobe") == "1"
     lines += archive_lines(probe)
@@ -4083,6 +4252,63 @@ async def index(request: Request):
     return await status_report(request)
 
 
+def browse_probe() -> dict:
+    """The panel's browser, end to end: three shapes and one local package.
+
+    A local package on purpose — a remote one would drag a shard down from the
+    release, and a diagnostic page has no business doing that.
+    """
+    try:
+        package_id = int(ARCHIVE.random_package_id(remote=False) or 0)
+        sections = wa.browse({"turi": "bolimlar"}, ARCHIVE)
+        packages = wa.browse({"turi": "paketlar", "sahifa": 2}, ARCHIVE)
+        questions = wa.browse({"turi": "savollar", "paket": package_id}, ARCHIVE)
+        search = wa.browse({"turi": "paketlar",
+                            "qidiruv": str(ARCHIVE.package_info(package_id).get("title") or "")
+                            .split()[0] if ARCHIVE.package_info(package_id).get("title") else ""},
+                           ARCHIVE)
+        return {"ok": bool(sections.get("ok")) and bool(packages.get("ok"))
+                       and bool(questions.get("ok")) and bool(search.get("ok")),
+                "bo‘limlar": len(sections.get("bolimlar") or []),
+                "paketlar": int(packages.get("jami") or 0),
+                "sahifalar": int(packages.get("sahifalar") or 0),
+                "paket": package_id,
+                "savollar": int(questions.get("jami") or 0),
+                "qidiruv": int(search.get("jami") or 0)}
+    except Exception as exc:
+        return {"ok": False, "xato": f"{type(exc).__name__}: {exc}"[:180]}
+
+
+async def composer_probe(owner: dict) -> dict:
+    """The composer's gate: the plan list works and every bad input is refused.
+
+    Nothing here reaches Telegram — the refusals all happen before the bot is
+    started, and a real card is only posted by a curator pressing the button.
+    """
+    try:
+        package_id = int(ARCHIVE.random_package_id(remote=False) or 0)
+        plans = await panel_tour(owner, {"amal": "reja"})
+        refused = {
+            "guruh": await panel_tour(owner, {"amal": "shakllantirish", "guruh": owner["id"],
+                                              "paket": package_id}),
+            "paket": await panel_tour(owner, {"amal": "shakllantirish", "guruh": -1001234567890,
+                                              "paket": 1}),
+            "vaqt": await panel_tour(owner, {"amal": "shakllantirish", "guruh": -1001234567890,
+                                             "paket": package_id, "vaqt": "kecha 10:00"}),
+            "bekor": await panel_tour(owner, {"amal": "bekor"}),
+        }
+        limits = plans.get("chegaralar") or {}
+        return {"ok": bool(plans.get("ok")) and all(not row.get("ok") for row in refused.values()),
+                "rejalar": len(plans.get("rejalar") or []),
+                "guruhlar": len(plans.get("guruhlar") or []),
+                "chegaralar": sorted(limits),
+                "ishlatilgan": int((plans.get("ishlatilgan") or {}).get("count") or 0),
+                "rad_javoblari": {name: str(row.get("reason") or "")[:48]
+                                  for name, row in refused.items()}}
+    except Exception as exc:
+        return {"ok": False, "xato": f"{type(exc).__name__}: {exc}"[:180]}
+
+
 async def app_probe(menu: bool = False) -> dict:
     """Prove the Mini App gate end to end, without leaving a trace in the numbers.
 
@@ -4113,6 +4339,8 @@ async def app_probe(menu: bool = False) -> dict:
     checks["begona_id_ko‘rindi"] = int((outside.get("user") or {}).get("id") or 0) == 424242
 
     state = stats.freeze()
+    browse: dict = {"ok": False, "izoh": "tekshirilmadi"}
+    composer: dict = {"ok": False, "izoh": "tekshirilmadi"}
     try:
         await stats.load_access()
         checks["ega_kira_oladi"] = wa.can_open(owner["id"])
@@ -4122,17 +4350,27 @@ async def app_probe(menu: bool = False) -> dict:
                  "hisoblagichlar": len(body.get("counters") or {}),
                  "bo‘limlar": len(body.get("sections") or []),
                  "yozuvlar": len(body.get("events") or []),
-                 "ruxsatlar": len(body.get("access") or [])}
+                 "ruxsatlar": len(body.get("access") or []),
+                 "ishlatilgan": int((body.get("used") or {}).get("count") or 0),
+                 "rejalar": len(body.get("plans") or []),
+                 "guruhlar": len(body.get("groups") or [])}
+        browse = browse_probe()
+        composer = await composer_probe(owner)
     except Exception as exc:
         panel = {"ok": False, "xato": f"{type(exc).__name__}: {exc}"}
     finally:
         stats.restore(state)
     report["tekshiruvlar"] = checks
     report["panel"] = panel
+    report["brauzer"] = browse
+    report["kompozitor"] = composer
     if menu:
         report["menyu"] = await apply_menu_buttons()
-    report["ok"] = bool(panel.get("ok")) and all(value is True for value in checks.values())
-    report["izoh"] = ("imzo tekshiriladi, faqat ega va /grant olganlar ko‘radi"
+    report["ok"] = (bool(panel.get("ok")) and bool(browse.get("ok"))
+                    and bool(composer.get("ok"))
+                    and all(value is True for value in checks.values()))
+    report["izoh"] = ("imzo tekshiriladi, faqat ega va /grant olganlar ko‘radi; "
+                      "brauzer va kompozitor ham shu darvozadan o‘tadi"
                       if report["ok"] else "biror tekshiruv ishlamadi — pastga qarang")
     return report
 

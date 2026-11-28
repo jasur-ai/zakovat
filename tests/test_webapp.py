@@ -638,6 +638,15 @@ class RouteTests(unittest.TestCase):
         self.assertIn("Arxiv manifesti:", answer.text)
         self.assertIn("Manba zakovatklubi:", answer.text)
 
+    def test_the_status_page_names_the_reminder_chain_and_the_panel_routes(self):
+        with mock.patch.dict(os.environ, {"BOT_TOKEN": ""}):
+            answer = self.client.get("/api/status")
+        self.assertEqual(answer.status_code, 200)
+        self.assertIn("Shu nusxadagi eslatmalar:", answer.text)
+        self.assertIn(f"oyna {webhook.REMINDER_ARM} s", answer.text)
+        self.assertIn("Xotirada: reja", answer.text)
+        self.assertIn("/api/browse /api/tour", answer.text)
+
     def test_the_diagnostic_page_answers_without_a_probe(self):
         # It used to read `request.query_params` inside a function that was
         # never given a request: /api/index answered 500 in production while
@@ -682,6 +691,52 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(body["hisoblagichlar"], {})       # the probe counted nothing
         after = asyncio.run(stats.snapshot(self.archive))
         self.assertEqual(before["counters"], after["counters"])
+
+    def test_the_diagnostic_walks_the_browser_and_the_composer(self):
+        body = self.client.get("/api/index?appprobe=1&cb=8").json()
+        browse = body["brauzer"]
+        self.assertTrue(browse["ok"], browse)
+        self.assertGreaterEqual(browse["bo‘limlar"], 10)
+        self.assertGreater(browse["paketlar"], 100)
+        self.assertGreater(browse["sahifalar"], 1)
+        self.assertGreater(browse["savollar"], 0)          # a real package was opened
+        self.assertGreater(browse["qidiruv"], 0)           # and the search found it
+        self.assertLessEqual(browse["qidiruv"], browse["paketlar"])
+
+        composer = body["kompozitor"]
+        self.assertTrue(composer["ok"], composer)
+        self.assertEqual(composer["chegaralar"],
+                         ["eslatma", "jamoa", "raund", "savol", "sekund"])
+        refusals = composer["rad_javoblari"]
+        self.assertEqual(sorted(refusals), ["bekor", "guruh", "paket", "vaqt"])
+        self.assertIn("manfiy id", refusals["guruh"])
+        self.assertIn("topilmadi", refusals["paket"])
+        self.assertTrue(refusals["vaqt"])
+        self.assertIn("kerak", refusals["bekor"])
+        self.assertEqual(body["hisoblagichlar"], {})       # still nothing was counted
+
+    def test_a_broken_browser_makes_the_diagnostic_say_so(self):
+        def explode(body, archive):
+            raise RuntimeError("shard yo‘q")
+
+        with mock.patch.object(wa, "browse", explode):
+            answer = self.client.get("/api/index?appprobe=1&cb=9")
+        body = answer.json()
+        self.assertFalse(body["ok"])                       # the probe does not lie
+        self.assertFalse(body["brauzer"]["ok"])
+        self.assertIn("shard yo‘q", body["brauzer"]["xato"])
+        self.assertTrue(body["panel"]["ok"])               # the rest still works
+
+    def test_a_broken_composer_makes_the_diagnostic_say_so(self):
+        async def explode(user, body):
+            raise RuntimeError("reja o‘qilmadi")
+
+        with mock.patch.object(webhook, "panel_tour", explode):
+            answer = self.client.get("/api/index?appprobe=1&cb=10")
+        body = answer.json()
+        self.assertFalse(body["ok"])
+        self.assertFalse(body["kompozitor"]["ok"])
+        self.assertIn("reja o‘qilmadi", body["kompozitor"]["xato"])
 
 
 async def _nothing():

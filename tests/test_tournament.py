@@ -1350,5 +1350,320 @@ class TournamentTickTests(unittest.TestCase):
         self.assertIsNone(webhook.parse_body(tour.body()))     # never mistaken for a game
 
 
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class CuratorPromptTests(unittest.TestCase):
+    """A button asks, the group answers: no command has to be remembered.
+
+    «Yangi jamoa», «Qidirish» and «Paketni almashtirish» used to answer with an
+    instruction ("/jamoa nom", "/tanlov so‘z", "/turnir <paket>"). The card now
+    remembers who was asked and takes that person's next plain message.
+    """
+
+    MEMBER = 101
+
+    def setUp(self):
+        stats.reset()
+        self.archive = Archive("data/all")
+        self.bot = TourBot()
+        self.context = tour_context(self.bot, self.archive)
+        webhook._tour_probe.clear()
+        self._patches = [
+            mock.patch.object(webhook, "TICKS_ENABLED", False),
+            mock.patch.object(stats, "backend", lambda: "lokal"),
+        ]
+        for patch in self._patches:
+            patch.start()
+        message = TourMessage("/turnir", user_id=ADMIN)
+        self.context.args = [str(PACKAGE)]
+        asyncio.run(webhook.cmd_tour(tour_update(message, user_id=ADMIN), self.context))
+        self.context.args = []
+
+    def tearDown(self):
+        for patch in self._patches:
+            patch.stop()
+        stats.reset()
+        webhook._tour_probe.clear()
+
+    def _card_text(self) -> str:
+        return self.bot.sent[self.bot.pinned[CHAT] - 1]["text"]
+
+    def _press(self, action: str, value="", user_id=ADMIN):
+        press = callback_query(st.curator_data(action, value), self._card_text(),
+                               user_id=user_id)
+        asyncio.run(webhook.on_curator_button(tour_update(callback=press, user_id=user_id),
+                                              self.context))
+        return press
+
+    def _team_press(self, action: str, user_id=MEMBER):
+        press = callback_query(st.tour_data(action), self._card_text(), user_id=user_id)
+        asyncio.run(webhook.on_team_button(tour_update(callback=press, user_id=user_id),
+                                           self.context))
+        return press
+
+    def _search_word(self) -> str:
+        """A word from this package's own questions: the picker must find it."""
+        first = self.archive.questions(PACKAGE)[0]
+        words = [word.strip(".,!?;:«»()\u201e\u201c\u201d’'")
+                 for word in str(first.get("text") or "").split()]
+        return max((word for word in words if len(word) > 4), key=len)
+
+    def _say(self, text: str, user_id: int) -> TourMessage:
+        """A plain message in the group, through the real text handler."""
+        message = TourMessage(text, user_id=user_id)
+        asyncio.run(webhook.on_text(tour_update(message, user_id=user_id), self.context))
+        return message
+
+    def _say_offline(self, text: str, user_id: int) -> TourMessage:
+        """The same, but a package from the big base does not drag a shard down."""
+        real = self.archive.questions
+
+        def questions(package_id):
+            return [] if int(package_id) >= 900000 else real(package_id)
+
+        with mock.patch.object(self.archive, "questions", questions):
+            return self._say(text, user_id)
+
+    # ------------------------------------------------------------------ search
+    def test_the_search_button_asks_and_the_next_message_answers(self):
+        press = self._press("qs")
+        self.assertEqual(self.bot.card_state().pending_of(), (tn.PROMPT_SEARCH, ADMIN))
+        self.assertIn("guruhga yozing", press._answers[-1]["text"])
+
+        word = self._search_word()
+        self._say(word, ADMIN)
+        tour = self.bot.card_state()
+        self.assertEqual(tour.query, word[:24])
+        self.assertEqual(tour.pending_of(), ("", 0))          # answered, so closed
+        self.assertEqual(self.context.args, [])                # no leftover arguments
+
+    def test_somebody_elses_message_is_not_the_answer(self):
+        self._press("qs")
+        self._say("bu shunchaki gap", self.MEMBER)
+        tour = self.bot.card_state()
+        self.assertEqual(tour.query, "")                       # nothing was searched
+        self.assertEqual(tour.pending_of(), (tn.PROMPT_SEARCH, ADMIN))
+
+    def test_a_command_is_not_the_answer_either(self):
+        self._press("qs")
+        message = TourMessage("/jadval", user_id=ADMIN)
+        asyncio.run(webhook.on_text(tour_update(message, user_id=ADMIN), self.context))
+        self.assertEqual(self.bot.card_state().pending_of(), (tn.PROMPT_SEARCH, ADMIN))
+
+    def test_any_other_button_cancels_the_question(self):
+        self._press("qs")
+        self._press("r", 3)                                    # a rounds chip instead
+        tour = self.bot.card_state()
+        self.assertEqual(tour.rounds, 3)
+        self.assertEqual(tour.pending_of(), ("", 0))
+
+    # ----------------------------------------------------------------- package
+    def test_the_package_button_swaps_the_whole_bank(self):
+        self._press("i", self.archive.questions(PACKAGE)[0]["id"])   # a selection first
+        self.assertTrue(self.bot.card_state().include)
+        other = self.archive.random_package_id(remote=False)
+        while int(other) == int(PACKAGE):
+            other = self.archive.random_package_id(remote=False)
+
+        press = self._press("pk")
+        self.assertEqual(self.bot.card_state().pending_of(), (tn.PROMPT_PACKAGE, ADMIN))
+        self.assertIn("paketga o‘tadi", press._answers[-1]["text"])
+
+        said = self._say(str(other), ADMIN)
+        tour = self.bot.card_state()
+        self.assertEqual(tour.package_id, int(other))
+        self.assertEqual(tour.include, [])                     # the old picks are gone
+        self.assertEqual(tour.exclude, [])
+        self.assertEqual(tour.pending_of(), ("", 0))
+        answered = "\n".join(said.replies)
+        self.assertIn("PAKET ALMASHTIRILDI", answered)
+        self.assertIn(str(PACKAGE), answered)                  # how to put it back
+        self.assertIn("Qaytarish", answered)
+        self.assertTrue(tour.questions)                        # the new bank is attached
+
+    def test_a_word_that_is_not_a_package_keeps_the_question_open(self):
+        self._press("pk")
+        said = self._say("rahmat hammaga", ADMIN)
+        tour = self.bot.card_state()
+        self.assertEqual(tour.package_id, PACKAGE)             # nothing moved
+        self.assertEqual(tour.pending_of(), (tn.PROMPT_PACKAGE, ADMIN))
+        self.assertIn("topilmadi", "\n".join(said.replies))
+
+    def test_a_package_found_by_its_name_is_accepted(self):
+        title = (self.archive.package_info(PACKAGE) or {}).get("title") or ""
+        word = title.split()[0]
+        expected = self.archive.search(word, limit=1)
+        self.assertTrue(expected)
+        self._press("pk")
+        self._say_offline(word, ADMIN)
+        tour = self.bot.card_state()
+        self.assertEqual(tour.package_id, int(expected[0]["id"]))
+        self.assertEqual(tour.pending_of(), ("", 0))
+
+    def test_an_open_game_does_not_let_the_package_go(self):
+        tour = self.bot.card_state()
+        tour.phase = tn.PHASE_PLAY
+        tour.question_id = int(self.archive.questions(PACKAGE)[0]["id"])
+        tour.deadline = int(time.time()) + 40
+        asyncio.run(webhook.tour_persist(self.bot, self.archive, tour))
+        press = self._press("pk")
+        self.assertIn("boshlangan", press._answers[-1]["text"])
+        self.assertEqual(self.bot.card_state().pending_of(), ("", 0))
+
+    # -------------------------------------------------------------------- team
+    def test_the_new_team_button_takes_the_name_from_the_group(self):
+        press = self._team_press(st.TEAM_NEW, user_id=self.MEMBER)
+        self.assertEqual(self.bot.card_state().pending_of(), (tn.PROMPT_TEAM, self.MEMBER))
+        self.assertIn("nomini", press._answers[-1]["text"])
+
+        self._say("Bilimdonlar", self.MEMBER)
+        tour = self.bot.card_state()
+        self.assertEqual([team.name for team in tour.teams], ["Bilimdonlar"])
+        self.assertEqual(tour.teams[0].captain, self.MEMBER)
+        self.assertEqual(tour.pending_of(), ("", 0))
+
+    def test_a_name_from_somebody_else_is_not_taken(self):
+        self._team_press(st.TEAM_NEW, user_id=self.MEMBER)
+        self._say("Men ham jamoa", self.MEMBER + 1)
+        tour = self.bot.card_state()
+        self.assertEqual(tour.teams, [])
+        self.assertEqual(tour.pending_of(), (tn.PROMPT_TEAM, self.MEMBER))
+
+    # ------------------------------------------------------------------- state
+    def test_the_question_survives_a_cold_instance(self):
+        self._press("qs")
+        body = self.bot.card_state().body()
+        self.assertIn('"pd":', body)
+        self.assertEqual(tn.Tournament.from_body(body).pending_of(), (tn.PROMPT_SEARCH, ADMIN))
+
+    def test_a_prompt_never_pushes_the_card_over_the_limit(self):
+        tour = self.bot.card_state()
+        tour.ask(tn.PROMPT_PACKAGE, ADMIN)
+        for index in range(tn.SELECTION_LIMIT):
+            tour.include.append(900000000 + index)
+        body = tour.body(level=3)
+        self.assertLessEqual(len(body), 4000)
+        self.assertEqual(tn.Tournament.from_body(body).pending_of(), (tn.PROMPT_PACKAGE, ADMIN))
+
+
+class PackageSwapRulesTests(unittest.TestCase):
+    """Which answers move the whole bank, and which are only somebody's reply.
+
+    ``Archive.search`` is a plain substring match over titles, so it answers "a"
+    with a championship and "9" with a student league. That looseness is right for
+    ``/solo olimpiada`` and wrong for swapping the questions a group is about to
+    play, so ``_resolve_package_strict`` adds three rules: every word is at least
+    two letters, at least one is a real word, and each word has to start a word of
+    the title it matched. Nothing here is pinned to one package — the archive
+    changes on every import, so the expectations are read out of it.
+    """
+
+    def setUp(self):
+        self.archive = Archive("data/all")
+        self.context = tour_context(TourBot(), self.archive)
+        self.title = str((self.archive.package_info(PACKAGE) or {}).get("title") or "")
+        self.assertTrue(self.title, "the test package needs a title")
+        self.words = [word for word in webhook._title_words(self.title) if not word.isdigit()]
+        self.assertTrue(self.words)
+        self.long_words = [word for word in self.words if len(word) >= webhook.MIN_SWAP_WORD]
+        self.assertTrue(self.long_words, "the title needs one word worth typing")
+
+    def loose(self, answer: str):
+        return webhook._resolve_package(self.context, answer)
+
+    def strict(self, answer: str):
+        return webhook._resolve_package_strict(self.context, answer)
+
+    def test_a_number_is_taken_as_it_is(self):
+        found = self.strict(str(PACKAGE))
+        self.assertIsNotNone(found)
+        self.assertEqual(int(found[0]), PACKAGE)
+
+    def test_a_number_that_does_not_exist_is_refused(self):
+        self.assertIsNone(self.strict("1"))
+        self.assertIsNone(self.strict("99999999"))
+
+    def test_a_word_of_a_title_finds_a_package_that_really_holds_it(self):
+        checked = 0
+        for word in self.long_words:
+            found = self.strict(word)
+            loose = self.loose(word)
+            if loose:
+                # No false refusal: what the search found is accepted…
+                self.assertIsNotNone(found, word)
+                self.assertEqual(int(found[0]), int(loose[0]), word)
+            if not found:
+                continue
+            # …and no false acceptance: the title it lands on holds every word.
+            title = webhook._title_words(found[1])
+            self.assertTrue(any(item.startswith(word) for item in title), f"{word} in {found[1]}")
+            checked += 1
+        self.assertGreaterEqual(checked, 1)
+
+    def test_the_start_of_a_long_word_is_enough(self):
+        # "savol" has to find "…savollari" — nobody types the whole ending.
+        word = max(self.long_words, key=len)
+        head = word[:webhook.MIN_SWAP_WORD + 1]
+        found = self.strict(head)
+        self.assertIsNotNone(found, head)
+        self.assertTrue(any(item.startswith(head) for item in webhook._title_words(found[1])))
+
+    def test_punctuation_around_a_word_changes_nothing(self):
+        word = self.long_words[0]
+        plain = self.strict(word)
+        self.assertIsNotNone(plain, word)
+        for dressed in (word + "!", "?" + word, "«" + word + "»", word + "."):
+            found = self.strict(dressed)
+            self.assertIsNotNone(found, dressed)
+            self.assertEqual(int(found[0]), int(plain[0]))
+
+    def test_two_words_of_one_title_are_enough(self):
+        pair = self.long_words[:2]
+        found = self.strict(" ".join(pair))
+        if found is None:
+            self.skipTest("no single title holds both " + " and ".join(pair))
+        title = webhook._title_words(found[1])
+        for word in pair:
+            self.assertTrue(any(item.startswith(word) for item in title), word)
+
+    def test_a_single_letter_never_moves_the_bank(self):
+        answered = 0
+        for letter in "aeioustkn":
+            if self.loose(letter):
+                answered += 1
+            self.assertIsNone(self.strict(letter), letter)
+        self.assertGreaterEqual(answered, 3)      # the loose search is that generous
+
+    def test_a_short_reply_to_somebody_else_is_not_a_package(self):
+        for answer in ("ha", "ok", "xa", "yoq", "bor", "ha, to‘g‘ri", "xayr"):
+            self.assertIsNone(self.strict(answer), answer)
+
+    def test_a_reply_word_that_is_also_a_title_word_is_announced_not_hidden(self):
+        # "yo‘q" is an ordinary reply and also a word in some package title, so the
+        # swap does happen — which is why the message names the number to type back.
+        found = self.strict("yo‘q")
+        if found is None:
+            self.skipTest("no package title holds this word today")
+        said = msg.tour_package_swapped(found[1], int(found[0]), 12, "Kurator", PACKAGE)
+        self.assertIn("PAKET ALMASHTIRILDI", said)
+        self.assertIn(str(PACKAGE), said)
+        self.assertIn("Qaytarish", said)
+
+    def test_an_ordinary_sentence_is_not_a_package(self):
+        for answer in ("rahmat hammaga", "bugun o‘yin yaxshi bo‘ldi",
+                       "javob to‘g‘ri edi, hisoblang", "kim biladi bu savolni",
+                       "keyingi turda ko‘rishamiz"):
+            self.assertIsNone(self.strict(answer), answer)
+
+    def test_nothing_at_all_is_not_a_package(self):
+        for answer in ("", "   ", "!", "…", "??"):
+            self.assertIsNone(self.strict(answer), repr(answer))
+
+    def test_the_loose_resolver_still_answers_a_letter(self):
+        # The swap is strict *because* this is loose, and /solo depends on it.
+        self.assertIsNotNone(self.loose("a"))
+        self.assertIsNotNone(self.loose("9"))
+        self.assertIsNotNone(self.loose("olimpiada"))
+
+
 if __name__ == "__main__":
     unittest.main()

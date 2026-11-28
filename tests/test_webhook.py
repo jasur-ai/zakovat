@@ -1049,6 +1049,22 @@ class ReminderPlanTests(unittest.TestCase):
         self.assertIn(f"{self.CHAT}:{self.CARD + 1}", webhook._armed)
         self.assertEqual(asyncio.run(webhook.arm_due_reminders()), 0)   # not twice
 
+    def test_a_start_that_just_passed_is_still_announced(self):
+        stats.plan_add(self.CHAT, self.CARD, int(time.time()) - 60, "Kuzgi turnir")
+        self.assertEqual(asyncio.run(webhook.arm_due_reminders()), 1)
+        self.assertEqual(len(self.hops), 1)
+        self.assertEqual([row["chat"] for row in stats.plans()], [self.CHAT])
+
+    def test_a_plan_that_ran_out_is_dropped_and_never_announced(self):
+        stale = int(time.time()) - sched.LATE_GRACE - 600
+        stats.plan_add(self.CHAT, self.CARD, stale, "eski turnir")
+        stats.plan_add(self.CHAT, self.CARD + 1, int(time.time()) + 120, "yangi turnir")
+        self.assertEqual(asyncio.run(webhook.arm_due_reminders()), 1)   # only the live one
+        rows = stats.plans()
+        self.assertEqual([row["message"] for row in rows], [self.CARD + 1])
+        self.assertEqual(len(self.hops), 1)
+        self.assertEqual(self.bot.sent, [])                # the group hears nothing stale
+
     def test_a_broken_plan_list_never_raises(self):
         with mock.patch.object(stats, "plans", mock.Mock(side_effect=RuntimeError("hujjat yo‘q"))):
             self.assertEqual(asyncio.run(webhook.arm_due_reminders()), 0)
