@@ -1,6 +1,7 @@
 import asyncio
 import httpx
 import json
+import time
 import unittest
 from unittest import mock
 
@@ -632,6 +633,186 @@ class DryRunIsolationTests(unittest.TestCase):
         stats.restore(frozen)
         self.assertEqual(stats._pending["c"]["commands"], 2)
         self.assertEqual(stats._pending["u"]["5"], 1)
+
+
+@unittest.skipUnless(stats, "install requirements.txt to test statistics")
+class UsedIndexTests(unittest.TestCase):
+    """A question that has been asked is marked, and the mark survives a restart."""
+
+    def setUp(self):
+        stats.reset()
+        STORE.clear()
+        self._url, self._dry = stats.STORE_URL, stats.DRY_RUN
+        self._client = stats.httpx.AsyncClient
+        stats.httpx.AsyncClient = FakeClient
+        stats.STORE_URL = "https://store.example/doc"
+
+    def tearDown(self):
+        stats.httpx.AsyncClient = self._client
+        stats.STORE_URL, stats.DRY_RUN = self._url, self._dry
+        stats.reset()
+        STORE.clear()
+
+    def test_asking_a_question_indexes_it(self):
+        asked = stats.mark_used([{"id": 900123}, {"id": 900124}], package_id=959,
+                                chat_id=-100200, mode="turnir")
+        self.assertEqual(asked, 2)
+        self.assertTrue(stats.is_used(900123))
+        self.assertFalse(stats.is_used(900999))
+        index = stats.used_index()
+        self.assertEqual(index["count"], 2)
+        self.assertEqual(index["packages"], 1)
+        self.assertEqual(index["items"][0]["p"], 959)
+        self.assertEqual(index["items"][0]["m"], "turnir")
+
+    def test_asking_one_again_keeps_the_newest_stamp_and_counts(self):
+        stats.mark_used([{"id": 900123}], package_id=959)
+        stats.mark_used([{"id": 900123}], package_id=959)
+        index = stats.used_index()
+        self.assertEqual(index["count"], 1)
+        self.assertEqual(index["uses"], 2)
+        self.assertEqual(index["items"][0]["n"], 2)
+
+    def test_a_question_without_an_id_is_skipped(self):
+        self.assertEqual(stats.mark_used([{}, {"id": 0}, None, {"id": "abc"}]), 0)
+        self.assertEqual(stats.used_index()["count"], 0)
+
+    def test_the_index_survives_a_cold_instance(self):
+        stats.mark_used([{"id": 900123}], package_id=959, chat_id=-100200, mode="oyin")
+        self.assertTrue(asyncio.run(stats.sync(force=True)))
+        self.assertIn("900123", STORE["q"])
+
+        stats.reset()                                  # a fresh serverless instance
+        self.assertFalse(stats.is_used(900123))
+        data = asyncio.run(stats.snapshot())
+        self.assertTrue(stats.is_used(900123))         # the document taught it back
+        self.assertEqual(data["used"]["count"], 1)
+        self.assertEqual(data["used"]["recent"][0]["id"], 900123)
+
+    def test_the_stored_form_is_compact_and_round_trips(self):
+        packed = stats._pack_used({"900123": 1764200000, "900124": 1764100000})
+        self.assertEqual(packed, "900123:29403333,900124:29401666")
+        read = stats._normalise_used(packed)
+        self.assertEqual(list(read), ["900123", "900124"])     # newest first
+        self.assertEqual(read["900123"], 1764199980)            # minute resolution
+        self.assertEqual(stats._normalise_used("not-a-list"), {})
+        self.assertEqual(stats._normalise_used({"abc": 5, "900125": [1764200000, 1, 2]}),
+                         {"900125": 1764200000})
+
+    def test_the_index_is_capped_and_the_newest_stay(self):
+        stats.mark_used([{"id": 900000 + index} for index in range(stats.USED_LIMIT + 40)],
+                        package_id=959)
+        index = stats.used_index()
+        self.assertEqual(index["count"], stats.USED_LIMIT)
+        self.assertIn(900000 + stats.USED_LIMIT + 39, stats.used_ids())
+        self.assertNotIn(900000, stats.used_ids())
+
+    def test_a_tight_document_gives_the_index_up_before_the_counters(self):
+        payload = {"v": 1, "s": 1, "c": {"games_started": 3},
+                   "u": {str(1000 + i): i for i in range(400)},
+                   "h": {str(-100 - i): i for i in range(7)},
+                   "p": {str(900000 + i): i for i in range(400)},
+                   "e": [{"t": i, "k": "game_start"} for i in range(30)],
+                   "a": stats._pack_access({str(2000 + i): {"name": f"u{i}", "since": i}
+                                            for i in range(60)}),
+                   "q": stats._pack_used({str(900000 + i): 1764200000 - i
+                                          for i in range(stats.USED_LIMIT)}),
+                   "r": "", "g": {}}
+        shrunk = stats._shrink(json.loads(json.dumps(payload)), stats.MESSAGE_LIMIT)
+        body = json.dumps(shrunk, ensure_ascii=False)
+        self.assertLessEqual(len(body) + len(stats.DOC_HEADER) + 1, stats.MESSAGE_LIMIT)
+        self.assertEqual(shrunk["c"]["games_started"], 3)       # the point of the panel
+        self.assertEqual(len(shrunk["a"]), 60)                  # nobody is locked out
+        self.assertLess(len(stats._normalise_used(shrunk["q"])), stats.USED_LIMIT)
+
+    def test_a_roomy_document_keeps_the_whole_index(self):
+        payload = {"v": 1, "s": 1, "c": {"games_started": 3}, "u": {"7": 1}, "h": {}, "p": {},
+                   "e": [], "a": stats._pack_access({"2000": {"name": "Ega", "since": 1}}),
+                   "q": stats._pack_used({str(900000 + i): 1764200000 - i for i in range(40)}),
+                   "r": "", "g": {}}
+        shrunk = stats._shrink(payload, stats.MESSAGE_LIMIT)
+        self.assertEqual(len(stats._normalise_used(shrunk["q"])), 40)
+
+
+@unittest.skipUnless(stats, "install requirements.txt to test statistics")
+class PlanTests(unittest.TestCase):
+    """Scheduled tournaments: the plan is small, ordered and never lost."""
+
+    def setUp(self):
+        stats.reset()
+        STORE.clear()
+        self._url, self._dry = stats.STORE_URL, stats.DRY_RUN
+        self._client = stats.httpx.AsyncClient
+        stats.httpx.AsyncClient = FakeClient
+        stats.STORE_URL = "https://store.example/doc"
+
+    def tearDown(self):
+        stats.httpx.AsyncClient = self._client
+        stats.STORE_URL, stats.DRY_RUN = self._url, self._dry
+        stats.reset()
+        STORE.clear()
+
+    def test_a_plan_is_registered_listed_and_dropped(self):
+        now = int(time.time())
+        stats.plan_add(-100200, 555, now + 3600, "Kuzgi turnir")
+        stats.plan_add(-100300, 777, now + 600, "Talabalar ligasi")
+        rows = stats.plans(now)
+        self.assertEqual([row["chat"] for row in rows], [-100300, -100200])   # soonest first
+        self.assertEqual(rows[0]["left"], 600)
+        self.assertEqual([row["chat"] for row in stats.due_plans(now, lead=900)], [-100300])
+        self.assertEqual(stats.due_plans(now, lead=60), [])
+        stats.plan_drop(-100300, 777)
+        self.assertEqual([row["chat"] for row in stats.plans(now)], [-100200])
+
+    def test_a_plan_without_a_time_or_a_message_is_not_registered(self):
+        stats.plan_add(-100200, 0, 1764200000, "karta yo‘q")
+        stats.plan_add(0, 555, 1764200000, "guruh yo‘q")
+        stats.plan_add(-100200, 555, 0, "vaqt yo‘q")
+        self.assertEqual(stats.plans(), [])
+
+    def test_the_list_is_capped_and_the_soonest_survive(self):
+        now = int(time.time())
+        for index in range(stats.PLAN_LIMIT + 5):
+            stats.plan_add(-100200 - index, 500 + index, now + 60 * (index + 1), f"T{index}")
+        rows = stats.plans(now)
+        self.assertLessEqual(len(rows), stats.PLAN_LIMIT)
+        self.assertEqual(rows[0]["title"], "T0")
+
+    def test_plans_and_groups_survive_a_cold_instance(self):
+        now = int(time.time())
+        stats.plan_add(-100200, 555, now + 3600, "Kuzgi turnir")
+        stats.group_seen(-100200, "Zakovat klubi · Toshkent")
+        self.assertTrue(asyncio.run(stats.sync(force=True)))
+        self.assertIn("-100200.555.", STORE["r"])
+        self.assertIn("-100200", STORE["g"])
+
+        stats.reset()
+        self.assertEqual(stats.plans(), [])
+        data = asyncio.run(stats.snapshot())
+        self.assertEqual([row["chat"] for row in data["plans"]], [-100200])
+        self.assertEqual(data["plans"][0]["title"], "Kuzgi turnir")
+        self.assertEqual(data["groups"], {-100200: "Zakovat klubi · Toshkent"})
+
+    def test_only_groups_are_remembered_and_the_list_stays_short(self):
+        stats.group_seen(8004724563, "shaxsiy chat")            # a private chat is not a target
+        self.assertEqual(stats.groups(), {})
+        for index in range(stats.GROUP_LIMIT + 6):
+            stats.group_seen(-100200 - index, f"Guruh {index}")
+        groups = stats.groups()
+        self.assertEqual(len(groups), stats.GROUP_LIMIT)
+        self.assertIn(-100200 - (stats.GROUP_LIMIT + 5), groups)
+
+    def test_a_guest_list_write_keeps_the_plans_and_the_index(self):
+        stats.mark_used([{"id": 900123}], package_id=959)
+        stats.plan_add(-100200, 555, int(time.time()) + 3600, "Kuzgi turnir")
+        stats.group_seen(-100200, "Zakovat klubi")
+        asyncio.run(stats.sync(force=True))
+        saved, access = asyncio.run(stats.set_access(777, "Sardor", True))
+        self.assertTrue(saved)
+        self.assertIn("777", access)
+        self.assertIn("900123", STORE["q"])                  # the index rode along
+        self.assertIn("-100200.555.", STORE["r"])            # and so did the plan
+        self.assertIn("-100200", STORE["g"])
 
 
 if __name__ == "__main__":

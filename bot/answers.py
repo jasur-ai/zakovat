@@ -29,6 +29,12 @@ NUMBER_WORDS = {
 }
 
 PREFIX_RE = re.compile(r"^\s*(?:to'?g'?ri\s+)?(?:javob|answer|j)\s*[:.\-]?\s*", re.I)
+# A team that copies an archive answer types the prefix with it ("Javob: X"), so
+# the same prefix is taken off the guess before comparing. It has to be stricter
+# than PREFIX_RE: a bare "j" is only a prefix when a separator follows it, or a
+# real answer like "Jizzax" would lose its first letter.
+USER_PREFIX_RE = re.compile(
+    r"^\s*(?:to'?g'?ri\s+)?(?:(?:javob|answer)\s*[:.\-]?\s+|j\s*[:.\-]\s*)", re.I)
 
 
 def normalize(text: str) -> str:
@@ -103,8 +109,11 @@ class AnswerChecker:
         user = normalize(user_text)
         if not user:
             return False
+        bare = USER_PREFIX_RE.sub("", user).strip(" .,:;-'")
+        guesses = [user] + ([bare] if bare and bare != user else [])
         options = variants(expected) + self.aliases.get(str(question_id), [])
-        return any(_close_enough(user, option) for option in options if option)
+        return any(_close_enough(guess, option)
+                   for guess in guesses for option in options if option)
 
     def learn(self, question_id: int, user_text: str) -> bool:
         """Remember a confirmed answer variant; returns True if it was new."""

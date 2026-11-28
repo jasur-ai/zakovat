@@ -25,6 +25,8 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import schedule
+
 MIN_TEAMS = 3          # kamida uchta jamoa ro‘yxatdan o‘tishi kerak
 MIN_READY = 2          # har bir jamoadan kamida ikki kishi "tayyorman" deydi
 MIN_MEMBERS = 3        # jamoada kamida uch kishi
@@ -189,6 +191,9 @@ class Tournament:
     finished: bool = False
     rev: int = 0                     # every mutation counts: the newest state wins
     can_pin: bool = False            # the card could be pinned, so it is the authority
+    start_at: int = 0                # rejadagi boshlanish vaqti (0 = hoziroq mumkin)
+    max_teams: int = MAX_TEAMS       # nechta jamoa o‘ynashi mumkin
+    announced: int = 0               # eslatma xabari yuborilgan payt
 
     # ------------------------------------------------------------------- teams
     def team(self, name: str) -> Team | None:
@@ -305,8 +310,9 @@ class Tournament:
         name = " ".join(str(name or "").split())[:MAX_NAME]
         if not name:
             return None, "Jamoa nomini yozing."
-        if len(self.teams) >= MAX_TEAMS:
-            return None, f"Jamolar soni chegarada ({MAX_TEAMS})."
+        limit = self.team_limit
+        if len(self.teams) >= limit:
+            return None, f"Jamolar soni chegarada ({limit} ta)."
         if self.team(name) is not None:
             return None, "Bunday nomli jamoa bor."
         if self.team_of(user_id) is not None:
@@ -361,13 +367,18 @@ class Tournament:
         return group, ""
 
     # ------------------------------------------------------------------- rules
-    def missing(self, available: int | None = None) -> list[str]:
+    def missing(self, available: int | None = None, now: int = 0) -> list[str]:
         """What still has to happen before the tournament may start.
 
         ``available`` is how many questions the current selection leaves in the
-        archive; the caller knows that, this module never reads files.
+        archive; the caller knows that, this module never reads files. ``now``
+        lets a scheduled tournament say how long it still has to wait.
         """
         problems: list[str] = []
+        waiting = self.start_delay(now)
+        if waiting:
+            problems.append(f"Belgilangan vaqtgacha {waiting // 60} daqiqa qoldi "
+                            f"(boshlanish: {when_text(self.start_at)}).")
         if available is not None and int(available) <= 0:
             problems.append("Savollar to‘plami bo‘sh — paket yoki tanlovni tekshiring.")
         if len(self.teams) < MIN_TEAMS:
@@ -382,8 +393,23 @@ class Tournament:
                                 f"tugmasini bosishi kerak (hozir {group.ready_count}).")
         return problems
 
-    def ready_to_start(self, available: int | None = None) -> bool:
-        return not self.missing(available)
+    @property
+    def team_limit(self) -> int:
+        """How many teams may play: the composer's choice, inside the hard cap."""
+        try:
+            return max(MIN_TEAMS, min(int(self.max_teams or MAX_TEAMS), MAX_TEAMS))
+        except (TypeError, ValueError):
+            return MAX_TEAMS
+
+    def start_delay(self, now: int = 0) -> int:
+        """Seconds left until the planned start; 0 when it may start now."""
+        moment = int(now or 0)
+        if not self.start_at or not moment:
+            return 0
+        return max(0, int(self.start_at) - moment)
+
+    def ready_to_start(self, available: int | None = None, now: int = 0) -> bool:
+        return not self.missing(available, now)
 
     @property
     def people(self) -> int:
@@ -555,6 +581,8 @@ class Tournament:
             "dr": [list(row) for row in self.directory][-DIRECTORY_LIMIT:],
             "hn": [int(x) for x in self.hinted][-DIRECTORY_LIMIT:],
             "rv": int(self.rev), "pn": 1 if self.can_pin else 0,
+            "sa": int(self.start_at), "mt": int(self.team_limit),
+            "an": int(self.announced),
         }
 
     def body(self, level: int = 0) -> str:
@@ -613,6 +641,9 @@ class Tournament:
         tour.hinted = [int(item) for item in (data.get("hn") or [])][:DIRECTORY_LIMIT]
         tour.rev = int(data.get("rv") or 0)
         tour.can_pin = bool(data.get("pn"))
+        tour.start_at = int(data.get("sa") or 0)
+        tour.max_teams = int(data.get("mt") or MAX_TEAMS)
+        tour.announced = int(data.get("an") or 0)
         tour.questions = list(questions or [])
         tour.finished = tour.phase == PHASE_DONE
         return tour
@@ -645,6 +676,11 @@ def rebuild(tournament: Tournament, questions: list[dict]) -> Tournament:
         tournament.index = position
         tournament.question_id = int(tournament.questions[position]["id"])
     return tournament
+
+
+def when_text(stamp: int) -> str:
+    """A planned start time in the copy the bot uses everywhere else."""
+    return schedule.when_text(stamp)
 
 
 def sizes() -> dict:

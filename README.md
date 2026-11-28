@@ -52,7 +52,7 @@ python3 run_bot.py
 
 ## Vercel ga deploy qilish (webhook)
 
-`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/now` — server vaqti, `/app` — statistika paneli (Mini App, faqat ega va `/grant` olganlar), `/api/app` — shu panelning ma’lumotlari (imzo tekshiriladi). O‘yin Telegram ichida o‘ynaladi; hisoblagich xabarning o‘zida yuradi, Mini App faqat statistika paneli uchun. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
+`api/index.py` — FastAPI ASGI entrypoint. Vercel Python funksiyasi `/api/index` manzilida ishlaydi: `POST /api/index` — Telegram webhook (xabar va tugma bosishlari) va ichki `tick` so‘rovlari (jonli taymer), `GET /api/index` — diagnostika, `?setup=1` — webhook’ni qo‘lda o‘rnatish (`&drop=1` — Telegram navbatini tozalash), `?test=1` — o‘z-o‘zini sinash. `/` — bot haqidagi oddiy sahifa (`public/index.html`), `/api/now` — server vaqti, `/app` — statistika paneli (Mini App, faqat ega va `/grant` olganlar), `/api/app` — shu panelning ma’lumotlari, `/api/browse` — savollar bazasi bo‘ylab qidirish (bo‘limlar, paketlar, savollar), `/api/tour` — turnirni panel ichida shakllantirish yoki rejasini bekor qilish. Uchala manzil bitta darvozadan o‘tadi (`panel_request`): initData imzosi va `stats.allowed(id)` tekshiriladi, aks holda `ok: false` va rad sababi. O‘yin Telegram ichida o‘ynaladi; hisoblagich xabarning o‘zida yuradi, Mini App faqat statistika paneli uchun. Serverless holatda o‘yin holati xabarning ichida **ko‘rinmas belgilarda** (nol kenglikli `U+200C`/`U+200D`) saqlanadi: ekranda hech narsa ko‘rinmaydi, ochib o‘qiladigan joy ham yo‘q — spoiler emas, javoblar **ForceReply** orqali qabul qilinadi.
 
 **Eng oddiy usul — repo’ni Vercel’ga qo‘shish kifoya:** Vercel dashboard → *Add New → Project* → shu reponi tanlang → *Deploy*. `vercel.json`, `.python-version` va `requirements.txt` tayyor, build buyrug‘i kerak emas. Keyingi `push` lar avtomatik deploy bo‘ladi.
 
@@ -142,11 +142,11 @@ Oddiy o‘yindan farqi: **jamoalar**, **yakuniy javob** va **jadval**. Admin `/t
 - javoblar guruhda ko‘rinmaydi: bot xabarni o‘chiradi (o‘chirish ruxsati bo‘lsa) va natijani faqat o‘z jamoasiga shaxsiy xabar bilan ko‘rsatadi;
 - `/pichoq matn` — o‘z jamoangizga maxfiy gap; `/pichoq @a’zo matn` — bitta a’zoga. **Faqat o‘z jamoangiz** ko‘radi: ro‘yxatda yo‘q odamga yoki boshqa jamoaga yozib bo‘lmaydi (kurator bundan mustasno — u istalgan jamoaga yoza oladi). Bot guruhdagi xabarni **avval** o‘chiradi, keyin yetkazadi: o‘chirish huquqi bo‘lmasa, xabar hech kimga yuborilmaydi va nima uchunligi shaxsiy chatda aytiladi.
 
-**Buyruqlar.** Telegram menyusida faqat o‘yinchi yozadigan 15 ta buyruq turadi — qolgani ishlaydi, lekin menyuni to‘ldirmaydi; hammasi `/help` da bo‘limlarga ajratilgan (`/help turnir`, `/help kurator`, `/help o‘yin`, `/help ega` — bittadan bo‘lim).
+**Buyruqlar.** Telegram menyusida faqat o‘yinchi yozadigan 16 ta buyruq turadi — qolgani ishlaydi, lekin menyuni to‘ldirmaydi; hammasi `/help` da bo‘limlarga ajratilgan (`/help turnir`, `/help kurator`, `/help o‘yin`, `/help ega` — bittadan bo‘lim).
 
 | Buyruq | Kim | Nima qiladi |
 | --- | --- | --- |
-| `/turnir [paket]` | admin/kurator | yangi turnir va pinlangan karta |
+| `/turnir [paket] [vaqt=… jamoa=… tur=… savol=… sekund=… sarlavha=…]` | admin/kurator | yangi turnir va pinlangan karta — hammasi bir qatorda |
 | `/turnir qoidalar` | har kim | qoidalar |
 | `/jamoa Nom` | har kim | yangi jamoa (yozgan odam — kapitan) |
 | `/qoshil Nom` · `/chiqish` | har kim | jamoaga qo‘shilish · chiqish (kapitan chiqsa, o‘rni keyingi a’zoga o‘tadi) |
@@ -157,8 +157,11 @@ Oddiy o‘yindan farqi: **jamoalar**, **yakuniy javob** va **jadval**. Admin `/t
 | `/jadval` | har kim | ochkolar va o‘rinlar |
 | `/tanlov [so‘z]` · `/olish <id…>` · `/chiqarish <id…>` | kurator | aniq savollarni olish yoki chiqarish |
 | `/kurator <id> [olib]` | admin | kurator tayinlash · tayinlovni olish |
-| `/savol <id>` | kurator | bitta savolni ko‘rish |
+| `/savollar [sahifa]` | har kim | turnir savollari ro‘yxati (javoblar yashirin) |
+| `/savol <id>` | har kim | bitta savol: kuratorga javobi bilan, qolganlarga javob e’lon qilingach |
 | `/turnirstop` | kurator | turnirni to‘xtatish va yakuniy jadval |
+
+**Reja va eslatma.** `/turnir 959 vaqt=ertaga 19:00 jamoa=6 tur=3 savol=10 sekund=60 sarlavha=Kuzgi liga` — karta darhol guruhga chiqadi va mahkamlanadi, bot esa belgilangan daqiqada guruhga **eslatma** va tayyor **«Boshlash»** tugmasini yuboradi. O‘yin o‘zi boshlanmaydi: kamida 3 jamoa va har biridan 2 kishi «Men tayyorman» degach, kurator yoki admin tugmani bosadi. Vaqtni `19:00`, `bugun 23:59`, `ertaga 10:30`, `28.11 19:00` yoki `+45` (daqiqa) ko‘rinishida yozsa bo‘ladi; o‘tmish va 30 kundan uzoq vaqt rad etiladi. Reja statistika hujjatida saqlanadi (12 tagacha, eng yaqinlari), shuning uchun funksiya qayta ishga tushsa ham eslatma yo‘qolmaydi: guruhga kelgan **har qanday xabar** muddati yaqin rejalarni uyg‘otadi va bot boshlanishgacha qisqa qadamlar («hop») bilan kutadi. Eslatma bir marta yuboriladi — karta allaqachon o‘yinni ochgan bo‘lsa, zanjir jim tugaydi. Bekor qilish: paneldagi **«Bekor»** (faqat reja o‘chadi, karta qoladi) yoki `/turnirstop` (butun turnir).
 
 **Kurator** — bot egasi, kartani ochgan admin yoki `/kurator` bilan tayinlangan a’zo. «Sozlamalar» panelida raund, savol soni va vaqt tanlanadi; «Savol tanlash» ro‘yxatida savol ustiga bosib uni OLISH yoki CHIQARISH mumkin. So‘ralgan savollar to‘plamdagi savollardan ko‘p bo‘lsa, panel ogohlantiradi: **bir savol ikki marta berilmaydi** — shuncha savol o‘ynaladi.
 
@@ -205,7 +208,7 @@ BO‘LIMLAR
 …
 ```
 
-Panel ostidagi tugmalar: **Mini App — to‘liq panel** (ochiq manzil bo‘lsa), **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **O‘yinlar** (oxirgi harakatlar). `/stats` buyrug‘i faqat eganing buyruq menyusida ko‘rinadi; kengaytirilgan panel quyida, «Mini App paneli» bo‘limida.
+Panel ostidagi tugmalar: **Mini App — to‘liq panel** (ochiq manzil bo‘lsa), **Yangilash**, **Bo‘limlar** (barcha bo‘limlar), **O‘yinlar** (oxirgi harakatlar), **Ishlatilgan savollar** (qaysi savol qachon va qaysi paketda berilgan — 120 tagacha, sahifalanadi), **Turnir rejalari** (kelgusi o‘yinlar va qolgan vaqt) va **Ruxsatlar** (kim `/grant` olgan). `/stats ishlatilgan`, `/stats reja` va `/stats ruxsat` shu ko‘rinishlarni to‘g‘ridan-to‘g‘ri ochadi. `/stats` buyrug‘i faqat eganing buyruq menyusida ko‘rinadi; kengaytirilgan panel quyida, «Mini App paneli» bo‘limida.
 
 Serverless’da baza yo‘q, shuning uchun raqamlar bitta kichik JSON hujjatda saqlanadi. Qaysi saqlagich ishlayotganini `stats.backend()` aytadi; ustunlik tartibi shunday:
 
@@ -220,7 +223,9 @@ Tekshirish: `.../api/index?statsprobe=1` — amaldagi saqlagichni hujjatni **buz
 
 **Mini App paneli (ega va u ruxsat berganlar).** `/stats` panelining katta versiyasi Telegram ichida ochiladigan oynada: `https://<loyihangiz>.vercel.app/app`. Sahifa butunlay o‘zi bilan yetarli (bitta HTML, ichida CSS va JS, tashqi kutubxona yo‘q — faqat Telegram’ning o‘z SDK’si), ko‘rinishi Telegram’niki bilan bir xil: yorug‘ rejimda yumshoq oq fon (`#eff1f4`) va oq kartochkalar, qora rejimda **qop-qora emas** — chuqur ko‘mirrang (`#15191d`) fon va `#1d2329` kartochkalar. Mavzu `Telegram.WebApp.colorScheme` va `themeParams` dan olinadi, brauzerda ochilsa tizim mavzusiga qaraydi.
 
-To‘rt bo‘lim: **Umumiy** (hisoblagichlar, aniqlik, odamlar, ko‘p o‘ynalgan paketlar, arxiv, tizim holati), **Bo‘limlar** (13 liga ulushi bilan), **O‘yinlar** (oxirgi harakatlar tasmari), **Ruxsatlar** (faqat egada ko‘rinadi).
+Olti bo‘lim: **Umumiy** (hisoblagichlar, aniqlik, odamlar, ko‘p o‘ynalgan paketlar, arxiv, tizim holati), **Savollar** (ishlatilgan savollar indeksi va butun baza bo‘ylab brauzer: bo‘limlar → paketlar → savollar, qidiruv va sahifalash bilan; har savolda **«Tanlovga»** tugmasi), **Turnir** (shakllantirish: guruh, paket, sarlavha, raund/savol/sekund/jamoa, sana va soat yoki tayyor tugmalar — «30 daqiqadan so‘ng», «Bugun 19:00», «Ertaga 10:00»; tanlangan savollar va rejadagi turnirlar ro‘yxati), **Bo‘limlar** (13 liga ulushi bilan), **O‘yinlar** (oxirgi harakatlar tasmasi), **Ruxsatlar** (faqat egada ko‘rinadi).
+
+«Turnir» bo‘limidagi **«Turnirni guruhga chiqarish»** tugmasi `/api/tour` ga yozadi: bot guruhni tekshiradi (so‘rov yuborgan odam o‘sha guruhning admini yoki bot egasi bo‘lishi kerak), kartani yuborib mahkamlaydi va vaqt belgilangan bo‘lsa eslatmani reja qiladi. Guruh tanlanmagan, paket topilmagan, vaqt xato yoki huquq yetishmasa — javob `ok: false` va **o‘zbekcha sabab** bilan qaytadi, panel uni ko‘rsatadi. Brauzer va kompozitor `/api/browse` va `/api/tour` dan oladi, ikkalasi ham `no-store`.
 
 Kirish ikki qavatdan iborat:
 

@@ -10,7 +10,10 @@ from unittest import mock
 try:
     import bot.webhook as webhook
     from bot import messages as msg
+    from bot import schedule as sched
     from bot import settings as st
+    from bot import stats
+    from bot import tournament as tn
     from bot.archive import Archive
 except ImportError:  # fastapi / python-telegram-bot not installed yet
     webhook = None
@@ -899,6 +902,182 @@ class WholeBaseTests(unittest.TestCase):
 
     def test_unused_helpers_stay_importable(self):
         self.assertTrue(callable(remote_row))
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class ReminderPlanTests(unittest.TestCase):
+    """A scheduled start waits quietly, then announces itself exactly once."""
+
+    CHAT = -1002001234
+    CARD = 777
+
+    def setUp(self):
+        stats.reset()
+        self.archive = Archive("data/all")
+        self.bot = FakeBot()
+        self.application = SimpleNamespace(
+            bot=self.bot, bot_data={"archive": self.archive},
+            initialize=mock.AsyncMock(), shutdown=mock.AsyncMock())
+        self.hops = []
+        self._patches = [
+            mock.patch.object(webhook, "TICK_MODE", "sleep"),
+            mock.patch.object(webhook, "bg_add", lambda factory: False),
+            mock.patch.object(webhook, "post_tick", self._post),
+            mock.patch.object(webhook, "get_application", lambda: self.application),
+            mock.patch.object(stats, "backend", lambda: "lokal"),
+        ]
+        for patch in self._patches:
+            patch.start()
+        webhook._armed.clear()
+
+    def tearDown(self):
+        for patch in self._patches:
+            patch.stop()
+        webhook._armed.clear()
+        stats.reset()
+
+    async def _post(self, body: str, chat_id: int, wait: int = 0) -> None:
+        self.hops.append((body, chat_id, wait))
+
+    def _plan(self, start_at: int, title: str = "Kuzgi turnir") -> str:
+        return sched.plan_body(self.CHAT, self.CARD, start_at, title)
+
+    def _tour(self, announced: int = 0) -> tn.Tournament:
+        tour = tn.Tournament(chat_id=self.CHAT, title="Kuzgi turnir", package_id=959,
+                             creator=1, timer=60, rounds=1, per_round=5,
+                             card_message_id=self.CARD, start_at=int(time.time()) - 5,
+                             announced=announced)
+        tour.questions = self.archive.questions(959)
+        return tour
+
+    # ------------------------------------------------------------------ arming
+    def test_a_start_far_away_is_not_armed(self):
+        armed = asyncio.run(webhook.arm_reminder(self.CHAT, self.CARD,
+                                                 int(time.time()) + 7200))
+        self.assertFalse(armed)
+        self.assertEqual(self.hops, [])
+        self.assertEqual(webhook._armed, set())
+
+    def test_a_near_start_queues_one_short_hop(self):
+        start = int(time.time()) + 120
+        self.assertTrue(asyncio.run(webhook.arm_reminder(self.CHAT, self.CARD, start)))
+        self.assertEqual(len(self.hops), 1)
+        body, chat_id, wait = self.hops[0]
+        self.assertTrue(body.startswith(sched.PLAN_PREFIX))
+        self.assertEqual(chat_id, self.CHAT)
+        self.assertEqual(wait, sched.hop_step(start))
+        self.assertIn(f"{self.CHAT}:{self.CARD}", webhook._armed)
+
+    def test_a_plan_body_is_routed_to_the_reminder_chain(self):
+        with mock.patch.object(webhook, "reminder_tick_work",
+                               mock.AsyncMock(return_value={"ok": True})) as work:
+            asyncio.run(webhook.tick_work(self._plan(int(time.time()) + 60), self.CHAT))
+        self.assertEqual(work.await_count, 1)
+        self.assertEqual(work.await_args.args[1], self.CHAT)
+
+    # ------------------------------------------------------------- the hops
+    def test_a_hop_before_the_window_stops_the_chain(self):
+        webhook._armed.add(f"{self.CHAT}:{self.CARD}")
+        result = asyncio.run(webhook.reminder_tick_work(self._plan(int(time.time()) + 7200),
+                                                        self.CHAT))
+        self.assertEqual(result, {"ok": True, "stopped": "too early"})
+        self.assertEqual(webhook._armed, set())
+
+    def test_a_hop_inside_the_window_chains_again(self):
+        start = int(time.time()) + 300
+        with mock.patch.object(webhook, "arm_reminder",
+                               mock.AsyncMock(return_value=True)) as arm:
+            result = asyncio.run(webhook.reminder_tick_work(self._plan(start), self.CHAT))
+        self.assertTrue(result["ok"])
+        self.assertGreater(result["remaining"], 250)
+        self.assertEqual(arm.await_count, 1)
+        self.assertEqual(arm.await_args.args, (self.CHAT, self.CARD, start, "Kuzgi turnir"))
+        self.assertEqual(self.bot.sent, [])                  # nothing is said yet
+
+    def test_a_plan_whose_card_is_gone_ends_the_chain(self):
+        stats.plan_add(self.CHAT, self.CARD, int(time.time()) - 5, "Kuzgi turnir")
+        with mock.patch.object(webhook, "tour_from_pin", mock.AsyncMock(return_value=None)):
+            result = asyncio.run(webhook.reminder_tick_work(self._plan(int(time.time()) - 5),
+                                                            self.CHAT))
+        self.assertFalse(result["announced"])
+        self.assertEqual(result["stopped"], "no card")
+        self.assertEqual(stats.plans(), [])                  # never retried
+        self.assertEqual(self.bot.sent, [])
+
+    def test_the_due_reminder_is_sent_once_with_the_keyboard(self):
+        tour = self._tour()
+        stats.plan_add(self.CHAT, self.CARD, int(time.time()) - 5, tour.title)
+        persisted = []
+
+        async def persist(bot, archive, saved):
+            persisted.append(saved)
+
+        with mock.patch.object(webhook, "tour_from_pin", mock.AsyncMock(return_value=tour)), \
+                mock.patch.object(webhook, "tour_persist", persist):
+            result = asyncio.run(webhook.reminder_tick_work(self._plan(int(time.time()) - 5),
+                                                            self.CHAT))
+
+        self.assertTrue(result["announced"])
+        self.assertEqual(stats.plans(), [])
+        self.assertEqual(len(self.bot.sent), 1)
+        sent = self.bot.sent[0]
+        self.assertEqual(sent["chat_id"], self.CHAT)
+        self.assertIn("ESLATMA", sent["text"])
+        self.assertIn("Kuzgi turnir", sent["text"])
+        self.assertIsNotNone(sent["reply_markup"])           # the «Boshlash» row rides along
+        self.assertTrue(persisted and persisted[0].announced)
+
+    def test_an_open_game_is_not_announced_again(self):
+        tour = self._tour(announced=int(time.time()) - 60)
+        stats.plan_add(self.CHAT, self.CARD, int(time.time()) - 5, tour.title)
+        with mock.patch.object(webhook, "tour_from_pin", mock.AsyncMock(return_value=tour)), \
+                mock.patch.object(webhook, "tour_persist", mock.AsyncMock()):
+            result = asyncio.run(webhook.reminder_tick_work(self._plan(int(time.time()) - 5),
+                                                            self.CHAT))
+        self.assertFalse(result["announced"])
+        self.assertEqual(result["stopped"], "already started")
+        self.assertEqual(self.bot.sent, [])
+        self.assertEqual(stats.plans(), [])
+
+    def test_traffic_arms_only_the_plans_that_are_due(self):
+        now = int(time.time())
+        stats.plan_add(self.CHAT, self.CARD, now + 3 * 3600, "kechqurun")
+        stats.plan_add(self.CHAT, self.CARD + 1, now + 120, "tez orada")
+        armed = asyncio.run(webhook.arm_due_reminders())
+        self.assertEqual(armed, 1)
+        self.assertEqual(len(self.hops), 1)
+        self.assertIn(f"{self.CHAT}:{self.CARD + 1}", webhook._armed)
+        self.assertEqual(asyncio.run(webhook.arm_due_reminders()), 0)   # not twice
+
+    def test_a_broken_plan_list_never_raises(self):
+        with mock.patch.object(stats, "plans", mock.Mock(side_effect=RuntimeError("hujjat yo‘q"))):
+            self.assertEqual(asyncio.run(webhook.arm_due_reminders()), 0)
+
+    # ---------------------------------------------------------------- the panel
+    def test_a_command_in_a_group_is_remembered_for_the_panel(self):
+        calls = []
+
+        async def callback(update, context):
+            calls.append(update)
+
+        handler = webhook.command_handler("stats", callback)
+        message = FakeMessage("/stats")
+        chat = SimpleNamespace(id=self.CHAT, type="supergroup", title="Zakovat klubi · Toshkent")
+        update_ = SimpleNamespace(effective_message=message, message=message, callback_query=None,
+                                  effective_chat=chat, effective_user=message.from_user)
+        context = SimpleNamespace(bot=self.bot, args=[])
+        asyncio.run(handler.callback(update_, context))
+        self.assertEqual(calls, [update_])
+        self.assertEqual(stats.groups(), {self.CHAT: "Zakovat klubi · Toshkent"})
+
+    def test_a_private_chat_is_not_offered_as_a_target(self):
+        handler = webhook.command_handler("help", mock.AsyncMock())
+        message = FakeMessage("/help")
+        chat = SimpleNamespace(id=8004724563, type="private", title=None)
+        update_ = SimpleNamespace(effective_message=message, message=message, callback_query=None,
+                                  effective_chat=chat, effective_user=message.from_user)
+        asyncio.run(handler.callback(update_, SimpleNamespace(bot=self.bot, args=[])))
+        self.assertEqual(stats.groups(), {})
 
 
 if __name__ == "__main__":

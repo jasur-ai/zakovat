@@ -41,6 +41,7 @@ from telegram.ext import (
 from . import dashboard
 from . import hidden
 from . import messages as msg
+from . import schedule as sched
 from . import settings as st
 from . import stats
 from . import tournament as tn
@@ -57,6 +58,10 @@ IDLE_LIMIT = max(0, int(os.getenv("ZAKOVAT_IDLE_LIMIT", "3")))
 TICKS_ENABLED = os.getenv("ZAKOVAT_LIVE_TIMER", "1") not in ("0", "false", "no")
 TICK_MODE = os.getenv("ZAKOVAT_TICK_MODE", "bg")     # "bg" (after response) | "sleep"
 MAX_TICK_HORIZON = 900          # a countdown never runs longer than this
+# A scheduled tournament is announced by a chain of short hops, and a chain costs
+# function time, so it only lives through the last minutes before the start. The
+# card in the group carries the whole plan, so nothing is lost when no hop runs.
+REMINDER_ARM = max(60, int(os.getenv("ZAKOVAT_REMINDER_ARM", str(sched.ARM_WINDOW))))
 PROBE_WAIT = 4                  # seconds used by the ?bgprobe= diagnostic
 
 # Work queued while handling a request, run after the response has been sent.
@@ -243,6 +248,11 @@ def unpack_state(text: str | None) -> dict | None:
 IMPORTANT_EVENTS = ("game_start", "game_end", "auto_stop", "stopped")
 
 
+_reminders_seen = 0
+_reminders_fired = 0
+_armed: set[str] = set()        # reminder chains this instance already started
+
+
 def note(kind: str, **fields) -> None:
     """Count one statistics event; the store write happens after the response.
 
@@ -257,6 +267,20 @@ def note(kind: str, **fields) -> None:
             bg_add(stats.sync)
     except Exception:  # statistics must never break a game
         logging.getLogger(__name__).debug("stats record failed", exc_info=True)
+
+
+def index_used(questions, *, package_id: int = 0, chat_id: int = 0, mode: str = "") -> None:
+    """Put the questions just asked into the "ishlatildi" index.
+
+    The index lives inside the statistics document, so a question asked in any
+    chat is visible to the panel everywhere — and the next curator picking
+    questions can see which ones are already spent.
+    """
+    try:
+        if stats.mark_used(questions, package_id=package_id, chat_id=chat_id, mode=mode):
+            bg_add(stats.sync)
+    except Exception:  # the index must never break a game
+        logging.getLogger(__name__).debug("used index failed", exc_info=True)
 
 
 def close_question(session: Session, kind: str = "unanswered") -> bool:
@@ -623,6 +647,8 @@ async def send_question(bot, chat_id: int, session: Session, aliases: list[str] 
     await send_control(bot, chat_id, session, deadline, aliases)
     note("question", chat_id=chat_id, package_id=session.package_id, questions_asked=1,
          log=False)
+    index_used([question], package_id=session.package_id, chat_id=chat_id,
+               mode=session.mode or "oyin")
 
     picture = has_picture(question)
     attachments = [a for a in (question.get("attachments") or []) if isinstance(a, str)]
@@ -741,6 +767,8 @@ async def tick_work(body: str, chat_id: int) -> dict:
     """One hop of the live countdown: repaint, resolve or chain again."""
     global _ticks_seen, _ticks_painted, _ticks_resolved, _ticks_stopped
     _ticks_seen += 1
+    if str(body or "").lstrip().startswith(sched.PLAN_PREFIX):
+        return await reminder_tick_work(body, chat_id)
     if str(body or "").lstrip().startswith(tn.STATE_PREFIX):
         return await tour_tick_work(body, chat_id)
     state = body if body.lstrip().startswith(MARKER.strip()) else MARKER + body
@@ -1242,9 +1270,56 @@ def tour_round_label(tour: tn.Tournament) -> str:
     return f"{tour.current_round}-raund" if int(tour.rounds or 1) > 1 else ""
 
 
+QUESTION_PAGE = 10      # nechta savol ro‘yxatning bir sahifasida
+
+
+def tour_question_rows(archive: Archive, tour: tn.Tournament) -> list[dict]:
+    """The tournament's questions in play order, with what everybody may see.
+
+    Before the game starts the list is the playlist the seed already fixes, so
+    the group can read its questions in advance. An answer is only marked
+    published once that question has actually been played.
+    """
+    pool = list(tour.questions) if tour.questions else tour.playlist(tour_bank(archive, tour))
+    published = {int(row.get("id") or 0) for row in tour.history}
+    rows = []
+    for number, question in enumerate(pool, start=1):
+        question_id = int(question.get("id") or 0)
+        rows.append({"number": number, "id": question_id,
+                     "text": str(question.get("text") or ""),
+                     "answer": str(question.get("answer") or ""),
+                     "published": question_id in published,
+                     "used": stats.is_used(question_id)})
+    return rows
+
+
+async def tour_render_questions(bot, archive: Archive, tour: tn.Tournament, page: int = 1,
+                                query=None, chat_id: int = 0) -> int:
+    """Send (or rewrite) the public question list; returns the page shown."""
+    rows = tour_question_rows(archive, tour)
+    pages = max(1, -(-len(rows) // QUESTION_PAGE))
+    page = max(1, min(int(page or 1), pages))
+    shown = rows[(page - 1) * QUESTION_PAGE: page * QUESTION_PAGE]
+    published = sum(1 for row in rows if row["published"])
+    text = msg.tour_question_list(tour.title, shown, published, page, pages)[:4090]
+    keyboard = st.question_list_keyboard(page, pages, shown)
+    if query is not None:
+        try:
+            await query.edit_message_text(text, parse_mode=ParseMode.HTML,
+                                          reply_markup=keyboard)
+            return page
+        except TelegramError:
+            pass
+    await bot.send_message(chat_id=int(chat_id or tour.chat_id), text=text,
+                           parse_mode=ParseMode.HTML, reply_markup=keyboard,
+                           disable_web_page_preview=True)
+    return page
+
+
 def tour_teams_view(tour: tn.Tournament) -> list[dict]:
     """Roster, matn va klaviatura uchun oddiy lug‘atlar ko‘rinishida."""
     return [{"name": team.name, "captain": int(team.captain),
+             "ready": int(team.ready_count), "size": int(team.size),
              "members": [{"id": int(person.user_id), "name": person.label(),
                           "username": person.username, "ready": bool(person.ready)}
                          for person in team.members]}
@@ -1278,9 +1353,11 @@ def tour_card_text(archive: Archive, tour: tn.Tournament, curator: bool = False)
         total = tour_total(archive, tour)
         per_round = int(tour.per_round or 0) or bank
         text = msg.tour_intro(tour.title, package_title, int(tour.rounds or 1), per_round,
-                              int(tour.timer), total, sizes)
+                              int(tour.timer), total, sizes,
+                              start_text=tn.when_text(tour.start_at),
+                              team_limit=tour.team_limit)
         text += "\n" + msg.tour_teams(teams, tour.phase, sizes)
-        problems = tour.missing(bank)
+        problems = tour.missing(bank, int(time.time()))
         text += "\n\n" + (msg.tour_ready(total, tour.people, len(tour.teams)) if not problems
                             else msg.tour_missing(problems))
         if curator:
@@ -1298,7 +1375,8 @@ def tour_card_keyboard(archive: Archive, tour: tn.Tournament, curator: bool):
     sizes = tn.sizes()
     if tour.phase == tn.PHASE_REGISTER:
         return st.tour_keyboard(tour_teams_view(tour), tour.phase, tour.ready_to_start(
-            tour_bank_size(archive, tour)), curator, sizes)
+            tour_bank_size(archive, tour), int(time.time())), curator, sizes,
+            start_text=tn.when_text(int(tour.start_at)))
     if tour.phase == tn.PHASE_PLAY:
         return st.tour_play_keyboard(curator, msg.clock(
             max(0, int(tour.deadline) - int(time.time()))))
@@ -1578,6 +1656,7 @@ async def send_tour_question(bot, archive: Archive, chat_id: int,
     await tour_persist(bot, archive, tour)      # the card now carries the strip id too
     note("question", chat_id=chat_id, package_id=tour.package_id, questions_asked=1,
          detail=f"turnir · savol {tour.number}/{tour.total}", log=False)
+    index_used([question], package_id=tour.package_id, chat_id=chat_id, mode="turnir")
 
     picture = has_picture(question)
     attachments = [a for a in (question.get("attachments") or []) if isinstance(a, str)]
@@ -1650,12 +1729,14 @@ async def tour_resolve(bot, archive: Archive, chat_id: int, tour: tn.Tournament)
 async def tour_start(bot, archive: Archive, chat_id: int, tour: tn.Tournament) -> bool:
     """Registration is over: build the playlist and open the first question."""
     bank = tour_bank(archive, tour)
-    problems = tour.missing(len(bank))
+    problems = tour.missing(len(bank), int(time.time()))
     if problems:
         return False
     chat_type = "supergroup"
     tour.can_delete = await detect_can_delete(bot, chat_id, chat_type)
     tour.open_mode = not tour.can_delete
+    tour.start_at = 0                     # the wait is over
+    tour_forget_plan(tour)
     tour.questions = tour.playlist(bank)
     tour.phase = tn.PHASE_PLAY
     tour.index = 0
@@ -1682,6 +1763,7 @@ async def tour_stop(bot, archive: Archive, chat_id: int, tour: tn.Tournament,
     tour.phase = tn.PHASE_DONE
     tour.finished = True
     tour.bump()
+    tour_forget_plan(tour)
     note("stopped", chat_id=chat_id, package_id=tour.package_id, games_stopped=1,
          games_finished=1, detail=f"turnir · {tour.title} · {tour.leader()}")
     await tour_persist(bot, archive, tour)
@@ -1704,6 +1786,117 @@ async def schedule_tour_tick(tour: tn.Tournament, deadline: int) -> None:
     if TICK_MODE == "bg" and bg_add(lambda: tour_tick_after_wait(body, chat_id, step)):
         return
     await post_tick(body, chat_id, step)
+
+
+async def arm_reminder(chat_id: int, message_id: int, start_at: int, title: str = "",
+                       wait: int = 0) -> bool:
+    """Keep a scheduled tournament's reminder alive with short hops.
+
+    Returns False when the start is still outside the arming window: nobody pays
+    for a chain of hops three hours before the game, and the plan stays stored,
+    so any later traffic opens the window again.
+    """
+    key = f"{int(chat_id)}:{int(message_id)}"
+    if int(start_at) - int(time.time()) > REMINDER_ARM:
+        _armed.discard(key)
+        return False
+    step = int(wait) if wait else sched.hop_step(int(start_at))
+    body = sched.plan_body(chat_id, message_id, start_at, title)
+    _armed.add(key)
+    if TICK_MODE == "bg" and bg_add(lambda: reminder_after_wait(body, chat_id, step)):
+        return True
+    await post_tick(body, chat_id, step)
+    return True
+
+
+async def arm_due_reminders() -> int:
+    """Lazy re-arming: whatever traffic arrives wakes the plans now due."""
+    armed = 0
+    try:
+        rows = stats.plans()
+    except Exception:
+        return 0
+    for row in rows:
+        if not sched.due(int(row.get("start") or 0), window=REMINDER_ARM):
+            continue
+        key = f"{int(row.get('chat') or 0)}:{int(row.get('message') or 0)}"
+        if key in _armed:
+            continue
+        try:
+            if await arm_reminder(int(row.get("chat") or 0), int(row.get("message") or 0),
+                                  int(row.get("start") or 0), str(row.get("title") or "")):
+                armed += 1
+        except Exception:
+            logging.getLogger(__name__).debug("reminder arming failed", exc_info=True)
+    return armed
+
+
+async def reminder_after_wait(body: str, chat_id: int, wait: int) -> None:
+    if wait:
+        await asyncio.sleep(wait)
+    try:
+        await reminder_tick_work(body, chat_id)
+    except Exception:
+        logging.getLogger(__name__).warning("reminder hop failed", exc_info=True)
+
+
+async def reminder_tick_work(body: str, chat_id: int) -> dict:
+    """One hop of a scheduled start: wait, chain again, or announce the game."""
+    global _reminders_seen, _reminders_fired
+    _reminders_seen += 1
+    plan = sched.plan_data(body)
+    if not plan or not plan["chat"]:
+        return {"ok": False, "reason": "no plan"}
+    chat_id = int(plan["chat"] or chat_id or 0)
+    message_id = int(plan["message"] or 0)
+    start_at = int(plan["start"] or 0)
+    key = f"{chat_id}:{message_id}"
+    left = start_at - int(time.time())
+    if left > REMINDER_ARM:
+        _armed.discard(key)                    # somebody moved the start further away
+        return {"ok": True, "stopped": "too early"}
+    if left > 0:
+        await arm_reminder(chat_id, message_id, start_at, plan["title"])
+        return {"ok": True, "remaining": left}
+
+    application = get_application()
+    await application.initialize()
+    try:
+        bot = application.bot
+        archive: Archive = application.bot_data.get("archive") or ARCHIVE
+        tour = await tour_from_pin(bot, archive, chat_id)
+        if tour is None:
+            return await _reminder_done(chat_id, message_id, key, "no card")
+        if tour.phase != tn.PHASE_REGISTER or int(tour.announced):
+            return await _reminder_done(chat_id, message_id, key, "already started")
+        sizes = tn.sizes()
+        teams = tour_teams_view(tour)
+        ready = tour.ready_to_start(tour_bank_size(archive, tour), int(time.time()))
+        text = msg.tour_reminder(tour.title or plan["title"],
+                                 tn.when_text(int(tour.start_at or start_at)), teams, sizes)
+        sent = await bot.send_message(chat_id=chat_id, text=text[:4090],
+                                      parse_mode=ParseMode.HTML,
+                                      reply_markup=st.tour_keyboard(teams, tour.phase, ready,
+                                                                    True, sizes))
+        tour.announced = int(time.time())
+        tour.card_message_id = getattr(sent, "message_id", tour.card_message_id)
+        tour.bump()
+        await tour_persist(bot, archive, tour)
+        note("tour_reminder", chat_id=chat_id, package_id=tour.package_id,
+             detail=f"turnir · {tour.title} · {len(tour.teams)} jamoa")
+        _reminders_fired += 1
+        return await _reminder_done(chat_id, message_id, key, "announced", announced=True)
+    finally:
+        await application.shutdown()
+
+
+async def _reminder_done(chat_id: int, message_id: int, key: str, reason: str,
+                         announced: bool = False) -> dict:
+    """The chain ends here: forget the plan so it is never announced twice."""
+    _armed.discard(key)
+    stats.plan_drop(chat_id, message_id)
+    bg_add(lambda: stats.sync(force=True))
+    return {"ok": True, "announced": bool(announced), "stopped": reason}
 
 
 async def tour_tick_after_wait(body: str, chat_id: int, wait: int) -> None:
@@ -1845,18 +2038,36 @@ async def tour_render_curator_panel(context: ContextTypes.DEFAULT_TYPE, bot,
                            reply_markup=keyboard, disable_web_page_preview=True)
 
 
+def clamp_choice(value: int, options, fallback: int) -> int:
+    """The nearest setting the game actually offers, so a typed number is safe."""
+    try:
+        wanted = int(value)
+    except (TypeError, ValueError):
+        return int(fallback)
+    allowed = [int(item) for item in options]
+    if wanted in allowed:
+        return wanted
+    return min(allowed, key=lambda item: (abs(item - wanted), item))
+
+
 async def tour_new(bot, archive: Archive, chat_id: int, user_id: int, argument: str,
-                   chat=None) -> tn.Tournament:
-    """A fresh tournament: package resolved like /solo, structure at defaults."""
+                   chat=None, spec: dict | None = None) -> tn.Tournament:
+    """A fresh tournament: package resolved like /solo, structure at defaults.
+
+    ``spec`` is a parsed composer line (``sched.parse_spec``), which is how one
+    command can carry the package, the start time, the team cap and the shape of
+    the game at once.
+    """
+    spec = spec if isinstance(spec, dict) else sched.parse_spec(argument)
+    wanted = str(spec.get("package") or spec.get("text") or "").strip()
     package_id = 0
     title = TOUR_DEFAULT_TITLE
-    argument = (argument or "").strip()
-    if argument:
-        digits = argument.split()[0]
+    if wanted:
+        digits = wanted.split()[0]
         if digits.isdigit() and archive.package_info(int(digits)):
             package_id = int(digits)
         else:
-            found = archive.search(argument, limit=1)
+            found = archive.search(wanted, limit=1)
             if found:
                 package_id = int(found[0]["id"])
     if not package_id:
@@ -1865,9 +2076,45 @@ async def tour_new(bot, archive: Archive, chat_id: int, user_id: int, argument: 
     tour = tn.Tournament(chat_id=chat_id, title=(info.get("title") or title)[:40],
                          package_id=package_id, creator=int(user_id), timer=TIMER,
                          rounds=1, per_round=10, seed=random.randrange(1, 999999))
+    if spec.get("title"):
+        tour.title = str(spec["title"])[:40]
+    if spec.get("rounds"):
+        tour.rounds = clamp_choice(spec["rounds"], st.TOUR_ROUNDS, 1)
+    if spec.get("per_round") is not None:
+        tour.per_round = clamp_choice(spec["per_round"], st.TOUR_PER_ROUND, 10)
+    if spec.get("timer"):
+        tour.timer = clamp_choice(spec["timer"], st.TOUR_TIMERS, TIMER)
+    if spec.get("teams"):
+        tour.max_teams = max(tn.MIN_TEAMS, min(int(spec["teams"]), tn.MAX_TEAMS))
+    tour.start_at = int(spec.get("start_at") or 0)
     tour.can_delete = await detect_can_delete(bot, chat_id,
                                               getattr(chat, "type", "supergroup") or "supergroup")
     return tour
+
+
+async def tour_register_plan(bot, archive: Archive, tour: tn.Tournament) -> bool:
+    """A tournament with a start time: store the reminder and arm it if it is near.
+
+    The card pinned in the group stays the authority — it carries the package, the
+    shape of the game and the teams — so the plan itself only has to say which
+    message to announce and when.
+    """
+    if not tour.start_at or tour.phase != tn.PHASE_REGISTER or not tour.card_message_id:
+        return False
+    stats.plan_add(int(tour.chat_id), int(tour.card_message_id), int(tour.start_at),
+                   str(tour.title or ""))
+    stats.group_seen(int(tour.chat_id), "")
+    bg_add(lambda: stats.sync(force=True))
+    return await arm_reminder(int(tour.chat_id), int(tour.card_message_id),
+                              int(tour.start_at), str(tour.title or ""))
+
+
+def tour_forget_plan(tour: tn.Tournament) -> None:
+    """The game started, stopped or moved: the reminder is no longer needed."""
+    if not tour.card_message_id:
+        return
+    stats.plan_drop(int(tour.chat_id), int(tour.card_message_id))
+    bg_add(lambda: stats.sync(force=True))
 
 
 async def cmd_tour(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -1901,16 +2148,31 @@ async def cmd_tour(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             msg.tour_denied_action("turnir ochish"), parse_mode=ParseMode.HTML)
         return
     archive = _archive_of(context)
+    spec = sched.parse_spec(argument)
+    if spec.get("error"):
+        await update.effective_message.reply_text(
+            f"{spec['error']}\n\n{msg.tour_spec_help()}", parse_mode=ParseMode.HTML)
+        return
+    stats.group_seen(chat.id, getattr(chat, "title", "") or "")
     tour = await tour_new(context.bot, archive, chat.id, update.effective_user.id,
-                          argument, chat)
+                          argument, chat, spec=spec)
     note("command", user_id=update.effective_user.id, chat_id=chat.id,
          detail=f"turnir · {tour.package_id}", log=False)
     await tour_persist(context.bot, archive, tour)
-    await update.effective_message.reply_text(
-        "Turnir ochildi: ro‘yxat xabari yuborildi va mahkamlandi (pin).\n"
-        "• Jamoa yaratish: <code>/jamoa nom</code> yoki «Yangi jamoa» tugmasi\n"
-        "• Sozlamalar va savol tanlash: kartadagi tugmalar (faqat kurator)\n"
-        "• Qoidalar: <code>/turnir qoidalar</code>", parse_mode=ParseMode.HTML)
+    await tour_register_plan(context.bot, archive, tour)
+    lines = ["Turnir ochildi: ro‘yxat xabari yuborildi va mahkamlandi (pin)."]
+    if tour.start_at:
+        lines.append(f"• Boshlanish: <b>{msg.esc(tn.when_text(tour.start_at))}</b> — o‘sha paytda "
+                     "bot shu guruhga eslatma va «Boshlash» tugmasini yuboradi")
+    lines += [
+        f"• Jamolar: ko‘pi bilan {tour.team_limit} ta · yaratish: «Yangi jamoa» tugmasi "
+        "yoki <code>/jamoa nom</code>",
+        "• Sozlamalar va savol tanlash: kartadagi tugmalar (faqat kurator)",
+        "• Savollar va e’lon qilingan javoblar guruhdagi hammaga ko‘rinadi: "
+        "<code>/savollar</code>",
+        "• Qoidalar: <code>/turnir qoidalar</code>",
+    ]
+    await update.effective_message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML)
 
 
 async def cmd_team(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2490,28 +2752,61 @@ async def _selection_change(update: Update, context: ContextTypes.DEFAULT_TYPE,
     await message.reply_text(text[:4090], parse_mode=ParseMode.HTML)
 
 
-async def cmd_show_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/savol <id> — one question for the curator (answer only in private)."""
+async def cmd_show_questions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/savollar — the tournament's questions, for everybody in the group."""
     message = update.effective_message
     tour = await tour_state(update, context)
     if tour is None:
         await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
         return
-    if not await tour_curator(update, context, tour):
-        await message.reply_text(msg.tour_denied_action("savolni ko‘rish"),
-                                 parse_mode=ParseMode.HTML)
+    argument = " ".join(context.args or []).strip()
+    page = int(argument) if argument.isdigit() else 1
+    note("command", user_id=getattr(update.effective_user, "id", 0) or 0,
+         chat_id=getattr(update.effective_chat, "id", 0) or 0,
+         detail="savollar ro‘yxati", log=False)
+    await tour_render_questions(context.bot, _archive_of(context), tour, page,
+                                chat_id=getattr(update.effective_chat, "id", 0) or 0)
+
+
+async def cmd_show_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/savol <id> — one question, open to everybody in the tournament chat.
+
+    The answer follows the game: a curator sees it at once, anybody else sees it
+    once the question has been played and its answer published. Nothing has to be
+    asked in private any more.
+    """
+    message = update.effective_message
+    tour = await tour_state(update, context)
+    if tour is None:
+        await message.reply_text(msg.tour_no_tournament(), parse_mode=ParseMode.HTML)
         return
+    archive = _archive_of(context)
     argument = " ".join(context.args or []).strip()
     if not argument.isdigit():
-        await message.reply_text("Masalan: <code>/savol 12345</code>", parse_mode=ParseMode.HTML)
+        await message.reply_text("Masalan: <code>/savol 12345</code> · ro‘yxat: "
+                                 "<code>/savollar</code>", parse_mode=ParseMode.HTML)
         return
-    question = _archive_of(context).question(int(argument))
+    question_id = int(argument)
+    question = archive.question(question_id)
     if question is None:
         await message.reply_text("Bunday savol topilmadi.")
         return
     private_chat = getattr(update.effective_chat, "type", "") == "private"
-    await message.reply_text(msg.tour_question_card(question, private_chat),
-                             parse_mode=ParseMode.HTML)
+    curator = await tour_curator(update, context, tour)
+    published = any(int(row.get("id") or 0) == question_id for row in tour.history)
+    rows = tour_question_rows(archive, tour)
+    number = next((row["number"] for row in rows if row["id"] == question_id), 0)
+    show_answer = bool(private_chat or curator or published)
+    page = max(1, (number + QUESTION_PAGE - 1) // QUESTION_PAGE) if number else 1
+    await message.reply_text(msg.tour_question_card(question, show_answer,
+                                                    used=stats.is_used(question_id),
+                                                    number=number, total=len(rows)),
+                             parse_mode=ParseMode.HTML,
+                             reply_markup=None if private_chat
+                             else st.question_card_keyboard(page))
+    note("command", user_id=getattr(update.effective_user, "id", 0) or 0,
+         chat_id=getattr(update.effective_chat, "id", 0) or 0,
+         detail=f"savol {question_id}", log=False)
 
 
 async def cmd_curator(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2587,6 +2882,10 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     chat_id = update.effective_chat.id
     tour.see(int(getattr(user, "id", 0) or 0), tour_sender(user),
              getattr(user, "username", "") or "")
+    pressed = getattr(getattr(query, "message", None), "message_id", None)
+    # The pinned card is the roster; a list or a panel drawn into it would replace
+    # the teams, so those open in their own message and rewrite that one instead.
+    editable = bool(pressed) and pressed != tour.card_message_id
 
     if action == st.TEAM_JOIN:
         position = int(value) if str(value).lstrip("-").isdigit() else -1
@@ -2683,6 +2982,66 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await tour_resolve(context.bot, archive, chat_id, tour)
         return
 
+    if action == st.TEAM_LIST:
+        await query.answer()
+        await tour_render_questions(context.bot, archive, tour, 1, query=query if editable
+                                    else None, chat_id=chat_id)
+        return
+
+    if action == st.TEAM_LIST_PAGE:
+        page = int(value) if str(value).isdigit() else 1
+        await query.answer()
+        await tour_render_questions(context.bot, archive, tour, page, query=query if editable
+                                    else None, chat_id=chat_id)
+        return
+
+    if action == st.TEAM_QUESTION:
+        question_id = int(value) if str(value).isdigit() else 0
+        question = archive.question(question_id) if question_id else None
+        if question is None:
+            await query.answer("Savol topilmadi.", show_alert=True)
+            return
+        rows = tour_question_rows(archive, tour)
+        number = next((row["number"] for row in rows if row["id"] == question_id), 0)
+        curator = await tour_curator(update, context, tour)
+        show_answer = bool(curator or any(row["id"] == question_id and row["published"]
+                                          for row in rows))
+        await query.answer()
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=msg.tour_question_card(question, show_answer,
+                                        used=stats.is_used(question_id), number=number,
+                                        total=len(rows))[:4090],
+            parse_mode=ParseMode.HTML,
+            reply_markup=st.question_card_keyboard(
+                max(1, (number + QUESTION_PAGE - 1) // QUESTION_PAGE) if number else 1))
+        return
+
+    if action == st.TEAM_MANAGE:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("boshqaruv"), show_alert=True)
+            return
+        await query.answer()
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=msg.tour_manage_text(tour, tn.when_text(int(tour.start_at)),
+                                      tour.ready_to_start(tour_bank_size(archive, tour),
+                                                          int(time.time())))[:4090],
+            parse_mode=ParseMode.HTML,
+            reply_markup=st.manage_keyboard(tour.phase, tour.ready_to_start(
+                tour_bank_size(archive, tour), int(time.time())),
+                tn.when_text(int(tour.start_at))))
+        return
+
+    if action == st.TEAM_PLAN:
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("rejni ko‘rish"), show_alert=True)
+            return
+        await query.answer()
+        await context.bot.send_message(chat_id=chat_id, text=msg.tour_plan_text(tour)[:4090],
+                                       parse_mode=ParseMode.HTML)
+        return
+
     if action == st.TEAM_TABLE:
         heading = "YAKUNIY JADVAL" if tour.phase == tn.PHASE_DONE else "JADVAL"
         text = msg.tour_standings(tour.standings(), tour.title, heading)[:4000]
@@ -2704,6 +3063,17 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                                        parse_mode=ParseMode.HTML)
         return
 
+    if action == "ku":
+        if not await tour_curator(update, context, tour):
+            await query.answer(msg.tour_denied_action("kurator tayinlash"), show_alert=True)
+            return
+        await query.answer()
+        names = [person for person in (tour.directory or []) if len(person) >= 2]
+        await context.bot.send_message(chat_id=chat_id,
+                                       text=msg.tour_curator_picker(tour, names)[:4090],
+                                       parse_mode=ParseMode.HTML)
+        return
+
     if action == st.TEAM_PICK:
         if not await tour_curator(update, context, tour):
             await query.answer(msg.tour_denied_action("savol tanlash"), show_alert=True)
@@ -2717,7 +3087,7 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await query.answer(msg.tour_denied_action("boshlash"), show_alert=True)
             return
         bank = tour_bank_size(archive, tour)
-        problems = tour.missing(bank)
+        problems = tour.missing(bank, int(time.time()))
         if problems:
             await query.answer("Shartlar bajarilmagan", show_alert=True)
             await context.bot.send_message(chat_id=chat_id,
@@ -2728,7 +3098,8 @@ async def on_team_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         started = await tour_start(context.bot, archive, chat_id, tour)
         if not started:
             await context.bot.send_message(chat_id=chat_id,
-                                           text=msg.tour_missing(tour.missing(bank))[:4090],
+                                           text=msg.tour_missing(
+                                               tour.missing(bank, int(time.time())))[:4090],
                                            parse_mode=ParseMode.HTML)
         return
 
@@ -2863,13 +3234,41 @@ def is_owner(update: Update) -> bool:
     return bool(user) and int(getattr(user, "id", 0) or 0) == int(stats.OWNER_ID)
 
 
+USED_PAGE = 12          # nechta ishlatilgan savol bir sahifada
+
+
 async def render_stats(context: ContextTypes.DEFAULT_TYPE, view: str = "main",
-                       message=None, callback=None) -> None:
+                       message=None, callback=None, page: int = 1) -> None:
     """Build one statistics page and either send it or rewrite the panel."""
-    data = await stats.snapshot(_archive_of(context))
-    render = {"sections": msg.stats_sections, "events": msg.stats_events}.get(view, msg.stats_panel)
-    text = render(data)[:4090]
-    keyboard = st.stats_keyboard("main" if view == "main" else view, app_menu_url())
+    archive = _archive_of(context)
+    data = await stats.snapshot(archive)
+    pages = 1
+    if view == "used":
+        index = stats.used_index(archive)
+        rows = index["items"]
+        pages = max(1, -(-len(rows) // USED_PAGE))
+        page = max(1, min(int(page or 1), pages))
+        shown = rows[(page - 1) * USED_PAGE: page * USED_PAGE]
+        for row in shown:                       # a stored row knows only its id
+            if not row.get("x"):
+                found = archive.question(int(row["id"])) or {}
+                row["x"] = str(found.get("text") or "")[:60]
+                row["p"] = int(row.get("p") or found.get("package_id") or 0)
+        data = {**data, "used": {**index, "items": shown}}
+        text = msg.stats_used(data, shown, page, pages)[:4090]
+    elif view == "plans":
+        text = msg.stats_plans(data)[:4090]
+    elif view == "access":
+        rows = [{"id": row["id"], "name": row["name"],
+                 "label": sched.clock_text(row["since"]) if row.get("since") else ""}
+                for row in wa.access_report()]
+        text = msg.stats_access({**data, "access": rows})[:4090]
+    else:
+        render = {"sections": msg.stats_sections,
+                  "events": msg.stats_events}.get(view, msg.stats_panel)
+        text = render(data)[:4090]
+    keyboard = st.stats_keyboard("main" if view == "main" else view, app_menu_url(),
+                                 page=page, pages=pages)
     if callback is not None:
         try:
             await callback.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard)
@@ -2889,8 +3288,11 @@ async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     view = (context.args[0].strip().lower() if context.args else "main")
     view = {"bo'limlar": "sections", "bolimlar": "sections", "b": "sections",
-            "o'yinlar": "events", "oyinlar": "events", "e": "events"}.get(view, view)
-    if view not in ("main", "sections", "events"):
+            "o'yinlar": "events", "oyinlar": "events", "e": "events",
+            "ishlatilgan": "used", "savollar": "used", "q": "used",
+            "reja": "plans", "rejalar": "plans", "turnirlar": "plans", "p": "plans",
+            "ruxsat": "access", "ruxsatlar": "access", "a": "access"}.get(view, view)
+    if view not in ("main", "sections", "events", "used", "plans", "access"):
         view = "main"
     await render_stats(context, view, message=update.effective_message)
 
@@ -2904,9 +3306,17 @@ async def on_stats_button(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await query.answer(msg.stats_denied(getattr(update.effective_user, "id", None)),
                            show_alert=True)
         return
-    view = {"r": "main", "b": "sections", "e": "events"}.get(data.split("|", 1)[1], "main")
+    tail = data.split("|", 1)[1]
+    view = {"r": "main", "b": "sections", "e": "events", "q": "used", "qp": "used",
+            "p": "plans", "a": "access"}.get(tail.split("|")[0], "main")
+    page = 1
+    if tail.startswith("qp|"):
+        try:
+            page = max(1, int(tail.split("|", 1)[1]))
+        except (TypeError, ValueError):
+            page = 1
     await query.answer()
-    await render_stats(context, view, callback=query)
+    await render_stats(context, view, callback=query, page=page)
 
 
 APP_MENU_TEXT = "Statistika"
@@ -3085,6 +3495,7 @@ BOT_COMMANDS = [
     ("yakuniy", "Yakuniy javob: /yakuniy javob"),
     ("pichoq", "Maxfiy xabar: /pichoq matn"),
     ("jadval", "Ochkolar jadvali"),
+    ("savollar", "Turnir savollari (hammaga ochiq)"),
 ]
 # Everything the bot understands, menu or not: /help is written from these groups.
 ALL_COMMANDS = BOT_COMMANDS + [
@@ -3142,6 +3553,7 @@ COMMANDS = {
     "olish": cmd_include,
     "chiqarish": cmd_exclude,
     "savol": cmd_show_question,
+    "savollar": cmd_show_questions,
     "kurator": cmd_curator,
     "turnirstop": cmd_tour_stop,
     "stats": cmd_stats,
@@ -3175,9 +3587,13 @@ def command_handler(name: str, callback):
     """CommandHandler that also counts the command in the statistics."""
 
     async def counted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        chat = getattr(update, "effective_chat", None)
         note("command", user_id=getattr(getattr(update, "effective_user", None), "id", None),
-             chat_id=getattr(getattr(update, "effective_chat", None), "id", None),
-             commands=1, detail=f"/{name}", log=False)
+             chat_id=getattr(chat, "id", None), commands=1, detail=f"/{name}", log=False)
+        # The panel can only offer a group it has seen, and seeing one is free:
+        # it is a line of memory, written out with the next statistics flush.
+        if chat is not None and getattr(chat, "type", "private") != "private":
+            stats.group_seen(int(chat.id), str(getattr(chat, "title", "") or ""))
         await callback(update, context)
 
     return CommandHandler(name, counted)
@@ -3226,6 +3642,7 @@ def build_app(bot=None) -> Application:
         command_handler("olish", cmd_include),
         command_handler("chiqarish", cmd_exclude),
         command_handler("savol", cmd_show_question),
+        command_handler("savollar", cmd_show_questions),
         command_handler("kurator", cmd_curator),
         command_handler("turnirstop", cmd_tour_stop),
         command_handler("stats", cmd_stats),
@@ -3756,18 +4173,23 @@ async def app_page(request: Request):
     return response
 
 
-async def app_payload(request: Request) -> dict:
-    """Verify who is asking, then answer with the dashboard (or a refusal)."""
-    init_data = ""
-    source = ""
+async def panel_request(request: Request) -> tuple[dict, dict]:
+    """Read one panel call: its body, and who is asking.
+
+    Every panel endpoint goes through here, so the gate is written once: a valid
+    Telegram signature *and* a place on the owner's guest list. The answer is
+    ``({"user": …, "body": …}, {})`` when allowed, or ``({}, refusal)``.
+    """
+    body: dict = {}
     if request.method == "POST":
         try:
-            body = await request.json()
+            posted = await request.json()
         except Exception:
-            body = None
-        if isinstance(body, dict):
-            init_data = str(body.get("initData") or body.get("init_data") or "")
-            source = str(body.get("manba") or "")
+            posted = None
+        if isinstance(posted, dict):
+            body = posted
+    init_data = str(body.get("initData") or body.get("init_data") or "")
+    source = str(body.get("manba") or "")
     if not init_data:
         init_data = str(request.query_params.get("initData")
                         or request.query_params.get("auth") or "")
@@ -3783,7 +4205,7 @@ async def app_payload(request: Request) -> dict:
         answer = wa.denied(reason)
         answer["manba"] = source or "yo‘q"
         answer["uzunlik"] = len(init_data)
-        return answer
+        return {}, answer
     user = verified.get("user") or {}
     user_id = int(user.get("id") or 0)
     await stats.load_access()
@@ -3794,8 +4216,207 @@ async def app_payload(request: Request) -> dict:
         answer["manba"] = source or "yo‘q"
         answer["sizning_id"] = user_id
         answer["yechim"] = f"Bot egasiga shu id ni yuboring, u /grant {user_id} Ism deb yozadi."
-        return answer
-    return await wa.payload(user, ARCHIVE, flush=bg_add)
+        return {}, answer
+    return {"user": user, "chat": verified.get("chat") or {}, "body": body}, {}
+
+
+async def app_payload(request: Request) -> dict:
+    """Verify who is asking, then answer with the dashboard (or a refusal)."""
+    allowed, refusal = await panel_request(request)
+    if refusal:
+        return refusal
+    return await wa.payload(allowed["user"], ARCHIVE, flush=bg_add)
+
+
+# --------------------------------------------------------------- panel: browse
+@app.post("/api/browse")
+@app.get("/api/browse")
+async def api_browse(request: Request):
+    """Sections, packages and questions for the panel's browser."""
+    bucket: list = []
+    token = _bg_tasks.set(bucket)
+    try:
+        allowed, refusal = await panel_request(request)
+        if refusal:
+            answer: dict = refusal
+        else:
+            try:
+                answer = wa.browse(allowed.get("body") or {}, ARCHIVE)
+            except Exception as exc:                     # a shard may be unreachable
+                logging.getLogger(__name__).warning("browse failed", exc_info=True)
+                answer = {"ok": False, "reason": f"Ko‘rib chiqib bo‘lmadi: {exc}"[:200]}
+            answer["ishlatilgan_indeks"] = stats.used_index()
+            answer["ishlatilgan_indeks"].pop("items", None)
+        response: Response = JSONResponse(answer)
+        response.headers["Cache-Control"] = "no-store"
+    finally:
+        _bg_tasks.reset(token)
+    return with_background(response, bucket)
+
+
+# ---------------------------------------------------------------- panel: plans
+@app.post("/api/tour")
+async def api_tour(request: Request):
+    """Compose a tournament in the panel and let the bot post it into a group."""
+    bucket: list = []
+    token = _bg_tasks.set(bucket)
+    try:
+        allowed, refusal = await panel_request(request)
+        if refusal:
+            answer = refusal
+        else:
+            answer = await panel_tour(allowed["user"], allowed.get("body") or {})
+        response: Response = JSONResponse(answer)
+        response.headers["Cache-Control"] = "no-store"
+    finally:
+        _bg_tasks.reset(token)
+    return with_background(response, bucket)
+
+
+async def panel_tour(user: dict, body: dict) -> dict:
+    """One panel action about tournaments: list, compose, or cancel a plan."""
+    action = str(body.get("amal") or "reja").strip().lower()
+    if action in ("bekor", "cancel"):
+        return await panel_cancel(user, body)
+    if action in ("shakllantirish", "compose", "yuborish"):
+        return await panel_compose(user, body)
+    return {"ok": True, "amal": "reja", "rejalar": stats.plans(),
+            "guruhlar": [{"id": int(key), "title": value}
+                         for key, value in sorted(stats.groups().items(),
+                                                  key=lambda kv: -int(kv[0]))],
+            "chegaralar": {"jamoa": [tn.MIN_TEAMS, tn.MAX_TEAMS],
+                           "raund": list(st.TOUR_ROUNDS),
+                           "savol": list(st.TOUR_PER_ROUND),
+                           "sekund": list(st.TOUR_TIMERS),
+                           "eslatma": REMINDER_ARM},
+            "ishlatilgan": _used_summary()}
+
+
+def _used_summary() -> dict:
+    """The used-question index without its rows: the panel only shows totals here."""
+    index = stats.used_index()
+    index.pop("items", None)
+    return index
+
+
+async def panel_cancel(user: dict, body: dict) -> dict:
+    """Take a scheduled tournament's plan back (the card itself stays)."""
+    try:
+        chat_id = int(body.get("guruh") or 0)
+        message_id = int(body.get("xabar") or 0)
+    except (TypeError, ValueError):
+        return {"ok": False, "reason": "Qaysi reja ekanini tushunmadim."}
+    if not chat_id or not message_id:
+        return {"ok": False, "reason": "Guruh va karta xabari id si kerak."}
+    stats.plan_drop(chat_id, message_id)
+    bg_add(lambda: stats.sync(force=True))
+    note("tour_cancelled", user_id=int(user.get("id") or 0), chat_id=chat_id,
+         detail=f"reja bekor · karta {message_id}")
+    return {"ok": True, "amal": "bekor", "rejalar": stats.plans(),
+            "xabar": "Eslatma bekor qilindi. Karta guruhda qoldi — «Boshlash» "
+                     "tugmasi istalgan paytda ishlaydi."}
+
+
+async def panel_compose(user: dict, body: dict) -> dict:
+    """Build the tournament the panel described and post its card into the group.
+
+    Nothing starts by itself: the card is pinned, the plan is written into the
+    statistics document, and at the chosen minute the bot announces it with a
+    «Boshlash» button that a curator or admin has to press.
+    """
+    user_id = int(user.get("id") or 0)
+    try:
+        chat_id = int(body.get("guruh") or 0)
+    except (TypeError, ValueError):
+        chat_id = 0
+    if chat_id >= 0:
+        return {"ok": False, "reason": "Guruh tanlanmagan: manfiy id kerak "
+                                       "(guruh id si «Guruhlar» ro‘yxatida)."}
+    try:
+        package_id = int(body.get("paket") or 0)
+    except (TypeError, ValueError):
+        package_id = 0
+    if not ARCHIVE.package_info(package_id):
+        return {"ok": False, "reason": "Paket topilmadi — avval «Savollar» bo‘limidan "
+                                       "paketni tanlang."}
+    when = str(body.get("vaqt") or "").strip()
+    start_at = 0
+    if when:
+        start_at, problem = sched.parse_when(when)
+        if problem:
+            return {"ok": False, "reason": problem}
+    picked: list[int] = []
+    for item in (body.get("savollar") or []):
+        try:
+            value = int(item)
+        except (TypeError, ValueError):
+            continue
+        if value and value not in picked:
+            picked.append(value)
+    picked = picked[:tn.SELECTION_LIMIT]
+    info = ARCHIVE.package_info(package_id) or {}
+    title = str(body.get("sarlavha") or info.get("title") or TOUR_DEFAULT_TITLE)[:40]
+
+    application = get_application()
+    await application.initialize()
+    try:
+        bot = application.bot
+        try:
+            member = await bot.get_chat_member(chat_id, user_id)
+        except TelegramError as exc:
+            return {"ok": False, "reason": f"Guruhga kirib bo‘lmadi: {str(exc)[:120]}"}
+        status = str(getattr(member, "status", "") or "")
+        admin = status in ("creator", "administrator") or bool(
+            getattr(member, "can_delete_messages", False))
+        if not admin and user_id != int(stats.OWNER_ID):
+            return {"ok": False, "reason": f"Siz bu guruh admini emassiz (id {user_id}). "
+                                           "Turnirni guruh adminlari chiqaradi."}
+        tour = tn.Tournament(chat_id=chat_id, title=title, package_id=package_id,
+                             creator=user_id,
+                             timer=clamp_choice(int(body.get("sekund") or 0) or TIMER,
+                                                st.TOUR_TIMERS, TIMER),
+                             rounds=clamp_choice(int(body.get("raund") or 0) or 1,
+                                                 st.TOUR_ROUNDS, 1),
+                             per_round=clamp_choice(int(body.get("savol_soni") or 0) or 10,
+                                                    st.TOUR_PER_ROUND, 10),
+                             seed=random.randrange(1, 999999))
+        tour.include = picked
+        tour.max_teams = max(tn.MIN_TEAMS, min(int(body.get("jamoa") or tn.MAX_TEAMS),
+                                               tn.MAX_TEAMS))
+        tour.start_at = start_at
+        tour.curators = [user_id]
+        tour.can_delete = await detect_can_delete(bot, chat_id, "supergroup")
+        tour.open_mode = not tour.can_delete
+        bank = tour_bank_size(ARCHIVE, tour)
+        if bank <= 0:
+            return {"ok": False, "reason": "Tanlangan savollar bu paketda topilmadi — "
+                                           "tanlovni tekshiring."}
+        stats.group_seen(chat_id, str(getattr(getattr(member, "chat", None), "title", "")
+                                      or body.get("guruh_nomi") or ""))
+        await tour_persist(bot, ARCHIVE, tour)
+        note("tour_composed", user_id=user_id, chat_id=chat_id, package_id=package_id,
+             detail=(f"panel · {title} · {tour.rounds}×{tour.per_round} · {tour.team_limit} "
+                     f"jamoa · {len(picked)} tanlov" +
+                     (f" · {sched.when_text(start_at)}" if start_at else "")))
+        armed = await tour_register_plan(bot, ARCHIVE, tour) if start_at else False
+        return {"ok": True, "amal": "shakllantirish",
+                "guruh": chat_id, "paket": package_id, "sarlavha": title,
+                "karta": int(tour.card_message_id or 0),
+                "savollar": bank, "tanlov": len(picked),
+                "jamoa": tour.team_limit, "raund": int(tour.rounds),
+                "har_raundda": int(tour.per_round), "sekund": int(tour.timer),
+                "boshlanish": start_at,
+                "boshlanish_matn": sched.when_text(start_at) if start_at else "",
+                "eslatma": bool(armed),
+                "rejalar": stats.plans(),
+                "xabar": (f"Turnir «{title}» guruhga chiqarildi va mahkamlandi. "
+                          + (f"Boshlanish: {sched.when_text(start_at)} — bot eslatma va "
+                             "«Boshlash» tugmasini yuboradi." if start_at else
+                             "«Boshlash» tugmasi hozir ishlaydi."))}
+    except TelegramError as exc:
+        return {"ok": False, "reason": f"Telegram xatosi: {str(exc)[:160]}"}
+    finally:
+        await application.shutdown()
 
 
 @app.post("/api/app")
@@ -3853,6 +4474,7 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str | None 
                 await application.process_update(update)
             finally:
                 await application.shutdown()
+            bg_add(arm_due_reminders)      # any traffic wakes a scheduled start
             response = JSONResponse({"ok": True})
     finally:
         _bg_tasks.reset(token)
