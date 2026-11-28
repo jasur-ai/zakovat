@@ -1096,5 +1096,435 @@ class ReminderPlanTests(unittest.TestCase):
         self.assertEqual(stats.groups(), {})
 
 
+REVIEW_ADMIN = 555
+REVIEW_PLAYER = 777
+REVIEW_GROUP = -100
+
+
+class ReviewBot(FakeBot):
+    """A bot that knows a group's admins and can be shut out of a private chat."""
+
+    def __init__(self, admins=(REVIEW_ADMIN,), closed=()):
+        super().__init__()
+        self.admins = set(int(person) for person in admins)
+        self.closed = set(int(person) for person in closed)
+        self.next_id = 100
+
+    async def send_message(self, **kwargs):
+        if int(kwargs.get("chat_id") or 0) in self.closed:
+            raise webhook.TelegramError("Forbidden: bot can't initiate conversation")
+        self.next_id += 1
+        record = {"message_id": self.next_id, **kwargs}
+        self.sent.append(record)
+        return SimpleNamespace(message_id=self.next_id, text=kwargs.get("text"))
+
+    async def edit_message_text(self, **kwargs):
+        self.edits.append(kwargs)
+        for record in self.sent:
+            if record.get("message_id") == kwargs.get("message_id"):
+                record["text"] = kwargs.get("text")
+        return True
+
+    async def delete_message(self, chat_id=None, message_id=None, **kwargs):
+        self.deleted.append(int(message_id))
+        return True
+
+    async def get_chat_member(self, chat_id, user_id, **kwargs):
+        return SimpleNamespace(status="administrator" if int(user_id) in self.admins else "member",
+                               can_delete_messages=True)
+
+    async def get_chat_administrators(self, chat_id, **kwargs):
+        return [SimpleNamespace(user=SimpleNamespace(id=person, is_bot=False,
+                                                      first_name=f"Admin{person}"))
+                for person in sorted(self.admins)]
+
+    async def get_chat(self, chat_id, **kwargs):
+        """No tournament is pinned here: these tests are about an ordinary game."""
+        number = int(chat_id)
+        return SimpleNamespace(id=number, type="supergroup" if number < 0 else "private",
+                               title="Guruh" if number < 0 else "Shaxsiy", pinned_message=None)
+
+    def texts(self, chat_id) -> list[str]:
+        return [visible(record.get("text") or "") for record in self.sent
+                if record.get("chat_id") == chat_id]
+
+    def edits_of(self, message_id) -> list[dict]:
+        return [edit for edit in self.edits if edit.get("message_id") == int(message_id)]
+
+
+@unittest.skipUnless(webhook, "install requirements.txt to test the webhook")
+class GameReviewTests(unittest.TestCase):
+    """An ordinary game's answer is judged by the bot and confirmed by a person.
+
+    The point is not given at the moment the checker says "right": the answer is
+    parked, the admins get a card with the guess beside the bot's verdict, and the
+    score moves only when one of them presses a button — or when the window runs
+    out and the bot publishes its own verdict, marked as automatic.
+    """
+
+    STRIP = 77
+
+    def setUp(self):
+        stats.reset()
+        self.archive = Archive("data/all")
+        self.bot = ReviewBot()
+        self.application = FakeApplication(self.bot, self.archive)
+        self.context = SimpleNamespace(bot=self.bot, application=self.application, args=[])
+        self._patches = [
+            mock.patch.object(webhook, "TICKS_ENABLED", False),
+            mock.patch.object(stats, "backend", lambda: "lokal"),
+        ]
+        for patch in self._patches:
+            patch.start()
+        self.session = self._game(REVIEW_GROUP, "group")
+        self.right = str(self.session.question.get("answer") or "")
+        self.wrong = "Qirq yettinchi shahar ko‘chasi"
+        self.assertTrue(self.right)
+        self.assertNotIn(self.right.lower(), self.wrong.lower())
+        self.deadline = int(time.time()) + 60
+
+    def tearDown(self):
+        for patch in self._patches:
+            patch.stop()
+        stats.reset()
+
+    # ------------------------------------------------------------------ building
+    def _game(self, chat_id: int, mode: str, owner: int = REVIEW_ADMIN,
+              confirm: bool = True) -> webhook.Session:
+        playlist = webhook.build_playlist(self.archive.questions(959), 1, 10, 7)
+        session = webhook.Session(chat_id=chat_id, mode=mode, package_id=959,
+                                  package_title="959", questions=playlist, owner_id=owner,
+                                  timer_seconds=60, rounds=1, per_round=10, seed=7)
+        session.begin()
+        session.control_message_id = self.STRIP
+        session.can_delete = True
+        session.needs_confirm = confirm
+        return session
+
+    def _strip(self, session: webhook.Session, deadline: int | None = None) -> str:
+        return webhook.strip_text(session, 60, int(deadline or self.deadline))
+
+    def _say(self, text: str, user: int = REVIEW_PLAYER, reply: str | None = None,
+             chat: int = REVIEW_GROUP, chat_type: str = "supergroup"):
+        message = FakeMessage(text, reply=reply if reply is not None else self._strip(self.session))
+        message.from_user = SimpleNamespace(id=user, first_name=f"O‘yinchi{user}")
+        message.message_id = 400
+        return SimpleNamespace(effective_message=message, message=message, callback_query=None,
+                               effective_chat=SimpleNamespace(id=chat, type=chat_type),
+                               effective_user=message.from_user)
+
+    def _card(self, who: int = REVIEW_ADMIN) -> dict:
+        return next(record for record in self.bot.sent
+                    if record.get("chat_id") == int(who)
+                    and ("JAVOB TEKSHIRILMOQDA" in visible(record.get("text") or "")
+                         or "TEKSHIRUV YOPILDI" in visible(record.get("text") or "")))
+
+    def _press(self, data: str, user: int = REVIEW_ADMIN, chat: int = REVIEW_ADMIN):
+        """A press on the card, in the private chat the card was sent to."""
+        card = self._card()
+        answers: list[dict] = []
+
+        async def answer(text=None, show_alert=False, **kwargs):
+            answers.append({"text": text, "show_alert": show_alert})
+
+        async def edit_reply_markup(markup=None, **kwargs):
+            return True
+
+        query = SimpleNamespace(
+            data=data, id="cb1",
+            message=SimpleNamespace(message_id=card["message_id"], text=card["text"],
+                                    caption=None, chat_id=int(chat)),
+            from_user=SimpleNamespace(id=int(user), first_name=f"Admin{user}"),
+            answer=answer, edit_message_reply_markup=edit_reply_markup, _answers=answers,
+        )
+        update = SimpleNamespace(effective_message=query.message, message=query.message,
+                                 callback_query=query,
+                                 effective_chat=SimpleNamespace(id=int(chat), type="private"),
+                                 effective_user=query.from_user)
+        asyncio.run(webhook.on_game_button(update, self.context))
+        return query
+
+    def _state(self, message_id: int = STRIP) -> dict | None:
+        """The state the group's strip carries now."""
+        record = next((item for item in self.bot.sent if item["message_id"] == message_id), None)
+        text = record.get("text") if record else None
+        if text is None:
+            edits = self.bot.edits_of(message_id)
+            text = edits[-1].get("text") if edits else None
+        return webhook.unpack_state(text)
+
+    def _answer(self, text: str | None = None, user: int = REVIEW_PLAYER):
+        asyncio.run(webhook.on_text(self._say(text or self.right, user=user), self.context))
+
+    def _park_timeout(self, guess: str | None = None):
+        """The clock runs out on a question, with one wrong guess behind it."""
+        if guess:
+            asyncio.run(webhook.on_text(self._say(guess), self.context))
+            painted = self.bot.edits_of(self.STRIP)[-1]["text"]
+        else:
+            painted = self._strip(self.session)
+        state = webhook.unpack_state(painted)
+        session = webhook.session_from_data(state, REVIEW_GROUP, self.archive)
+        body = webhook.pack_state(session, int(time.time()) - 1)
+        asyncio.run(webhook.on_text(self._say("kechikdim", reply=webhook.with_state(
+            "Savol 1 / 10", body)), self.context))
+        return session
+
+    def _hop(self, text: str | None = None):
+        """One hop of the chain, from the strip as it stands now."""
+        body = text if text is not None else self.bot.edits_of(self.STRIP)[-1]["text"]
+        state = webhook.unpack_state(body)
+        with mock.patch.object(webhook, "get_application", lambda: self.application):
+            return asyncio.run(webhook.tick_work(webhook.decode_invisible(body), REVIEW_GROUP))
+
+    # ---------------------------------------------------------------- the window
+    def test_a_right_answer_waits_for_the_admin(self):
+        self._answer()
+        card = visible(self._card()["text"])
+        self.assertIn("JAVOB TEKSHIRILMOQDA", card)
+        self.assertIn(msg.review_snippet(self.right, 200), card)
+        self.assertIn("TO‘G‘RI", card)
+        self.assertIn("TASDIQLASH", card)
+
+        strip = visible(self.bot.edits_of(self.STRIP)[-1]["text"])
+        self.assertIn("admin tekshiruvida", strip)
+        self.assertNotIn(self.right, strip)              # the answer stays unpublished
+        self.assertNotIn("Javob:", "\n".join(self.bot.texts(REVIEW_GROUP)))
+
+        state = self._state()
+        self.assertTrue(state["rv"])                     # the window rides the state
+        self.assertEqual(state["rv"][2], "1")            # the bot's verdict
+        self.assertEqual(state["h"], REVIEW_GROUP)       # and which group it belongs to
+        self.assertEqual(state["c"], 0)                  # no point has been given yet
+        self.assertEqual(state["w"], 0)
+
+    def test_confirming_gives_the_point_and_opens_the_next_question(self):
+        self._answer()
+        press = self._press(st.GAME_CONFIRM)
+        self.assertEqual(press._answers[-1]["show_alert"], False)
+
+        group = "\n".join(self.bot.texts(REVIEW_GROUP))
+        self.assertIn("To‘g‘ri!", group)
+        self.assertIn(f"Javob:</b> {msg.esc(self.right)[:40]}", group)
+        self.assertIn("Javobni tasdiqladi", group)
+        self.assertIn("SAVOL 2 / 10", group)             # the game moved on
+
+        state = self._state(self.bot.sent[-1]["message_id"])
+        self.assertEqual(state["c"], 1)
+        self.assertEqual(state["w"], 0)
+        self.assertEqual(state["rv"], [])                # the window is closed
+        closed = visible(self._card()["text"])
+        self.assertIn("TEKSHIRUV YOPILDI", closed)
+        self.assertIn("Bilimdonlar 1 — 0", closed)
+        self.assertIsNone(self.bot.edits_of(self._card()["message_id"])[-1]["reply_markup"])
+
+    def test_rejecting_a_right_answer_gives_the_point_to_the_other_side(self):
+        self._answer()
+        self._press(st.GAME_REJECT)
+        group = "\n".join(self.bot.texts(REVIEW_GROUP))
+        self.assertIn("Noto‘g‘ri", group)
+        self.assertIn("rad etildi", group)
+        state = self._state(self.bot.sent[-1]["message_id"])
+        self.assertEqual(state["c"], 0)
+        self.assertEqual(state["w"], 1)
+
+    def test_a_timed_out_question_shows_the_guess_that_was_tried(self):
+        self._park_timeout(self.wrong)
+        card = visible(self._card()["text"])
+        self.assertIn(msg.review_snippet(self.wrong, 200), card)
+        self.assertIn("NOTO‘G‘RI", card)
+        self.assertNotIn("Javob berilmadi", card)
+
+    def test_rejecting_a_verdict_saves_the_answer_the_checker_missed(self):
+        """The whole point of the step: a person overrules the checker.
+
+        A spelling the bank does not know is judged wrong and the point would go to
+        the other side. The admin reads the guess beside the verdict and turns it
+        over — no alias file, no /accept, no argument in the group.
+        """
+        self._park_timeout(self.wrong)                         # the checker says no
+        card = visible(self._card()["text"])
+        self.assertIn("NOTO‘G‘RI", card)
+        self._press(st.GAME_REJECT)                            # the admin says yes
+        state = self._state(self.bot.sent[-1]["message_id"])
+        self.assertEqual(state["c"], 1)
+        self.assertEqual(state["w"], 0)
+        self.assertIn("To‘g‘ri!", "\n".join(self.bot.texts(REVIEW_GROUP)))
+
+    def test_a_question_nobody_guessed_needs_no_confirmation(self):
+        """Nothing was answered, so nothing is at stake: the rules decide, not a person."""
+        self._park_timeout(None)
+        group = "\n".join(self.bot.texts(REVIEW_GROUP))
+        self.assertIn("Vaqt tugadi", group)
+        self.assertNotIn("admin tekshiruvida", group)
+        state = self._state(self.bot.sent[-1]["message_id"])
+        self.assertEqual(state["w"], 1)
+        self.assertEqual(state["rv"], [])
+        with self.assertRaises(StopIteration):
+            self._card()
+
+    def test_nobody_deciding_means_the_bot_publishes_itself(self):
+        self._answer()
+        state = self._state()
+        session = webhook.session_from_data(state, REVIEW_GROUP, self.archive)
+        session.review_due = int(time.time()) - 1
+        session.review_at = int(time.time()) - 200
+        body = webhook.pack_state(session, session.review_due)
+        with mock.patch.object(webhook, "get_application", lambda: self.application):
+            result = asyncio.run(webhook.tick_work(body, REVIEW_GROUP))
+        self.assertEqual(result.get("review"), "auto")
+        group = "\n".join(self.bot.texts(REVIEW_GROUP))
+        self.assertIn("To‘g‘ri!", group)
+        self.assertIn("avtomatik", group.lower())
+        self.assertEqual(self._state(self.bot.sent[-1]["message_id"])["c"], 1)
+
+    def test_a_reminder_arrives_once_per_step(self):
+        self._answer()
+        cards = len(self.bot.texts(REVIEW_ADMIN))
+        state = self._state()
+        session = webhook.session_from_data(state, REVIEW_GROUP, self.archive)
+        session.review_at = int(time.time()) - 31
+        body = webhook.pack_state(session, session.review_due)
+        with mock.patch.object(webhook, "get_application", lambda: self.application):
+            asyncio.run(webhook.tick_work(body, REVIEW_GROUP))
+        self.assertEqual(len(self.bot.texts(REVIEW_ADMIN)), cards + 1)
+        self.assertIn("hali tasdiqlanmagan", self.bot.texts(REVIEW_ADMIN)[-1])
+
+        again = self.bot.edits_of(self.STRIP)[-1]["text"]
+        self._hop(again)                                   # the same step, once more
+        self.assertEqual(len(self.bot.texts(REVIEW_ADMIN)), cards + 1)
+
+    def test_the_group_line_keeps_the_confirmation_clock(self):
+        self._answer()
+        strip = visible(self.bot.edits_of(self.STRIP)[-1]["text"])
+        self.assertIn("03:00", strip)                      # REVIEW_AUTO, not the question timer
+        self.assertNotIn("QOLGAN VAQT", strip)
+        self.assertIsNone(self.bot.edits_of(self.STRIP)[-1]["reply_markup"])
+
+    # --------------------------------------------------------------- who decides
+    def test_a_player_cannot_confirm_their_own_answer(self):
+        self._answer()
+        press = self._press(st.GAME_CONFIRM, user=REVIEW_PLAYER, chat=REVIEW_PLAYER)
+        self.assertTrue(press._answers[-1]["show_alert"])
+        self.assertTrue(self._state()["rv"])               # still waiting
+        self.assertNotIn("To‘g‘ri!", "\n".join(self.bot.texts(REVIEW_GROUP)))
+
+    def test_a_second_press_after_the_decision_does_nothing(self):
+        self._answer()
+        self._press(st.GAME_CONFIRM)
+        again = self._press(st.GAME_REJECT)
+        self.assertTrue(again._answers[-1]["show_alert"])
+        self.assertEqual(self._state(self.bot.sent[-1]["message_id"])["c"], 1)
+
+    def test_a_group_that_cannot_be_dmed_keeps_playing(self):
+        self.bot = ReviewBot(closed=(REVIEW_ADMIN,))
+        self.application = FakeApplication(self.bot, self.archive)
+        self.context = SimpleNamespace(bot=self.bot, application=self.application, args=[])
+        self.session = self._game(REVIEW_GROUP, "group")
+        self._answer()
+        group = "\n".join(self.bot.texts(REVIEW_GROUP))
+        self.assertIn("To‘g‘ri!", group)                   # no gate without a person to ask
+        self.assertNotIn("admin tekshiruvida", group)
+
+    def test_a_private_solo_game_has_nobody_to_ask(self):
+        self.session = self._game(REVIEW_ADMIN, "solo", owner=REVIEW_ADMIN)
+        asyncio.run(webhook.on_text(self._say(self.right, user=REVIEW_ADMIN,
+                                              chat=REVIEW_ADMIN, chat_type="private"),
+                                    self.context))
+        group = "\n".join(self.bot.texts(REVIEW_ADMIN))
+        self.assertIn("To‘g‘ri!", group)
+        self.assertNotIn("JAVOB TEKSHIRILMOQDA", group)
+        self.assertEqual(self.bot.texts(REVIEW_ADMIN).count("JAVOB TEKSHIRILMOQDA"), 0)
+
+    def test_the_switch_in_the_settings_turns_the_step_off(self):
+        self.session = self._game(REVIEW_GROUP, "group", confirm=False)
+        self._answer()
+        group = "\n".join(self.bot.texts(REVIEW_GROUP))
+        self.assertIn("To‘g‘ri!", group)
+        self.assertNotIn("admin tekshiruvida", group)
+        self.assertEqual(self._state(self.bot.sent[-1]["message_id"])["cf"], 0)
+
+    # ------------------------------------------------------------------- the tape
+    def test_the_parked_answer_survives_a_cold_instance(self):
+        self._answer()
+        state = self._state()
+        cold = webhook.session_from_data(state, REVIEW_GROUP, self.archive)
+        self.assertTrue(cold.reviewing())
+        self.assertEqual(cold.review_mark, "1")
+        self.assertEqual(cold.review_text, msg.review_snippet(self.right, 70))
+        self.assertEqual(cold.review_user, REVIEW_PLAYER)
+        self.assertEqual(cold.review_kind, "answer")
+        self.assertEqual(cold.review_to, [[REVIEW_ADMIN, self._card()["message_id"]]])
+        self.assertEqual(cold.review_due, state["rv"][1])
+        self.assertTrue(cold.needs_confirm)
+
+    def test_an_old_state_line_still_reads(self):
+        """A game running when this was deployed has no review bytes at all."""
+        session = self._game(REVIEW_GROUP, "group")
+        body = "g|959|0|0|0|%d|%d|%d|1|10|60|7|77|0|0|1" % (
+            REVIEW_ADMIN, session.question["id"], int(time.time()) + 60)
+        data = webhook.parse_body(body)
+        self.assertIsNotNone(data)
+        self.assertEqual(data["cf"], 1)
+        self.assertEqual(data["rv"], [])
+        rebuilt = webhook.session_from_data(data, REVIEW_GROUP, self.archive)
+        self.assertFalse(rebuilt.reviewing())
+        self.assertTrue(rebuilt.needs_confirm)
+
+    def test_the_settings_panel_switches_the_step(self):
+        config = st.GameConfig(package_id=959, mode="group")
+        self.assertTrue(config.needs_confirm)              # on by default
+        edits, answers = [], []
+
+        async def answer(text=None, show_alert=False, **kwargs):
+            answers.append({"text": text, "show_alert": show_alert})
+
+        async def edit_message_text(text=None, **kwargs):
+            edits.append({"text": text, **kwargs})
+            return True
+
+        def press(value):
+            query = SimpleNamespace(
+                data=config.encode(st.ACTION_CONFIRM, value), id="cb1",
+                message=SimpleNamespace(message_id=5, text="", chat_id=REVIEW_GROUP),
+                from_user=SimpleNamespace(id=REVIEW_ADMIN, first_name="Admin"),
+                answer=answer, edit_message_text=edit_message_text)
+            update = SimpleNamespace(callback_query=query, effective_message=query.message,
+                                     message=query.message,
+                                     effective_chat=SimpleNamespace(id=REVIEW_GROUP,
+                                                                    type="supergroup"),
+                                     effective_user=query.from_user)
+            asyncio.run(webhook.on_settings_button(update, self.context))
+
+        press("0")                                          # turn it off
+        self.assertIn("O‘CHIQ", answers[-1]["text"])
+        self.assertIn("Javobni tasdiqlash: O‘CHIQ", visible(edits[-1]["text"]))
+        labels = [button.text for row in edits[-1]["reply_markup"].inline_keyboard
+                  for button in row]
+        self.assertIn("○ Javobni tasdiqlash", labels)
+
+        press("1")                                          # and back on
+        self.assertIn("YOQIQ", answers[-1]["text"])
+        self.assertIn("Javobni tasdiqlash: YOQIQ", visible(edits[-1]["text"]))
+
+        press("?")                                          # «Batafsil» only explains
+        before = len(edits)
+        self.assertTrue(answers[-1]["show_alert"])
+        self.assertIn("180 sekundda", answers[-1]["text"])
+        self.assertEqual(len(edits), before)
+
+    def test_a_skip_cannot_jump_over_the_confirmation(self):
+        self._answer()
+        message = FakeMessage("/skip", reply=self.bot.edits_of(self.STRIP)[-1]["text"])
+        message.from_user = SimpleNamespace(id=REVIEW_ADMIN, first_name="Admin")
+        update = SimpleNamespace(effective_message=message, message=message, callback_query=None,
+                                 effective_chat=SimpleNamespace(id=REVIEW_GROUP, type="supergroup"),
+                                 effective_user=message.from_user)
+        asyncio.run(webhook.cmd_skip(update, self.context))
+        self.assertTrue(message.replies)
+        self.assertIn("tasdiqlanmagan", message.replies[-1])
+        self.assertTrue(self._state()["rv"])
+
+
 if __name__ == "__main__":
     unittest.main()

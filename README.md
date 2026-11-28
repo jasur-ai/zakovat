@@ -130,6 +130,8 @@ Hisoblagich **bir marta yozib qo‘yilgan son emas**: sekundlar `00:45` ko‘rin
 
 Javob berilgach tasma o‘chiriladi (botda xabar o‘chirish ruxsati bo‘lmasa, bir qatorli «Savol 3 / 30 — yakunlandi» ga yig‘iladi), chat toza qoladi. Polling rejimida (`python3 run_bot.py`) tasma job queue orqali yangilanadi.
 
+**Javobni tasdiqlash.** Guruh o‘yinida to‘g‘ri javob darhol hisoblanmaydi: bot xulosasi **taklif** sifatida adminga shaxsiy xabarda ko‘rsatiladi («TASDIQLASH» / «RAD ETISH»), ochko bosilgach beriladi. Batafsil: «Javobni tasdiqlash» bo‘limi.
+
 ## Guruh turniri
 
 Oddiy o‘yindan farqi: **jamoalar**, **yakuniy javob** va **jadval**. Admin `/turnir 959` yozadi (paket raqami ixtiyoriy — ko‘rsatilmasa tasodifiy paket olinadi) va guruhda **pinlangan karta** paydo bo‘ladi. Karta turnirning butun holatini o‘z ichida saqlaydi (ko‘rinmas belgilar bilan), shuning uchun Vercel funksiyasi har so‘rovda qayta ishga tushsa ham hech narsa yo‘qolmaydi: jamoalar, ochkolar, tanlangan savollar va navbatdagi savol kartaning ichida yuradi.
@@ -181,6 +183,8 @@ YAKUNIY JAVOBLAR
 
 HISOB: Bilimdonlar 7 · Zakovat 5 · Intellekt 2
 ```
+
+**Javobni tasdiqlash.** Vaqt tugagach natija darhol e’lon qilinmaydi: jamoalarning yakuniy javoblari **ro‘yxat** bo‘lib kuratorga shaxsiy xabarga boradi, u har bir jamoa yonidagi «TO‘G‘RI / NOTO‘G‘RI» xulosani o‘zgartirishi va «TASDIQLASH» ni bosishi mumkin — ochko tasdiqlangan belgilar bo‘yicha beriladi. Batafsil: «Javobni tasdiqlash» bo‘limi.
 
 **Statistika (faqat bot egasi).** `ZAKOVAT_OWNER_ID` (standart `8004724563`) dagi foydalanuvchi `/stats` yozsa, boshqa hech kim ko‘rmaydigan panel ochiladi:
 
@@ -289,6 +293,46 @@ Guruhga qo‘shilganda bot o‘zini tanishtiradi; o‘yin yo‘q paytda `salom`,
 4. `/accept` bilan tasdiqlangan javoblar `data/answer_aliases.json` ga saqlanadi — keyingi o‘yinlarda shu varian ham to‘g‘ri hisoblanadi.
 
 Hech qanday LLM, token yoki tashqi xizmat chaqirilmaydi.
+
+## Javobni tasdiqlash (admin yoki kurator nazorati)
+
+Tekshiruvchi xato qilishi mumkin — noto‘g‘ri apostrof, qisqartma yoki bazada yo‘q variant uchun ochko ketadi. Shuning uchun **hisoblash va e’lon qilish ajratilgan**: bot javobni oladi va xulosa chiqaradi, lekin ochko faqat odam tasdiqlagach beriladi. Qamrov — turnir finali **va** oddiy (solo/duel) o‘yin.
+
+**Turnirda.** Vaqt tugagach:
+
+1. guruhda faqat qisqa qator: «Savol 3 / 30 — yakunlandi · 4 javob yig‘ildi — kuratorga tekshirish uchun yuborildi» (javob va xulosa guruhda ko‘rinmaydi);
+2. kim tekshirishi aniqlanadi: `/kurator` bilan tayinlanganlar, kartani ochgan admin, keyin guruh administratorlari — **4 kishigacha**;
+3. har biriga shaxsiy xabarda **ro‘yxat** ketadi: to‘g‘ri javob, har jamoaning javobi va bot xulosasi (`TO‘G‘RI` / `NOTO‘G‘RI`), javob bermagan jamoa belgilanmaydi:
+
+```
+SAVOL 3 / 30 — TEKSHIRISH
+• To‘g‘ri javob: Parnas
+• Javob berdi: 2 / 3 jamoa
+
+RO‘YXAT
+1. Bilimdonlar — «Parnas» — TO‘G‘RI
+2. Zakovat — «Parnas tog‘i» — NOTO‘G‘RI
+3. Intellekt — javob bermadi
+
+• Xulosani o‘zgartirish: jamoa yonidagi tugmani bosing
+• «TASDIQLASH» ochkolarni beradi va natijani guruhga yozadi
+• Qolgan vaqt: 03:00 — keyin bot o‘zi e’lon qiladi
+```
+
+4. har jamoa yonidagi tugma xulosani **o‘zgartiradi** (o‘zgargan qator `o‘zgartirildi` deb belgilanadi va boshqa kuratorlarning ro‘yxatida ham darhol ko‘rinadi), «TASDIQLASH» esa natijani e’lon qiladi: guruhda odatdagi `YAKUNI` bloki chiqadi, ostida kim tasdiqlagani yoziladi, ro‘yxat tugmalari o‘chiriladi va keyingi savol ochiladi;
+5. hech kim bosmasa: **30 sekundda** birinchi eslatma, **90 sekundda** ikkinchisi, **180 sekundda** bot o‘z xulosasini e’lon qiladi va natijada «Xulosa avtomatik e’lon qilindi (kurator tasdiqlamadi)» deb yoziladi.
+
+Hech qaysi jamoa javob bermasa, tekshiruv oynasi **ochilmaydi**: tasdiqlanadigan xulosa yo‘q, natija darhol e’lon qilinadi va o‘yin davom etadi (oddiy o‘yinda ham xuddi shunday — hech kim taxmin yozmagan savol kutmaydi).
+
+Shaxsiy xabar yuborib bo‘lmasa (admin botni `/start` qilmagan), ro‘yxat **guruhning o‘zida** chiqadi — o‘yin hech qachon to‘xtab qolmaydi. Tekshiruv oynasida `/skip`, «O‘tkazish» va «Vaqtni yangilash» natijani chetlab o‘ta olmaydi; `/turnirstop` oynani yopadi va ro‘yxatdan tugmalarni oladi.
+
+**Oddiy o‘yinda.** Sozlamalar panelida «Javobni tasdiqlash» qatori bor (standart — **yoqiq**). Guruhda javob berilgach yoki vaqt tugagach adminga bitta karta boradi: savol raqami, kim javob bergani, javob matni va bot xulosasi; «TASDIQLASH» xulosani kuchga kiritadi, «RAD ETISH» uni **teskarisiga** o‘giradi (shunday qilib tekshiruvchi xato qilganda ochko o‘yinchi qaytariladi — `/accept` yozish shart emas). Oyna 30/90/180 sekund tartibida ishlaydi, guruhda shu vaqtda «Savol 2 / 30 — javob admin tekshiruvida · 03:00 keyin avtomatik» qatori turadi. Shaxsiy chatda o‘ynaladigan solo o‘yinda so‘rovchi yo‘q (o‘yinchining o‘zi o‘z javobini tasdiqlamaydi), shuning uchun u avvalgidek darhol hisoblanadi; `/accept` esa o‘sha yerda baribir ishlaydi.
+
+**Holat qayerda yuradi.** Vercel funksiyasi har so‘rovda yangidan ishga tushadi, shuning uchun tekshiruv oynasi ham xabarning ichida yuradi: turnirda — pinlangan kartaning ko‘rinmas holatida (`review_*` maydonlari, `take_finals` yangi oynani eskisiga qo‘shib yubormaydi), oddiy o‘yinda — tasma holatining qo‘shimcha qismida (`rv`, `cf`, `h` — qaysi guruhga tegishli). Tugma shaxsiy chatda bosilgani uchun guruh id’si tugmaning o‘zida (turnir) yoki holatda (oddiy o‘yin) yuradi, huquq esa **guruh bo‘yicha** tekshiriladi: shaxsiy chatdagi tugma boshqa guruhning o‘yinini hisoblay olmaydi.
+
+**Statistika.** Har ochilgan oyna `review_opened`, har tasdiq `review_confirmed`, har avtomatik e’lon `review_auto` hodisasi sifatida yoziladi (kim, nechta xulosa o‘zgargani bilan).
+
+**Sozlamalar.** `ZAKOVAT_REVIEW_AUTO` (standart 180 sekund) va `ZAKOVAT_REVIEW_HOP` (standart 10 sekund) — oyna uzunligi va qadam. Turnirda butunlay o‘chirish: «Sozlamalar» panelidagi «Javobni tasdiqlash» qatori; oddiy o‘yinda — `/solo` panelidagi shu nomli qator.
 
 ## Kod tuzilishi
 

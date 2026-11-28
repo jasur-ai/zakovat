@@ -17,6 +17,15 @@ RIGHT_LABEL = "Qarshi taraf"
 # without a single guess, the round is closed automatically.
 IDLE_LIMIT = 3
 
+# The confirmation window of one parked answer: remind, remind again, then the
+# bot publishes its own verdict rather than let a game stand still.
+REVIEW_REMIND = (30, 90)
+
+# One parked answer, as it travels inside the message state: long enough to read,
+# short enough that the hidden run does not push the visible text out.
+REVIEW_TEXT_LIMIT = 70
+REVIEW_NAME_LIMIT = 24
+
 
 def build_playlist(questions: list[dict[str, Any]], rounds: int = 1, per_round: int = 0,
                    seed: int = 0) -> list[dict[str, Any]]:
@@ -71,6 +80,20 @@ class Session:
     can_delete: bool = True
     finished: bool = False
     history: list[dict[str, Any]] = field(default_factory=list)
+
+    # The confirmation step: an answer that has been judged but not published.
+    # Nothing here scores anything — ``decide`` does, once a person has looked.
+    needs_confirm: bool = True
+    review_at: int = 0
+    review_due: int = 0
+    review_mark: str = "0"        # the bot's verdict: "1" right, "0" wrong
+    review_text: str = ""         # the answer that is waiting
+    review_user: int = 0          # who gave it
+    review_name: str = ""
+    review_noted: int = 0         # reminders already sent
+    review_to: list = field(default_factory=list)   # [[user_id, message_id], …]
+    review_msg: int = 0           # the group copy, when a DM was impossible
+    review_kind: str = ""         # "answer" | "timeout" | "skip"
 
     @property
     def total(self) -> int:
@@ -128,6 +151,110 @@ class Session:
         self.latest_answer = text
         self.latest_user = user_id
         return WRONG
+
+    # ------------------------------------------------------------- confirmation
+    def reviewing(self) -> bool:
+        """True while an answer is parked and waiting for somebody's word."""
+        return bool(self.review_at) and self.question is not None
+
+    def review_left(self, now: int) -> int:
+        return max(0, int(self.review_due or 0) - int(now or 0))
+
+    def review_nudge(self, now: int) -> bool:
+        """True when another reminder is due (once per step of REVIEW_REMIND)."""
+        if not self.reviewing():
+            return False
+        step = int(self.review_noted)
+        if step >= len(REVIEW_REMIND):
+            return False
+        return int(now or 0) - int(self.review_at) >= int(REVIEW_REMIND[step])
+
+    def judge(self, user_id: int, text: str, checker: Any) -> str:
+        """Is this answer right? The score stays untouched — see ``park_review``."""
+        if self.finished or self.question is None or self.reviewing():
+            return IGNORED
+        if self.mode == "solo" and user_id != self.owner_id:
+            return FOREIGN
+        if checker.is_correct(int(self.question["id"]), str(self.question.get("answer", "")),
+                              str(text or "")):
+            return CORRECT
+        return WRONG
+
+    def park_review(self, now: int, due: int, text: str = "", user_id: int = 0,
+                    name: str = "", correct: bool = False, kind: str = "answer") -> bool:
+        """Hold the question: the point is proposed, not given.
+
+        ``answered`` stays False on purpose — the flag is rebuilt from the state
+        line, and ``reviewing()`` is what keeps further guesses out.
+        """
+        if self.finished or self.question is None or self.reviewing():
+            return False
+        if str(text or "").strip():
+            # Only a real guess counts as activity: a question nobody answered has
+            # to keep growing the idle streak that eventually stops the game.
+            self.attempts += 1
+        self.review_at = int(now or 0)
+        self.review_due = int(due or now or 0)
+        self.review_mark = "1" if correct else "0"
+        self.review_text = str(text or "").strip()[:REVIEW_TEXT_LIMIT]
+        self.review_user = int(user_id or 0)
+        self.review_name = str(name or "").strip()[:REVIEW_NAME_LIMIT]
+        self.review_noted = 0
+        self.review_kind = str(kind or "answer")
+        return True
+
+    def flip_review(self) -> str:
+        """The confirmer disagrees with the bot: the verdict turns over."""
+        if not self.reviewing():
+            return IGNORED
+        self.review_mark = "0" if self.review_mark == "1" else "1"
+        return CORRECT if self.review_mark == "1" else WRONG
+
+    def decide(self, user_id: int = 0, auto: bool = False, flip: bool = False) -> str:
+        """Publish the parked answer: award the point the verdict says and count it.
+
+        ``flip`` is «RAD ETISH» — the person looked and the bot was wrong, so the
+        opposite of its verdict is what gets scored.
+        """
+        if not self.reviewing():
+            return IGNORED
+        if flip:
+            self.review_mark = "0" if self.review_mark == "1" else "1"
+        correct = self.review_mark == "1"
+        if correct:
+            self.correct += 1
+            self.idle_streak = 0
+        else:
+            self.wrong += 1
+            self.idle_streak = self.idle_streak + 1 if self.attempts == 0 else 0
+        self.answered = True
+        entry: dict[str, Any] = {
+            "id": self.question["id"],
+            "result": "correct" if correct else ("wrong" if self.review_text else "unanswered"),
+            "user_id": self.review_user or None,
+            "attempts": self.attempts,
+        }
+        if auto:
+            entry["auto"] = 1
+        elif int(user_id or 0):
+            entry["by"] = int(user_id)
+        if flip:
+            entry["changed"] = 1
+        self.history.append(entry)
+        self.clear_review()
+        return CORRECT if correct else WRONG
+
+    def clear_review(self) -> None:
+        self.review_at = 0
+        self.review_due = 0
+        self.review_mark = "0"
+        self.review_text = ""
+        self.review_user = 0
+        self.review_name = ""
+        self.review_noted = 0
+        self.review_to = []
+        self.review_msg = 0
+        self.review_kind = ""
 
     def resolve_unanswered(self) -> bool:
         """A skipped or timed-out question gives one point to the other side.
