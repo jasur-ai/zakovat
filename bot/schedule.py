@@ -28,6 +28,7 @@ ARM_WINDOW = 15 * 60        # the hop chain only lives through the last quarter 
 HOP = 50                    # one hop waits at most this long (serverless limit)
 MAX_LEAD = 30 * 24 * 3600   # a plan further away than a month is refused
 MIN_LEAD = 30               # "start in 30 seconds" is just "start now"
+LATE_GRACE = 2 * 3600       # a start that passed this long ago is no longer news
 
 TIME_RE = re.compile(r"^(\d{1,2})[:.](\d{2})$")
 STAMP_RE = re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})[tT ](\d{1,2}):(\d{2})")
@@ -41,6 +42,9 @@ MONTHS = {
     "yanvar": 1, "fevral": 2, "mart": 3, "aprel": 4, "may": 5, "iyun": 6,
     "iyul": 7, "avgust": 8, "sentabr": 9, "oktabr": 10, "noyabr": 11, "dekabr": 12,
 }
+
+TIME_WORDS = {"vaqt", "qachon", "soat", "boshlanish"}
+TITLE_LIMIT = 40
 
 SPEC_KEYS = {
     "vaqt": "when", "qachon": "when", "soat": "when", "time": "when", "boshlanish": "when",
@@ -224,25 +228,58 @@ def parse_spec(argument: str) -> dict:
     """
     spec: dict = {"package": "", "when": "", "error": ""}
     rest: list[str] = []
-    for chunk in " ".join(str(argument or "").split()):
-        if "=" in chunk:
-            key, _, value = chunk.partition("=")
-            field = SPEC_KEYS.get(key.strip().lower())
-            if field:
-                if field == "when":
-                    spec["when"] = f"{spec['when']} {value}".strip()
-                else:
-                    spec[field] = value.strip()
-            else:
-                rest.append(chunk)
+    tokens = str(argument or "").split()
+    position = 0
+    while position < len(tokens):
+        token = tokens[position]
+        position += 1
+        if "=" not in token:
+            rest.append(token)
+            continue
+        key, _, value = token.partition("=")
+        field = SPEC_KEYS.get(key.strip().lower())
+        if not field:
+            rest.append(token)
+            continue
+        if field == "when":
+            # "vaqt=ertaga 19:00" — keep the next words while they still read as
+            # one time, and stop at the first word that does not.
+            phrase = value.strip()
+            while position < len(tokens) and "=" not in tokens[position]:
+                trial = f"{phrase} {tokens[position]}".strip()
+                if parse_when(trial)[1]:
+                    break
+                phrase = trial
+                position += 1
+            spec["when"] = f"{spec['when']} {phrase}".strip()
+        elif field == "title":
+            # "sarlavha=Kuzgi liga" — a name is several words, but a bare number
+            # after it is the package, not part of the name.
+            words = [value.strip()] if value.strip() else []
+            while position < len(tokens) and "=" not in tokens[position] \
+                    and not tokens[position].isdigit():
+                words.append(tokens[position])
+                position += 1
+            spec["title"] = " ".join(words)[:TITLE_LIMIT]
         else:
-            rest.append(chunk)
+            spec[field] = value.strip()
     # "vaqt 19:00" without an equals sign reads just as well
     words = list(rest)
-    for index, word in enumerate(words):
-        if word.strip().lower() in {"vaqt", "qachon", "soat"} and index + 1 < len(words):
-            spec["when"] = f"{spec['when']} {words[index + 1]}".strip()
-            words[index:index + 2] = []
+    position = 0
+    while position < len(words):
+        if words[position].strip().lower() not in TIME_WORDS or position + 1 >= len(words):
+            position += 1
+            continue
+        phrase = words[position + 1]
+        taken = 2
+        while position + taken < len(words):
+            trial = f"{phrase} {words[position + taken]}".strip()
+            if parse_when(trial)[1]:
+                break
+            phrase = trial
+            taken += 1
+        spec["when"] = f"{spec['when']} {phrase}".strip()
+        del words[position:position + taken]
     for field in ("teams", "rounds", "per_round", "timer"):
         raw = str(spec.get(field) or "")
         if raw and not raw.isdigit():
@@ -292,10 +329,24 @@ def hop_step(start_at: int, reference: int = 0) -> int:
     return max(1, min(HOP, left))
 
 
-def due(start_at: int, reference: int = 0, window: int = ARM_WINDOW) -> bool:
-    """True when a plan is inside the window where the hop chain should run."""
+def due(start_at: int, reference: int = 0, window: int = ARM_WINDOW,
+        late: int = LATE_GRACE) -> bool:
+    """True when the hop chain should be running for this plan.
+
+    A plan whose minute passed while every instance was cold is *still* due, for
+    ``late`` seconds: a reminder ten minutes late beats one that never comes, and
+    the card in the group is waiting for somebody to press «Boshlash». Past that
+    it is no longer news — ``too_late`` says so and the plan is dropped.
+    """
+    if not int(start_at):
+        return False
     left = int(start_at) - int(reference or now())
-    return 0 < left <= int(window)
+    return -int(late) <= left <= int(window)
+
+
+def too_late(start_at: int, reference: int = 0, late: int = LATE_GRACE) -> bool:
+    """True when announcing this plan would only confuse the group."""
+    return bool(int(start_at)) and int(reference or now()) - int(start_at) > int(late)
 
 
 def left_text(start_at: int, reference: int = 0) -> str:
