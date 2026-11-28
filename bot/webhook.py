@@ -3434,8 +3434,17 @@ async def setup(request: Request):
 
 
 @app.get("/api/status")
-async def status():
-    """Diagnostic page: shows only whether secrets exist, never their values."""
+async def status(request: Request):
+    return await status_report(request)
+
+
+async def status_report(request: Request | None = None):
+    """Diagnostic page: shows only whether secrets exist, never their values.
+
+    ``/api/index`` falls through here with its own request, so the shard probe
+    (``?shardprobe=1``) works on both paths. Called without a request — from a
+    test or another handler — it simply reports no probe.
+    """
     lines = [
         f"BOT_TOKEN: {'set' if os.getenv('BOT_TOKEN') else 'MISSING'}",
         f"WEBHOOK_SECRET: {'set' if SECRET else 'MISSING'}",
@@ -3459,7 +3468,8 @@ async def status():
         f"Shu nusxadagi taymer urinishlari: {_ticks_seen} · yangilangan: {_ticks_painted} · "
         f"vaqti tugagan: {_ticks_resolved} · to‘xtagan: {_ticks_stopped}",
     ]
-    lines += archive_lines(request.query_params.get("shardprobe") == "1")
+    probe = request is not None and request.query_params.get("shardprobe") == "1"
+    lines += archive_lines(probe)
     if os.getenv("BOT_TOKEN"):
         try:
             application = get_application()
@@ -3653,7 +3663,7 @@ async def index(request: Request):
         return JSONResponse({"ok": True, "log": _bg_probe_log[-5:]})
     if mode == "1":
         return status_page("O‘z-o‘zini sinash", await self_test())
-    return await status()
+    return await status_report(request)
 
 
 async def app_probe(menu: bool = False) -> dict:
